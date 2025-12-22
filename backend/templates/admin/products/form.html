@@ -1,0 +1,983 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Edit Product{% else %}Add Product{% endif %} - E-Commerce Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        {% if object %}
+            <i class="fas fa-edit"></i>
+            Edit Product
+        {% else %}
+            <i class="fas fa-plus"></i>
+            Add New Product
+        {% endif %}
+    </h1>
+</div>
+
+<!-- Main Form Layout -->
+<form method="post" enctype="multipart/form-data">
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 30px; width: 100%;">
+    <!-- Left Column - Main Product Information -->
+    <div class="data-table">
+        <div class="table-header">
+            <h3 class="table-title">Basic Information</h3>
+        </div>
+        <div style="padding: 24px;">
+            {% csrf_token %}
+            
+            <!-- Display form errors -->
+            {% if form.errors %}
+                <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
+                    <h4 style="color: #dc2626; margin: 0 0 12px 0;">
+                        <i class="fas fa-exclamation-triangle"></i> Please correct the errors below:
+                    </h4>
+                    {% if form.non_field_errors %}
+                        <div style="margin-bottom: 12px;">
+                            {% for error in form.non_field_errors %}
+                                <p style="color: #dc2626; margin: 0 0 6px 0;">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <ul style="color: #dc2626; margin: 0; padding-left: 20px;">
+                        {% for field, errors in form.errors.items %}
+                            {% if field != '__all__' %}
+                                <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                <div class="form-group">
+                    <label class="form-label">Product Name *</label>
+                    <input type="text" class="form-control" name="name" 
+                           value="{{ form.name.value|default:'' }}" 
+                           placeholder="Enter product name" required>
+                    {% if form.name.errors %}
+                        <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">
+                            {% for error in form.name.errors %}
+                                <div><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label class="form-label">SKU</label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" class="form-control" name="sku" id="sku-input"
+                               value="{{ form.sku.value|default:'' }}" 
+                               placeholder="Leave blank to auto-generate">
+                        <button type="button" id="generate-sku-btn" class="btn btn-outline" 
+                                style="min-width: 120px; font-size: 12px;">
+                            <i class="fas fa-magic"></i> Generate
+                        </button>
+                    </div>
+                    <small style="color: #64748b; font-size: 11px; margin-top: 4px; display: block;">
+                        <i class="fas fa-info-circle"></i> 
+                        SKU will be automatically generated if left empty
+                    </small>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Category *</label>
+                <select class="form-control" name="category" required>
+                    <option value="">---------</option>
+                    {% for category in form.category.field.queryset %}
+                        <option value="{{ category.id }}" 
+                                {% if form.category.value == category.id %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+                {% if form.category.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">
+                        {% for error in form.category.errors %}
+                            <div><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea class="form-control" name="description" rows="4" 
+                          placeholder="Detailed product description">{{ form.description.value|default:'' }}</textarea>
+                {% if form.description.errors %}
+                    <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">
+                        {% for error in form.description.errors %}
+                            <div><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Short Description</label>
+                <textarea class="form-control" name="short_description" rows="2" 
+                          placeholder="Brief product summary">{{ form.short_description.value|default:'' }}</textarea>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                <div class="form-group">
+                    <label class="form-label">Sale Price *</label>
+                    <input type="number" class="form-control" name="price" step="0.01"
+                           value="{{ form.price.value|default:'' }}" 
+                           placeholder="0.00" required>
+                    {% if form.price.errors %}
+                        <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">
+                            {% for error in form.price.errors %}
+                                <div><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small style="color: #64748b; font-size: 11px; margin-top: 4px; display: block;">
+                        <i class="fas fa-info-circle"></i> 
+                        Current selling price to customers
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Regular Price</label>
+                    <input type="number" class="form-control" name="compare_price" step="0.01"
+                           value="{{ form.compare_price.value|default:'' }}" 
+                           placeholder="0.00">
+                    <small style="color: #64748b; font-size: 11px; margin-top: 4px; display: block;">
+                        <i class="fas fa-info-circle"></i> 
+                        Original price (shows discount if higher than sale price)
+                    </small>
+                </div>
+            </div>
+
+            <!-- Optional: Cost Price for admin tracking (hidden from customers) -->
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label class="form-label">Cost Price (Internal)</label>
+                <input type="number" class="form-control" name="cost_price" step="0.01"
+                       value="{{ form.cost_price.value|default:'' }}" 
+                       placeholder="0.00" style="max-width: 300px;">
+                <small style="color: #64748b; font-size: 11px; margin-top: 4px; display: block;">
+                    <i class="fas fa-lock"></i> 
+                    Your cost for this product (for profit calculations, not shown to customers)
+                </small>
+            </div>
+
+            <!-- Inventory Section -->
+            <div style="border-top: 1px solid #e2e8f0; padding-top: 24px; margin-top: 24px;">
+                <h4 style="margin: 0 0 16px 0; color: #1e293b;">
+                    <i class="fas fa-warehouse"></i>
+                    Inventory
+                </h4>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label class="form-label">Stock Quantity *</label>
+                        <input type="number" class="form-control" name="stock_quantity"
+                               value="{{ form.stock_quantity.value|default:'' }}" 
+                               placeholder="0" required>
+                        {% if form.stock_quantity.errors %}
+                            <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">
+                                {% for error in form.stock_quantity.errors %}
+                                    <div><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Low Stock Threshold</label>
+                        <input type="number" class="form-control" name="low_stock_threshold"
+                               value="{{ form.low_stock_threshold.value|default:10 }}" 
+                               placeholder="10">
+                        {% if form.low_stock_threshold.errors %}
+                            <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">
+                                {% for error in form.low_stock_threshold.errors %}
+                                    <div><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                        <small style="color: #64748b; font-size: 11px; margin-top: 4px; display: block;">
+                            <i class="fas fa-info-circle"></i> 
+                            Alert when stock falls below this number
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Images Section -->
+            <div style="border-top: 1px solid #e2e8f0; padding-top: 24px; margin-top: 24px;">
+                <h4 style="margin: 0 0 16px 0; color: #1e293b;">
+                    <i class="fas fa-images"></i>
+                    Product Images
+                    <span id="image-count-badge" style="background: #e5e7eb; color: #6b7280; padding: 2px 8px; border-radius: 12px; font-size: 12px; margin-left: 8px;">0</span>
+                </h4>
+                
+                <!-- Single Combined Image Area -->
+                <div class="form-group">
+                    <div id="image-upload-area" style="
+                        border: 2px dashed #cbd5e1; 
+                        border-radius: 12px; 
+                        padding: 16px; 
+                        background: #f8fafc; 
+                        cursor: pointer; 
+                        transition: all 0.3s;
+                        min-height: 200px;
+                        position: relative;
+                    ">
+                        <!-- Upload Prompt (shown when no images) -->
+                        <div id="upload-prompt" style="text-align: center; padding: 24px;">
+                            <i class="fas fa-cloud-upload-alt fa-2x" style="color: #94a3b8; margin-bottom: 12px;"></i>
+                            <p style="color: #64748b; margin: 0 0 6px 0; font-size: 14px;">Drop images here or click to browse</p>
+                            <p style="color: #94a3b8; margin: 0; font-size: 11px;">Supports: JPG, PNG, WEBP (Max: 10MB each)</p>
+                        </div>
+                        
+                        <!-- Image Grid (shown when images exist) -->
+                        <div id="image-grid" style="
+                            display: grid; 
+                            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); 
+                            gap: 12px;
+                            align-items: start;
+                        ">
+                        </div>
+                        
+                        <input type="file" id="image-input" name="images" multiple accept="image/*" style="display: none;">
+                    </div>
+                    <small style="color: #64748b; font-size: 11px; margin-top: 8px; display: block;">
+                        <i class="fas fa-info-circle"></i> 
+                        First image is always main • Click to move to front • Hover to remove • Drag to reorder
+                    </small>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+    <!-- Right Column - Settings & Additional Info -->
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+        <!-- Shipping Details -->
+        <div class="data-table">
+            <div class="table-header">
+                <h3 class="table-title">Shipping</h3>
+            </div>
+            <div style="padding: 20px;">
+                <div class="form-group">
+                    <label class="form-label">Weight (kg)</label>
+                    <input type="number" class="form-control" name="weight" step="0.01"
+                           value="{{ form.weight.value|default:'' }}" 
+                           placeholder="0.00">
+                    {% if form.weight.errors %}
+                        <div style="color: #dc2626; font-size: 12px; margin-top: 4px;">
+                            {% for error in form.weight.errors %}
+                                <div><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    <small style="color: #64748b; font-size: 11px; margin-top: 4px; display: block;">
+                        <i class="fas fa-info-circle"></i> 
+                        Product weight in kilograms (max 2 decimal places)
+                    </small>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Dimensions (cm)</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px;">
+                        <div>
+                            <label style="font-size: 12px; color: #64748b; margin-bottom: 4px; display: block;">Length</label>
+                            <input type="number" class="form-control" name="length" step="0.01"
+                                   value="{{ form.length.value|default:'' }}" 
+                                   placeholder="0.00">
+                            {% if form.length.errors %}
+                                <div style="color: #dc2626; font-size: 10px; margin-top: 2px;">
+                                    {% for error in form.length.errors %}
+                                        <div><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: #64748b; margin-bottom: 4px; display: block;">Width</label>
+                            <input type="number" class="form-control" name="width" step="0.01"
+                                   value="{{ form.width.value|default:'' }}" 
+                                   placeholder="0.00">
+                            {% if form.width.errors %}
+                                <div style="color: #dc2626; font-size: 10px; margin-top: 2px;">
+                                    {% for error in form.width.errors %}
+                                        <div><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: #64748b; margin-bottom: 4px; display: block;">Height</label>
+                            <input type="number" class="form-control" name="height" step="0.01"
+                                   value="{{ form.height.value|default:'' }}" 
+                                   placeholder="0.00">
+                            {% if form.height.errors %}
+                                <div style="color: #dc2626; font-size: 10px; margin-top: 2px;">
+                                    {% for error in form.height.errors %}
+                                        <div><i class="fas fa-exclamation-circle"></i> {{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <small style="color: #64748b; font-size: 11px; margin-top: 4px; display: block;">
+                        <i class="fas fa-info-circle"></i> 
+                        Enter dimensions in centimeters (cm)
+                    </small>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Product Status -->
+        <div class="data-table">
+            <div class="table-header">
+                <h3 class="table-title">Status</h3>
+            </div>
+            <div style="padding: 20px;">
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; transition: all 0.2s;">
+                        <input type="checkbox" name="is_active" 
+                               {% if form.is_active.value %}checked{% endif %}
+                               style="transform: scale(1.2);">
+                        <div>
+                            <span class="form-label" style="margin: 0; font-weight: 600;">Product Active</span>
+                            <div style="font-size: 12px; color: #64748b;">Visible in store</div>
+                        </div>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 12px; border: 2px solid #e5e7eb; border-radius: 8px; transition: all 0.2s;">
+                        <input type="checkbox" name="is_featured" 
+                               {% if form.is_featured.value %}checked{% endif %}
+                               style="transform: scale(1.2);">
+                        <div>
+                            <span class="form-label" style="margin: 0; font-weight: 600;">Featured Product</span>
+                            <div style="font-size: 12px; color: #64748b;">Show on homepage</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- SEO Settings -->
+        <div class="data-table">
+            <div class="table-header">
+                <h3 class="table-title">SEO Settings</h3>
+            </div>
+            <div style="padding: 20px;">
+                <div class="form-group">
+                    <label class="form-label">Meta Title</label>
+                    <input type="text" class="form-control" name="meta_title"
+                           value="{{ form.meta_title.value|default:'' }}" 
+                           placeholder="SEO title for search engines">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Meta Description</label>
+                    <textarea class="form-control" name="meta_description" rows="3"
+                              placeholder="SEO description for search engines">{{ form.meta_description.value|default:'' }}</textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+        <!-- Form Actions -->
+        <div style="display: flex; gap: 16px; justify-content: flex-end; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+            <a href="/products/" class="btn btn-outline">
+                <i class="fas fa-times"></i>
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-primary" id="submit-btn">
+                <i class="fas fa-save"></i>
+                {% if object %}Update Product{% else %}Create Product{% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+</form>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- Sortable.js for drag and drop -->
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DEBUG: DOMContentLoaded event fired');
+    console.log('DEBUG: Starting form initialization');
+    
+    // SKU Generation
+    const nameInput = document.querySelector('input[name="name"]');
+    const skuInput = document.querySelector('#sku-input');
+    const generateSkuBtn = document.querySelector('#generate-sku-btn');
+    const categorySelect = document.querySelector('select[name="category"]');
+    
+    console.log('DEBUG: Form elements found:', {
+        nameInput: !!nameInput,
+        skuInput: !!skuInput,
+        generateSkuBtn: !!generateSkuBtn,
+        categorySelect: !!categorySelect
+    });
+    
+    function generateSKU() {
+        const productName = nameInput ? nameInput.value.trim() : '';
+        const categoryId = categorySelect ? categorySelect.value : '';
+        const categoryText = categorySelect && categorySelect.selectedIndex >= 0 ? categorySelect.options[categorySelect.selectedIndex].text : '';
+        
+        if (!productName) {
+            // Show a more user-friendly notification instead of alert
+            showNotification('Please enter a product name first', 'warning');
+            if (nameInput) {
+                nameInput.focus();
+                nameInput.style.borderColor = '#f59e0b';
+                setTimeout(() => {
+                    nameInput.style.borderColor = '';
+                }, 2000);
+            }
+            return false;
+        }
+        
+        // Create base SKU from product name (first 3 letters)
+        let namePart = productName.replace(/[^a-zA-Z]/g, '').toUpperCase().substring(0, 3);
+        if (namePart.length < 3) {
+            namePart = namePart.padEnd(3, 'X');
+        }
+        
+        // Create category part (first 2 letters of each word)
+        let categoryPart = 'XX';
+        if (categoryText && categoryText !== '---------') {
+            categoryPart = categoryText.split(' ')
+                .map(word => word.charAt(0).toUpperCase())
+                .join('')
+                .substring(0, 2);
+            if (categoryPart.length < 2) {
+                categoryPart = categoryPart.padEnd(2, 'X');
+            }
+        }
+        
+        // Generate random 4-digit number
+        const randomPart = Math.floor(1000 + Math.random() * 9000);
+        
+        const generatedSKU = `${namePart}${categoryPart}${randomPart}`;
+        skuInput.value = generatedSKU;
+        
+        // Add visual feedback
+        // SKU generated silently
+        skuInput.style.backgroundColor = '#f0f9ff';
+        skuInput.style.borderColor = '#3b82f6';
+        setTimeout(() => {
+            skuInput.style.backgroundColor = '';
+            skuInput.style.borderColor = '';
+        }, 1500);
+        
+        return true;
+    }
+    
+    // Simple notification system
+    function showNotification(message, type = 'info') {
+        // Remove any existing notifications
+        const existingNotification = document.querySelector('.temp-notification');
+        if (existingNotification) {
+            existingNotification.remove();
+        }
+        
+        const notification = document.createElement('div');
+        notification.className = 'temp-notification';
+        notification.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 12px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 10000;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            font-size: 14px;
+            background: ${type === 'success' ? '#10b981' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
+        `;
+        
+        notification.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                <span>${message}</span>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                notification.style.transition = 'all 0.3s ease';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }
+        }, 3000);
+    }
+    
+    // Disable mouse wheel on number inputs to prevent accidental value changes
+    const numberInputs = document.querySelectorAll('input[type="number"]');
+    numberInputs.forEach(input => {
+        input.addEventListener('wheel', function(e) {
+            e.preventDefault();
+            this.blur(); // Remove focus to prevent any potential issues
+        });
+        
+        // Also prevent focus from wheel events
+        input.addEventListener('focus', function() {
+            this.addEventListener('wheel', function(e) {
+                e.preventDefault();
+            });
+        });
+    });
+
+    // Generate SKU button click
+    if (generateSkuBtn) {
+        generateSkuBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            generateSKU();
+        });
+    }
+    
+    // Auto-generate when name or category changes (only if SKU is empty)
+    if (nameInput && skuInput) {
+        nameInput.addEventListener('blur', function() {
+            if (!skuInput.value.trim() && nameInput.value.trim()) {
+                generateSKU();
+            }
+        });
+    }
+    
+    if (categorySelect && skuInput) {
+        categorySelect.addEventListener('change', function() {
+            if (!skuInput.value.trim() && nameInput && nameInput.value.trim()) {
+                generateSKU();
+            }
+        });
+    }
+    
+    // Image Management System
+    let uploadedImages = [];
+    let mainImageIndex = 0;
+    
+    // Image upload functionality
+    const uploadArea = document.getElementById('image-upload-area');
+    const imageInput = document.getElementById('image-input');
+    const imageContainer = document.getElementById('image-grid');
+    const uploadPrompt = document.getElementById('upload-prompt');
+    const imageCountBadge = document.getElementById('image-count-badge');
+    
+    // Drag and drop events (only if elements exist)
+    if (uploadArea && imageInput) {
+        uploadArea.addEventListener('click', (e) => {
+            // Only open file dialog if clicking on empty space or upload prompt
+            if (e.target === uploadArea || e.target.closest('#upload-prompt')) {
+                imageInput.click();
+            }
+        });
+        
+        uploadArea.addEventListener('dragover', handleDragOver);
+        uploadArea.addEventListener('drop', handleDrop);
+        uploadArea.addEventListener('dragenter', () => uploadArea.style.borderColor = '#3b82f6');
+        uploadArea.addEventListener('dragleave', () => uploadArea.style.borderColor = '#cbd5e1');
+        
+        // File input change
+        imageInput.addEventListener('change', handleFileSelect);
+    }
+    
+    function handleDragOver(e) {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#3b82f6';
+        uploadArea.style.backgroundColor = '#eff6ff';
+    }
+    
+    function handleDrop(e) {
+        e.preventDefault();
+        uploadArea.style.borderColor = '#cbd5e1';
+        uploadArea.style.backgroundColor = '#f8fafc';
+        
+        const files = Array.from(e.dataTransfer.files);
+        processFiles(files);
+    }
+    
+    function handleFileSelect(e) {
+        const files = Array.from(e.target.files);
+        processFiles(files);
+    }
+    
+    function processFiles(files) {
+        files.forEach(file => {
+            if (file.type.startsWith('image/') && file.size <= 10 * 1024 * 1024) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    addImageToGrid({
+                        file: file,
+                        src: e.target.result,
+                        name: file.name,
+                        size: file.size
+                    });
+                };
+                reader.readAsDataURL(file);
+            } else {
+            }
+        });
+    }
+    
+    function addImageToGrid(imageData) {
+        const imageIndex = uploadedImages.length;
+        uploadedImages.push(imageData);
+        
+        // First image is always main
+        if (imageIndex === 0) {
+            mainImageIndex = 0;
+        }
+        
+        if (imageContainer) {
+            const imageElement = createImageElement(imageData, imageIndex);
+            imageContainer.appendChild(imageElement);
+            
+            updateImageDisplay();
+            // Image uploaded silently
+        } else {
+            console.error('Image container not found!');
+        }
+    }
+    
+    function updateImageDisplay() {
+        const count = uploadedImages.length;
+        
+        // Update count badge
+        if (imageCountBadge) {
+            imageCountBadge.textContent = count;
+            imageCountBadge.style.background = count > 0 ? '#10b981' : '#e5e7eb';
+            imageCountBadge.style.color = count > 0 ? 'white' : '#6b7280';
+        }
+        
+        // Show/hide upload prompt
+        if (uploadPrompt) {
+            uploadPrompt.style.display = count > 0 ? 'none' : 'block';
+        }
+        
+        // Update container styling
+        if (uploadArea) {
+            if (count > 0) {
+                uploadArea.style.padding = '16px';
+                uploadArea.style.minHeight = 'auto';
+            } else {
+                uploadArea.style.padding = '16px';
+                uploadArea.style.minHeight = '200px';
+            }
+        }
+    }
+    
+    function setMainImage(index) {
+        if (index !== 0) {
+            // Move clicked image to first position
+            const clickedImage = uploadedImages[index];
+            uploadedImages.splice(index, 1);
+            uploadedImages.unshift(clickedImage);
+            
+            // Rebuild the entire grid with new order
+            rebuildImageGrid();
+            // Image moved silently
+        } else {
+            // Already main image - no notification
+        }
+    }
+    
+    function rebuildImageGrid() {
+        // Clear current grid
+        if (imageContainer) {
+            imageContainer.innerHTML = '';
+        }
+        
+        // Re-add all images in new order
+        uploadedImages.forEach((imageData, index) => {
+            const imageElement = createImageElement(imageData, index);
+            imageContainer.appendChild(imageElement);
+        });
+        
+        // First image is always main
+        mainImageIndex = 0;
+        updateImageDisplay();
+    }
+    
+    function removeImage(index) {
+        const imageElement = document.querySelector(`[data-index="${index}"]`);
+        if (imageElement) {
+            const imageName = uploadedImages[index].name;
+            
+            // Remove from DOM and array
+            imageElement.remove();
+            uploadedImages.splice(index, 1);
+            
+            // Reindex remaining images
+            document.querySelectorAll('.image-item').forEach((item, newIndex) => {
+                item.dataset.index = newIndex;
+            });
+            
+            // Update main image index if needed
+            if (index === mainImageIndex) {
+                mainImageIndex = 0; // Reset to first image
+                if (uploadedImages.length > 0) {
+                    setMainImage(0);
+                }
+            } else if (index < mainImageIndex) {
+                mainImageIndex--;
+            }
+            
+            updateImageDisplay();
+            // Image removed silently
+        }
+    }
+    
+    function createImageElement(imageData, index) {
+        const div = document.createElement('div');
+        div.className = 'image-item';
+        div.style.cssText = `
+            position: relative;
+            border: 3px solid ${index === mainImageIndex ? '#f59e0b' : 'transparent'};
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        `;
+        div.dataset.index = index;
+        
+        div.innerHTML = `
+            <div style="position: relative;">
+                <img src="${imageData.src}" 
+                     style="width: 100%; height: 140px; object-fit: cover; display: block;">
+                
+                <!-- Main Image Badge -->
+                <div class="main-badge" style="
+                    position: absolute; top: 8px; left: 8px; 
+                    background: linear-gradient(135deg, #f59e0b, #d97706); 
+                    color: white; padding: 4px 8px; border-radius: 6px; 
+                    font-size: 10px; font-weight: 600;
+                    display: ${index === mainImageIndex ? 'block' : 'none'};
+                    z-index: 10;
+                ">
+                    <i class="fas fa-star"></i> MAIN
+                </div>
+                
+                <!-- Remove Button (appears on hover) -->
+                <div class="remove-btn" style="
+                    position: absolute; top: 8px; right: 8px;
+                    background: #ef4444; color: white;
+                    width: 24px; height: 24px; border-radius: 50%;
+                    display: flex; align-items: center; justify-content: center;
+                    cursor: pointer; opacity: 0; transition: opacity 0.3s;
+                    z-index: 10; font-size: 12px;
+                " data-remove-index="${index}">
+                    <i class="fas fa-times"></i>
+                </div>
+                
+                <!-- Drag Handle -->
+                <div class="drag-handle" style="
+                    position: absolute; bottom: 8px; right: 8px;
+                    background: rgba(0,0,0,0.7); color: white;
+                    padding: 6px; border-radius: 6px; cursor: grab;
+                    opacity: 0; transition: opacity 0.3s;
+                    z-index: 10;
+                " onmousedown="event.stopPropagation()">
+                    <i class="fas fa-grip-vertical"></i>
+                </div>
+                
+                <!-- Image Info -->
+                <div class="image-info" style="
+                    position: absolute; bottom: 0; left: 0; right: 0;
+                    background: linear-gradient(transparent, rgba(0,0,0,0.8));
+                    color: white; padding: 8px; font-size: 11px;
+                    opacity: 0; transition: opacity 0.3s;
+                ">
+                    <div style="font-weight: 600;">${imageData.name.substring(0, 20)}${imageData.name.length > 20 ? '...' : ''}</div>
+                    <div>${formatFileSize(imageData.size)}</div>
+                </div>
+            </div>
+        `;
+        
+        // Hover effects
+        div.addEventListener('mouseenter', (e) => {
+            e.stopPropagation(); // Prevent any parent events
+            div.querySelector('.remove-btn').style.opacity = '1';
+            div.querySelector('.drag-handle').style.opacity = '1';
+            div.querySelector('.image-info').style.opacity = '1';
+            div.style.transform = 'translateY(-2px)';
+            div.style.boxShadow = '0 8px 25px rgba(0,0,0,0.2)';
+        });
+        
+        div.addEventListener('mouseleave', (e) => {
+            e.stopPropagation(); // Prevent any parent events
+            div.querySelector('.remove-btn').style.opacity = '0';
+            div.querySelector('.drag-handle').style.opacity = '0';
+            div.querySelector('.image-info').style.opacity = '0';
+            div.style.transform = 'translateY(0)';
+            div.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)';
+        });
+        
+        // Click to move to first position (main)
+        div.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent upload area click
+            if (!e.target.closest('.remove-btn')) {
+                setMainImage(index);
+            }
+        });
+        
+        // Add remove button click handler
+        const removeBtn = div.querySelector('.remove-btn');
+        if (removeBtn) {
+            removeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeImage(index);
+            });
+        }
+        
+        return div;
+    }
+    
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+    }
+    
+    
+    // Make images sortable (only if container exists)
+    if (imageContainer) {
+        new Sortable(imageContainer, {
+            animation: 200,
+            handle: '.drag-handle',
+            ghostClass: 'sortable-ghost',
+            chosenClass: 'sortable-chosen',
+            dragClass: 'sortable-drag',
+            onEnd: function(evt) {
+                // Update the uploadedImages array order
+                const movedImage = uploadedImages.splice(evt.oldIndex, 1)[0];
+                uploadedImages.splice(evt.newIndex, 0, movedImage);
+                
+                // First image is always main
+                mainImageIndex = 0;
+                
+                // Rebuild grid to update main image styling
+                rebuildImageGrid();
+                // Images reordered silently
+            }
+        });
+    }
+    
+    // Form validation
+    const form = document.querySelector('form');
+    console.log('DEBUG: Form element found:', form);
+    
+    if (!form) {
+        console.error('ERROR: Form element not found!');
+        return;
+    }
+    
+    form.addEventListener('submit', function(e) {
+        console.log('DEBUG: Form submit triggered');
+        console.log('DEBUG: uploadedImages array:', uploadedImages);
+        console.log('DEBUG: uploadedImages.length:', uploadedImages.length);
+        
+        const name = document.querySelector('input[name="name"]').value;
+        const sku = document.querySelector('input[name="sku"]').value;
+        const price = document.querySelector('input[name="price"]').value;
+        
+        console.log('DEBUG: Form values - name:', name, 'sku:', sku, 'price:', price);
+        
+        // Auto-generate SKU if empty before validation
+        if (!sku && name) {
+            console.log('DEBUG: Auto-generating SKU before form submission');
+            generateSKU();
+            // Re-check SKU value after generation
+            const newSku = document.querySelector('input[name="sku"]').value;
+            console.log('DEBUG: SKU after generation:', newSku);
+        }
+        
+        if (!name || !price) {
+            console.log('DEBUG: Form validation failed - missing required fields');
+            e.preventDefault();
+            return false;
+        }
+        
+        // Add image data to form
+        if (uploadedImages.length > 0) {
+            console.log('DEBUG: Adding image data to form');
+            // Create hidden inputs for image data
+            uploadedImages.forEach((image, index) => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `image_data_${index}`;
+                const imageData = {
+                    src: image.src,
+                    name: image.name,
+                    isMain: index === mainImageIndex
+                };
+                input.value = JSON.stringify(imageData);
+                form.appendChild(input);
+                console.log(`DEBUG: Added hidden input image_data_${index}:`, imageData.name);
+            });
+        } else {
+            console.log('DEBUG: No uploaded images to process');
+        }
+        
+    });
+    
+    // Additional debugging - direct button click handler
+    const submitBtn = document.querySelector('#submit-btn');
+    if (submitBtn) {
+        console.log('DEBUG: Submit button found, adding click handler');
+        submitBtn.addEventListener('click', function(e) {
+            console.log('DEBUG: Submit button clicked directly');
+            console.log('DEBUG: Button type:', submitBtn.type);
+            console.log('DEBUG: Default prevented:', e.defaultPrevented);
+            console.log('DEBUG: Event target:', e.target);
+            console.log('DEBUG: Will form submit normally');
+        });
+    } else {
+        console.error('ERROR: Submit button not found');
+    }
+    
+    console.log('DEBUG: All event listeners attached successfully');
+});
+
+// Image removal now handled by event listeners within proper scope
+</script>
+
+<style>
+.sortable-ghost {
+    opacity: 0.4;
+}
+
+.sortable-chosen {
+    cursor: grabbing;
+}
+
+.sortable-drag {
+    transform: rotate(5deg);
+    opacity: 0.8;
+}
+
+.image-item:hover .drag-handle {
+    background: rgba(59, 130, 246, 0.8) !important;
+}
+
+.image-item:hover {
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

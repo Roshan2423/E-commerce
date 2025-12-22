@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}E-Commerce Admin Panel{% endblock %}</title>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    {% load static %}
+    <link href="{% static 'css/admin.css' %}" rel="stylesheet">
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Modern Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <h3>
+                    <span style="font-weight: 900;">OVN Store</span>
+                </h3>
+            </div>
+
+            <div class="nav-menu">
+                <ul>
+                    <li class="{% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}">
+                        <a href="/dashboard/">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    
+                    <li class="{% if request.resolver_match.app_name == 'products' %}active{% endif %}">
+                        <a href="#" class="dropdown-toggle" data-target="products-menu">
+                            <i class="fas fa-box"></i>
+                            <span>Products</span>
+                            <i class="fas fa-chevron-down" style="margin-left: auto; font-size: 12px;"></i>
+                        </a>
+                        <div class="dropdown-menu" id="products-menu">
+                            <a href="/products/">
+                                <i class="fas fa-list"></i>
+                                All Products
+                            </a>
+                            <a href="/products/add/">
+                                <i class="fas fa-plus"></i>
+                                Add Product
+                            </a>
+                            <a href="/products/categories/">
+                                <i class="fas fa-tags"></i>
+                                Categories
+                            </a>
+                        </div>
+                    </li>
+
+                    <li class="{% if request.resolver_match.app_name == 'orders' %}active{% endif %}">
+                        <a href="#" class="dropdown-toggle" data-target="orders-menu">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Orders</span>
+                            <i class="fas fa-chevron-down" style="margin-left: auto; font-size: 12px;"></i>
+                        </a>
+                        <div class="dropdown-menu" id="orders-menu">
+                            <a href="/orders/">
+                                <i class="fas fa-list"></i>
+                                All Orders
+                            </a>
+                            <a href="/orders/?status=pending">
+                                <i class="fas fa-clock"></i>
+                                Pending Orders
+                            </a>
+                            <a href="/orders/?status=processing">
+                                <i class="fas fa-cog"></i>
+                                Processing
+                            </a>
+                        </div>
+                    </li>
+
+                    <li class="{% if request.resolver_match.app_name == 'reports' %}active{% endif %}">
+                        <a href="#" class="dropdown-toggle" data-target="reports-menu">
+                            <i class="fas fa-chart-bar"></i>
+                            <span>Analytics</span>
+                            <i class="fas fa-chevron-down" style="margin-left: auto; font-size: 12px;"></i>
+                        </a>
+                        <div class="dropdown-menu" id="reports-menu">
+                            <a href="{% url 'reports:sales' %}">
+                                <i class="fas fa-dollar-sign"></i>
+                                Sales Report
+                            </a>
+                            <a href="{% url 'reports:products' %}">
+                                <i class="fas fa-chart-pie"></i>
+                                Product Analytics
+                            </a>
+                            <a href="{% url 'reports:customers' %}">
+                                <i class="fas fa-users"></i>
+                                Customer Insights
+                            </a>
+                        </div>
+                    </li>
+
+
+                    <li>
+                        <a href="/login/logout/" class="logout-link">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <!-- Top Navigation -->
+            <nav class="top-navbar">
+                
+                <div class="user-menu">
+                    <div class="user-info">
+                        <span style="color: #666; font-size: 14px;">{{ user.get_full_name|default:user.username }}</span>
+                    </div>
+                    <div class="user-avatar">
+                        {{ user.first_name.0|default:"A" }}{{ user.last_name.0|default:"" }}
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <div class="main-content">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert {{ message.tags }} fade-in">
+                            <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Custom JS -->
+    <script src="{% static 'js/admin.js' %}"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,249 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Reports & Analytics - E-Commerce Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fas fa-chart-bar"></i>
+        Reports & Analytics
+    </h1>
+    <p class="page-subtitle">Business insights and performance metrics</p>
+</div>
+
+<!-- Reports Introduction -->
+<div class="data-table" style="margin-bottom: 32px;">
+    <div style="padding: 32px; text-align: center;">
+        <h2 style="color: #1e293b; margin: 0 0 16px 0;">Business Analytics & Reports</h2>
+        <p style="color: #64748b; margin: 0; max-width: 600px; margin: 0 auto;">
+            Generate insights about your business performance, track sales trends, and make data-driven decisions.
+            Add your data to see detailed analytics here.
+        </p>
+    </div>
+</div>
+
+<!-- Report Categories -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px;">
+    <!-- Sales Reports -->
+    <div class="data-table">
+        <div class="table-header">
+            <h3 class="table-title">
+                <i class="fas fa-chart-line"></i>
+                Sales Reports
+            </h3>
+        </div>
+        <div style="padding: 32px;">
+            <p style="color: #64748b; margin: 0 0 24px 0;">
+                Analyze your sales performance, revenue trends, and growth patterns.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <a href="/reports/sales/" class="btn btn-primary" style="justify-content: space-between;">
+                    <span>
+                        <i class="fas fa-chart-line"></i>
+                        Sales Overview
+                    </span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="/reports/sales/?period=monthly" class="btn btn-outline" style="justify-content: space-between;">
+                    <span>
+                        <i class="fas fa-calendar"></i>
+                        Monthly Sales
+                    </span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="/reports/sales/?period=yearly" class="btn btn-outline" style="justify-content: space-between;">
+                    <span>
+                        <i class="fas fa-calendar-alt"></i>
+                        Yearly Trends
+                    </span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Reports -->
+    <div class="data-table">
+        <div class="table-header">
+            <h3 class="table-title">
+                <i class="fas fa-box"></i>
+                Product Analytics
+            </h3>
+        </div>
+        <div style="padding: 32px;">
+            <p style="color: #64748b; margin: 0 0 24px 0;">
+                Track product performance, inventory levels, and popular items.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <a href="/reports/products/" class="btn btn-success" style="justify-content: space-between;">
+                    <span>
+                        <i class="fas fa-chart-pie"></i>
+                        Product Performance
+                    </span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="/reports/products/?type=bestsellers" class="btn btn-outline" style="justify-content: space-between;">
+                    <span>
+                        <i class="fas fa-trophy"></i>
+                        Best Sellers
+                    </span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="/reports/products/?type=inventory" class="btn btn-outline" style="justify-content: space-between;">
+                    <span>
+                        <i class="fas fa-boxes"></i>
+                        Inventory Status
+                    </span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Reports -->
+    <div class="data-table">
+        <div class="table-header">
+            <h3 class="table-title">
+                <i class="fas fa-users"></i>
+                Customer Insights
+            </h3>
+        </div>
+        <div style="padding: 32px;">
+            <p style="color: #64748b; margin: 0 0 24px 0;">
+                Understand your customers, their behavior, and preferences.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <a href="/reports/customers/" class="btn btn-warning" style="justify-content: space-between;">
+                    <span>
+                        <i class="fas fa-user-friends"></i>
+                        Customer Overview
+                    </span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="/reports/customers/?type=acquisition" class="btn btn-outline" style="justify-content: space-between;">
+                    <span>
+                        <i class="fas fa-user-plus"></i>
+                        New Customers
+                    </span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+                <a href="/reports/customers/?type=retention" class="btn btn-outline" style="justify-content: space-between;">
+                    <span>
+                        <i class="fas fa-heart"></i>
+                        Customer Retention
+                    </span>
+                    <i class="fas fa-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Reports -->
+    <div class="data-table">
+        <div class="table-header">
+            <h3 class="table-title">
+                <i class="fas fa-cog"></i>
+                Custom Reports
+            </h3>
+        </div>
+        <div style="padding: 32px;">
+            <p style="color: #64748b; margin: 0 0 24px 0;">
+                Create and customize reports based on your specific needs.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <button onclick="createCustomReport()" class="btn btn-primary" style="justify-content: space-between;">
+                    <span>
+                        <i class="fas fa-plus"></i>
+                        Create Report
+                    </span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <button onclick="scheduleReport()" class="btn btn-outline" style="justify-content: space-between;">
+                    <span>
+                        <i class="fas fa-clock"></i>
+                        Schedule Report
+                    </span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+                <button onclick="exportData()" class="btn btn-outline" style="justify-content: space-between;">
+                    <span>
+                        <i class="fas fa-download"></i>
+                        Export Data
+                    </span>
+                    <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Getting Started -->
+<div class="data-table" style="margin-top: 32px;">
+    <div class="table-header">
+        <h3 class="table-title">
+            <i class="fas fa-rocket"></i>
+            Getting Started with Reports
+        </h3>
+    </div>
+    <div style="padding: 32px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+            <div>
+                <h5 style="color: #1e293b; margin: 0 0 16px 0;">Step 1: Add Your Data</h5>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    <li style="padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
+                        <i class="fas fa-box" style="color: #3b82f6; margin-right: 8px;"></i>
+                        <a href="/products/add/" style="text-decoration: none;">Add products to your catalog</a>
+                    </li>
+                    <li style="padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
+                        <i class="fas fa-tags" style="color: #10b981; margin-right: 8px;"></i>
+                        <a href="/products/categories/" style="text-decoration: none;">Create product categories</a>
+                    </li>
+                    <li style="padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
+                        <i class="fas fa-users" style="color: #f59e0b; margin-right: 8px;"></i>
+                        Wait for customer registrations
+                    </li>
+                    <li style="padding: 8px 0;">
+                        <i class="fas fa-shopping-cart" style="color: #ef4444; margin-right: 8px;"></i>
+                        Process customer orders
+                    </li>
+                </ul>
+            </div>
+            
+            <div>
+                <h5 style="color: #1e293b; margin: 0 0 16px 0;">Step 2: View Analytics</h5>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    <li style="padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
+                        <strong>Sales Reports</strong> - Track revenue and growth
+                    </li>
+                    <li style="padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
+                        <strong>Product Analytics</strong> - Monitor product performance
+                    </li>
+                    <li style="padding: 8px 0; border-bottom: 1px solid #f1f5f9;">
+                        <strong>Customer Insights</strong> - Understand your audience
+                    </li>
+                    <li style="padding: 8px 0;">
+                        <strong>Custom Reports</strong> - Build specific analytics
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function createCustomReport() {
+}
+
+function scheduleReport() {
+}
+
+function exportData() {
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+});
+</script>
+{% endblock %}

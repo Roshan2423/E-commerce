@@ -1,0 +1,239 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Orders - E-Commerce Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fas fa-shopping-cart"></i>
+        Order Management
+    </h1>
+    <p class="page-subtitle">Monitor and manage all customer orders</p>
+</div>
+
+<!-- Order Stats -->
+<div class="stats-grid" style="margin-bottom: 32px;">
+    <div class="stat-card">
+        <div class="stat-icon warning">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-value">{{ orders|length }}</div>
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i>
+            +12% this month
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon primary">
+            <i class="fas fa-cog"></i>
+        </div>
+        <div class="stat-value">5</div>
+        <div class="stat-label">Processing Orders</div>
+        <div class="stat-change">
+            <i class="fas fa-minus"></i>
+            Need attention
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon success">
+            <i class="fas fa-truck"></i>
+        </div>
+        <div class="stat-value">23</div>
+        <div class="stat-label">Shipped Today</div>
+        <div class="stat-change positive">
+            <i class="fas fa-arrow-up"></i>
+            On schedule
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon danger">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-value">2</div>
+        <div class="stat-label">Pending Issues</div>
+        <div class="stat-change negative">
+            <i class="fas fa-arrow-down"></i>
+            Requires action
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="data-table" style="margin-bottom: 24px;">
+    <div style="padding: 24px;">
+        <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Search Orders</label>
+                <input type="text" class="form-control" name="search" 
+                       value="{{ search }}" placeholder="Search by order ID...">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Order Status</label>
+                <select class="form-control" name="status">
+                    <option value="">All Status</option>
+                    {% for choice in status_choices %}
+                    <option value="{{ choice.0 }}" {% if choice.0 == selected_status %}selected{% endif %}>
+                        {{ choice.1 }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Payment Status</label>
+                <select class="form-control" name="payment_status">
+                    <option value="">All Payments</option>
+                    {% for choice in payment_status_choices %}
+                    <option value="{{ choice.0 }}" {% if choice.0 == selected_payment_status %}selected{% endif %}>
+                        {{ choice.1 }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i>
+                    Filter
+                </button>
+                <a href="/orders/" class="btn btn-outline">
+                    <i class="fas fa-times"></i>
+                    Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Orders Table -->
+<div class="data-table">
+    <div class="table-header">
+        <h3 class="table-title">Orders ({{ orders|length }} found)</h3>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Items</th>
+                    <th>Order Status</th>
+                    <th>Payment</th>
+                    <th>Total</th>
+                    <th>Date</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td>
+                        <div>
+                            <strong>#{{ order.get_order_number }}</strong>
+                        </div>
+                        <div style="font-size: 12px; color: #64748b;">
+                            {{ order.order_id|slice:":8" }}...
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <strong>{{ order.user.get_full_name|default:order.user.email }}</strong>
+                        </div>
+                        <div style="font-size: 12px; color: #64748b;">
+                            {{ order.user.email }}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="badge primary">{{ order.items.count|default:1 }} items</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="badge {% if order.status == 'delivered' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'cancelled' %}danger{% elif order.status == 'processing' %}primary{% else %}primary{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge {% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'pending' %}warning{% elif order.payment_status == 'failed' %}danger{% else %}primary{% endif %}">
+                            {{ order.get_payment_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <strong>${{ order.total_amount|default:0|floatformat:2 }}</strong>
+                    </td>
+                    <td>
+                        <div>{{ order.created_at|date:"M d, Y" }}</div>
+                        <div style="font-size: 12px; color: #64748b;">
+                            {{ order.created_at|time:"H:i" }}
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 8px;">
+                            <a href="/orders/{{ order.order_id }}/" 
+                               class="btn btn-outline" style="padding: 8px 12px;">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="/orders/{{ order.order_id }}/update/" 
+                               class="btn btn-warning" style="padding: 8px 12px;">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% if order.status == 'pending' %}
+                            <a href="/orders/{{ order.order_id }}/cancel/" 
+                               class="btn btn-danger" style="padding: 8px 12px;"
+                               onclick="return confirm('Cancel this order?')">
+                                <i class="fas fa-times"></i>
+                            </a>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 60px;">
+                        <i class="fas fa-shopping-cart fa-3x" style="color: #cbd5e1; margin-bottom: 20px;"></i>
+                        <h3 style="color: #64748b; margin: 0 0 8px 0;">No orders yet</h3>
+                        <p style="color: #64748b; margin: 0;">Orders will appear here when customers start purchasing</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+{% if not orders %}
+<div class="data-table" style="margin-top: 24px;">
+    <div style="padding: 60px; text-align: center;">
+        <i class="fas fa-shopping-cart fa-3x" style="color: #cbd5e1; margin-bottom: 20px;"></i>
+        <h3 style="color: #64748b; margin: 0 0 8px 0;">No orders yet</h3>
+        <p style="color: #64748b; margin: 0 0 24px 0;">Orders will appear here when customers start purchasing</p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <a href="/products/" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Add Products
+            </a>
+            <a href="/dashboard/" class="btn btn-outline">
+                <i class="fas fa-chart-bar"></i>
+                View Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-refresh order counts every 30 seconds
+    setInterval(function() {
+        // You can add AJAX call here to refresh order counts
+    }, 30000);
+    
+});
+</script>
+{% endblock %}

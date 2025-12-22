@@ -1,0 +1,184 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - Product Details{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fas fa-box"></i>
+        {{ product.name }}
+    </h1>
+    <p class="page-subtitle">Product details and information</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 300px; gap: 32px;">
+    <!-- Main Product Details -->
+    <div class="data-table">
+        <div class="table-header">
+            <h3 class="table-title">Product Information</h3>
+            <div style="display: flex; gap: 8px;">
+                <a href="/products/{{ product.pk }}/edit/" class="btn btn-warning">
+                    <i class="fas fa-edit"></i>
+                    Edit
+                </a>
+                <a href="/products/{{ product.pk }}/delete/" class="btn btn-danger">
+                    <i class="fas fa-trash"></i>
+                    Delete
+                </a>
+            </div>
+        </div>
+        <div style="padding: 32px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+                <div>
+                    <h4 style="margin: 0 0 16px 0; color: #1e293b;">Basic Information</h4>
+                    <table style="width: 100%;">
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748b; width: 120px;">Name:</td>
+                            <td style="padding: 8px 0;"><strong>{{ product.name }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748b;">SKU:</td>
+                            <td style="padding: 8px 0;"><code>{{ product.sku|default:"N/A" }}</code></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Category:</td>
+                            <td style="padding: 8px 0;">{{ product.category.name|default:"No Category" }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Status:</td>
+                            <td style="padding: 8px 0;">
+                                {% if product.is_active %}
+                                    <span class="badge success">Active</span>
+                                {% else %}
+                                    <span class="badge danger">Inactive</span>
+                                {% endif %}
+                                {% if product.is_featured %}
+                                    <span class="badge warning">Featured</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div>
+                    <h4 style="margin: 0 0 16px 0; color: #1e293b;">Pricing</h4>
+                    <table style="width: 100%;">
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748b; width: 120px;">Price:</td>
+                            <td style="padding: 8px 0;"><strong>${{ product.price|default:0|floatformat:2 }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Compare Price:</td>
+                            <td style="padding: 8px 0;">${{ product.compare_price|default:0|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Cost Price:</td>
+                            <td style="padding: 8px 0;">${{ product.cost_price|default:0|floatformat:2 }}</td>
+                        </tr>
+                        {% if product.compare_price %}
+                        <tr>
+                            <td style="padding: 8px 0; color: #64748b;">Savings:</td>
+                            <td style="padding: 8px 0;">
+                                <span style="color: #10b981; font-weight: 600;">
+                                    {{ product.get_discount_percentage }}% OFF
+                                </span>
+                            </td>
+                        </tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+            
+            {% if product.description %}
+            <div style="margin-top: 32px; padding-top: 32px; border-top: 1px solid #e2e8f0;">
+                <h4 style="margin: 0 0 16px 0; color: #1e293b;">Description</h4>
+                <div style="color: #64748b; line-height: 1.6;">{{ product.description|linebreaks }}</div>
+            </div>
+            {% endif %}
+            
+            {% if product.meta_title or product.meta_description %}
+            <div style="margin-top: 32px; padding-top: 32px; border-top: 1px solid #e2e8f0;">
+                <h4 style="margin: 0 0 16px 0; color: #1e293b;">SEO Information</h4>
+                {% if product.meta_title %}
+                <p><strong>Meta Title:</strong> {{ product.meta_title }}</p>
+                {% endif %}
+                {% if product.meta_description %}
+                <p><strong>Meta Description:</strong> {{ product.meta_description }}</p>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div>
+        <!-- Stock Information -->
+        <div class="data-table" style="margin-bottom: 24px;">
+            <div class="table-header">
+                <h3 class="table-title">Inventory</h3>
+            </div>
+            <div style="padding: 24px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 32px; font-weight: 800; color: #1e293b;">
+                        {{ product.stock_quantity|default:0 }}
+                    </div>
+                    <div style="color: #64748b;">Units in stock</div>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: #64748b;">Stock Status:</span>
+                        <span class="badge {% if product.stock_quantity > 10 %}success{% elif product.stock_quantity > 0 %}warning{% else %}danger{% endif %}">
+                            {% if product.stock_quantity > 10 %}In Stock{% elif product.stock_quantity > 0 %}Low Stock{% else %}Out of Stock{% endif %}
+                        </span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #64748b;">Low Stock Alert:</span>
+                        <span>{{ product.low_stock_threshold|default:10 }} units</span>
+                    </div>
+                </div>
+                
+                {% if product.weight or product.dimensions %}
+                <div style="border-top: 1px solid #e2e8f0; padding-top: 16px; margin-top: 16px;">
+                    <h5 style="margin: 0 0 12px 0; color: #1e293b;">Physical Properties</h5>
+                    {% if product.weight %}
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: #64748b;">Weight:</span>
+                        <span>{{ product.weight }} kg</span>
+                    </div>
+                    {% endif %}
+                    {% if product.dimensions %}
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #64748b;">Dimensions:</span>
+                        <span>{{ product.dimensions }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="data-table">
+            <div class="table-header">
+                <h3 class="table-title">Quick Actions</h3>
+            </div>
+            <div style="padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+                <a href="/products/{{ product.pk }}/edit/" class="btn btn-primary" style="justify-content: center;">
+                    <i class="fas fa-edit"></i>
+                    Edit Product
+                </a>
+                <a href="/products/" class="btn btn-outline" style="justify-content: center;">
+                    <i class="fas fa-list"></i>
+                    Back to Products
+                </a>
+                <a href="/products/add/" class="btn btn-success" style="justify-content: center;">
+                    <i class="fas fa-plus"></i>
+                    Add New Product
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

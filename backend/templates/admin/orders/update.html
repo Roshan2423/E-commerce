@@ -1,0 +1,256 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Update Order #{{ order.get_order_number }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fas fa-edit"></i>
+        Update Order #{{ order.get_order_number }}
+    </h1>
+    <p class="page-subtitle">Modify order status and details</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 350px; gap: 32px;">
+    <!-- Update Form -->
+    <div class="data-table">
+        <div class="table-header">
+            <h3 class="table-title">Order Update Form</h3>
+        </div>
+        <div style="padding: 32px;">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label class="form-label">Order Status *</label>
+                        <select class="form-control" name="status" required>
+                            {% for choice in form.status.field.choices %}
+                            <option value="{{ choice.0 }}" 
+                                    {% if choice.0 == order.status %}selected{% endif %}>
+                                {{ choice.1 }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small style="color: #64748b; font-size: 12px;">
+                            {{ form.status.help_text }}
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Payment Status *</label>
+                        <select class="form-control" name="payment_status" required>
+                            {% for choice in form.payment_status.field.choices %}
+                            <option value="{{ choice.0 }}" 
+                                    {% if choice.0 == order.payment_status %}selected{% endif %}>
+                                {{ choice.1 }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <small style="color: #64748b; font-size: 12px;">
+                            {{ form.payment_status.help_text }}
+                        </small>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                    <div class="form-group">
+                        <label class="form-label">Shipping Method</label>
+                        <input type="text" class="form-control" name="shipping_method"
+                               value="{{ order.shipping_method|default:'' }}" 
+                               placeholder="e.g., Standard Shipping">
+                        <small style="color: #64748b; font-size: 12px;">
+                            {{ form.shipping_method.help_text }}
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Tracking Number</label>
+                        <input type="text" class="form-control" name="tracking_number"
+                               value="{{ order.tracking_number|default:'' }}" 
+                               placeholder="Enter tracking number">
+                        <small style="color: #64748b; font-size: 12px;">
+                            {{ form.tracking_number.help_text }}
+                        </small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Internal Notes</label>
+                    <textarea class="form-control" name="notes" rows="4" 
+                              placeholder="Add internal notes about this order">{{ order.notes|default:'' }}</textarea>
+                    <small style="color: #64748b; font-size: 12px;">
+                        {{ form.notes.help_text }}
+                    </small>
+                </div>
+
+                <!-- Form Actions -->
+                <div style="display: flex; gap: 16px; justify-content: flex-end; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                    <a href="/orders/{{ order.order_id }}/" class="btn btn-outline">
+                        <i class="fas fa-times"></i>
+                        Cancel
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i>
+                        Update Order
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div>
+        <!-- Current Order Status -->
+        <div class="data-table" style="margin-bottom: 24px;">
+            <div class="table-header">
+                <h3 class="table-title">Current Status</h3>
+            </div>
+            <div style="padding: 24px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 32px; margin-bottom: 8px;">
+                        {% if order.status == 'delivered' %}🚚
+                        {% elif order.status == 'shipped' %}📦
+                        {% elif order.status == 'processing' %}⚙️
+                        {% elif order.status == 'pending' %}⏳
+                        {% elif order.status == 'cancelled' %}❌
+                        {% else %}📋
+                        {% endif %}
+                    </div>
+                    <span class="badge {% if order.status == 'delivered' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'cancelled' %}danger{% else %}primary{% endif %}" style="font-size: 14px; padding: 8px 16px;">
+                        {{ order.get_status_display }}
+                    </span>
+                    <div style="margin-top: 12px;">
+                        <span class="badge {% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'pending' %}warning{% elif order.payment_status == 'failed' %}danger{% else %}primary{% endif %}">
+                            {{ order.get_payment_status_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="data-table" style="margin-bottom: 24px;">
+            <div class="table-header">
+                <h3 class="table-title">Order Summary</h3>
+            </div>
+            <div style="padding: 24px;">
+                <table style="width: 100%; font-size: 14px;">
+                    <tr>
+                        <td style="padding: 4px 0; color: #64748b;">Order ID:</td>
+                        <td style="padding: 4px 0; text-align: right;">
+                            <code style="font-size: 12px;">{{ order.order_id|slice:":8" }}...</code>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0; color: #64748b;">Customer:</td>
+                        <td style="padding: 4px 0; text-align: right;">
+                            {{ order.user.get_full_name|default:order.user.email|truncatechars:20 }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0; color: #64748b;">Items:</td>
+                        <td style="padding: 4px 0; text-align: right;">
+                            {{ order.items.count|default:2 }}
+                        </td>
+                    </tr>
+                    <tr style="border-top: 1px solid #e2e8f0;">
+                        <td style="padding: 8px 0; color: #1e293b;"><strong>Total:</strong></td>
+                        <td style="padding: 8px 0; text-align: right;">
+                            <strong>${{ order.total_amount|default:299.99|floatformat:2 }}</strong>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="data-table">
+            <div class="table-header">
+                <h3 class="table-title">Quick Actions</h3>
+            </div>
+            <div style="padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+                <a href="/orders/{{ order.order_id }}/" class="btn btn-outline" style="justify-content: center;">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Order
+                </a>
+                <a href="/orders/" class="btn btn-outline" style="justify-content: center;">
+                    <i class="fas fa-list"></i>
+                    All Orders
+                </a>
+                <button onclick="notifyCustomer()" class="btn btn-success" style="justify-content: center;">
+                    <i class="fas fa-bell"></i>
+                    Notify Customer
+                </button>
+            </div>
+        </div>
+
+        <!-- Status Guide -->
+        <div class="data-table" style="margin-top: 24px;">
+            <div class="table-header">
+                <h3 class="table-title">
+                    <i class="fas fa-info-circle"></i>
+                    Status Guide
+                </h3>
+            </div>
+            <div style="padding: 24px;">
+                <div style="font-size: 13px;">
+                    <div style="margin-bottom: 12px;">
+                        <span class="badge warning" style="font-size: 11px;">Pending</span>
+                        <span style="color: #64748b; margin-left: 8px;">Awaiting payment</span>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <span class="badge primary" style="font-size: 11px;">Confirmed</span>
+                        <span style="color: #64748b; margin-left: 8px;">Payment received</span>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <span class="badge primary" style="font-size: 11px;">Processing</span>
+                        <span style="color: #64748b; margin-left: 8px;">Being prepared</span>
+                    </div>
+                    <div style="margin-bottom: 12px;">
+                        <span class="badge warning" style="font-size: 11px;">Shipped</span>
+                        <span style="color: #64748b; margin-left: 8px;">On the way</span>
+                    </div>
+                    <div>
+                        <span class="badge success" style="font-size: 11px;">Delivered</span>
+                        <span style="color: #64748b; margin-left: 8px;">Completed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function notifyCustomer() {
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-fill tracking number based on status
+    const statusSelect = document.querySelector('select[name="status"]');
+    const trackingInput = document.querySelector('input[name="tracking_number"]');
+    
+    statusSelect.addEventListener('change', function() {
+        if (this.value === 'shipped' && !trackingInput.value) {
+            trackingInput.value = 'TRK' + Math.random().toString(36).substr(2, 9).toUpperCase();
+        }
+    });
+    
+    // Form validation
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const status = document.querySelector('select[name="status"]').value;
+        const payment = document.querySelector('select[name="payment_status"]').value;
+        
+        if (!status || !payment) {
+            e.preventDefault();
+            return false;
+        }
+        
+    });
+});
+</script>
+{% endblock %}

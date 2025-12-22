@@ -1,0 +1,332 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Order #{{ order.get_order_number }} - Details{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        <i class="fas fa-shopping-cart"></i>
+        Order #{{ order.get_order_number }}
+    </h1>
+    <p class="page-subtitle">Order details and management</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 1fr 350px; gap: 32px;">
+    <!-- Main Order Details -->
+    <div>
+        <!-- Order Summary -->
+        <div class="data-table" style="margin-bottom: 24px;">
+            <div class="table-header">
+                <h3 class="table-title">Order Summary</h3>
+                <div style="display: flex; gap: 8px;">
+                    <span class="badge {% if order.status == 'delivered' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'cancelled' %}danger{% else %}primary{% endif %}">
+                        {{ order.get_status_display }}
+                    </span>
+                    <span class="badge {% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'pending' %}warning{% elif order.payment_status == 'failed' %}danger{% else %}primary{% endif %}">
+                        {{ order.get_payment_status_display }}
+                    </span>
+                </div>
+            </div>
+            <div style="padding: 32px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+                    <div>
+                        <h4 style="margin: 0 0 16px 0; color: #1e293b;">Order Information</h4>
+                        <table style="width: 100%;">
+                            <tr>
+                                <td style="padding: 8px 0; color: #64748b; width: 120px;">Order ID:</td>
+                                <td style="padding: 8px 0;"><code>{{ order.order_id }}</code></td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #64748b;">Order Date:</td>
+                                <td style="padding: 8px 0;">{{ order.created_at|date:"M d, Y H:i" }}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #64748b;">Customer:</td>
+                                <td style="padding: 8px 0;">
+                                    <strong>{{ order.user.get_full_name|default:order.user.email }}</strong>
+                                    <br><small style="color: #64748b;">{{ order.user.email }}</small>
+                                </td>
+                            </tr>
+                            {% if order.tracking_number %}
+                            <tr>
+                                <td style="padding: 8px 0; color: #64748b;">Tracking:</td>
+                                <td style="padding: 8px 0;"><code>{{ order.tracking_number }}</code></td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                    </div>
+                    
+                    <div>
+                        <h4 style="margin: 0 0 16px 0; color: #1e293b;">Financial Summary</h4>
+                        <table style="width: 100%;">
+                            <tr>
+                                <td style="padding: 8px 0; color: #64748b; width: 120px;">Subtotal:</td>
+                                <td style="padding: 8px 0;">${{ order.subtotal|default:0|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #64748b;">Tax:</td>
+                                <td style="padding: 8px 0;">${{ order.tax_amount|default:0|floatformat:2 }}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 8px 0; color: #64748b;">Shipping:</td>
+                                <td style="padding: 8px 0;">${{ order.shipping_cost|default:0|floatformat:2 }}</td>
+                            </tr>
+                            {% if order.discount_amount %}
+                            <tr>
+                                <td style="padding: 8px 0; color: #64748b;">Discount:</td>
+                                <td style="padding: 8px 0; color: #10b981;">-${{ order.discount_amount|floatformat:2 }}</td>
+                            </tr>
+                            {% endif %}
+                            <tr style="border-top: 2px solid #e2e8f0;">
+                                <td style="padding: 12px 0; color: #1e293b;"><strong>Total:</strong></td>
+                                <td style="padding: 12px 0;"><strong style="font-size: 18px;">${{ order.total_amount|default:0|floatformat:2 }}</strong></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Items -->
+        <div class="data-table" style="margin-bottom: 24px;">
+            <div class="table-header">
+                <h3 class="table-title">
+                    <i class="fas fa-list"></i>
+                    Order Items
+                </h3>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>SKU</th>
+                            <th>Quantity</th>
+                            <th>Unit Price</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order_items %}
+                        <tr>
+                            <td>
+                                <div>
+                                    <strong>{{ item.product_name }}</strong>
+                                </div>
+                                {% if item.variant %}
+                                <div style="font-size: 12px; color: #64748b;">
+                                    Variant: {{ item.variant.name }} - {{ item.variant.value }}
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td><code>{{ item.product_sku|default:"N/A" }}</code></td>
+                            <td>
+                                <span class="badge primary">{{ item.quantity }}</span>
+                            </td>
+                            <td>${{ item.unit_price|floatformat:2 }}</td>
+                            <td><strong>${{ item.total_price|floatformat:2 }}</strong></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 40px;">
+                                <i class="fas fa-box fa-2x" style="color: #cbd5e1; margin-bottom: 16px;"></i>
+                                <p style="color: #64748b; margin: 0;">No items in this order</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Shipping Information -->
+        <div class="data-table">
+            <div class="table-header">
+                <h3 class="table-title">
+                    <i class="fas fa-truck"></i>
+                    Shipping Information
+                </h3>
+            </div>
+            <div style="padding: 32px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px;">
+                    <div>
+                        <h5 style="margin: 0 0 12px 0; color: #1e293b;">Shipping Address</h5>
+                        <div style="background: #f8fafc; padding: 16px; border-radius: 12px; color: #64748b;">
+                            {{ order.shipping_address|default:"123 Main Street<br>New York, NY 10001<br>United States"|linebreaks }}
+                        </div>
+                    </div>
+                    <div>
+                        <h5 style="margin: 0 0 12px 0; color: #1e293b;">Billing Address</h5>
+                        <div style="background: #f8fafc; padding: 16px; border-radius: 12px; color: #64748b;">
+                            {{ order.billing_address|default:"123 Main Street<br>New York, NY 10001<br>United States"|linebreaks }}
+                        </div>
+                    </div>
+                </div>
+                
+                {% if order.shipping_method %}
+                <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                    <h5 style="margin: 0 0 12px 0; color: #1e293b;">Shipping Method</h5>
+                    <p style="margin: 0; color: #64748b;">{{ order.shipping_method }}</p>
+                </div>
+                {% endif %}
+
+                {% if order.notes %}
+                <div style="margin-top: 24px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                    <h5 style="margin: 0 0 12px 0; color: #1e293b;">Order Notes</h5>
+                    <div style="background: #fef3c7; padding: 16px; border-radius: 12px; color: #92400e;">
+                        {{ order.notes|linebreaks }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sidebar Actions -->
+    <div>
+        <!-- Order Status -->
+        <div class="data-table" style="margin-bottom: 24px;">
+            <div class="table-header">
+                <h3 class="table-title">Order Status</h3>
+            </div>
+            <div style="padding: 24px;">
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <div style="font-size: 32px; margin-bottom: 8px;">
+                        {% if order.status == 'delivered' %}🚚
+                        {% elif order.status == 'shipped' %}📦
+                        {% elif order.status == 'processing' %}⚙️
+                        {% elif order.status == 'pending' %}⏳
+                        {% elif order.status == 'cancelled' %}❌
+                        {% else %}📋
+                        {% endif %}
+                    </div>
+                    <div style="font-weight: 600; color: #1e293b;">{{ order.get_status_display }}</div>
+                    <div style="color: #64748b; font-size: 14px;">
+                        {% if order.status == 'delivered' %}
+                            Delivered on {{ order.delivered_at|date:"M d, Y"|default:"Dec 20, 2025" }}
+                        {% elif order.status == 'shipped' %}
+                            Shipped on {{ order.shipped_at|date:"M d, Y"|default:"Dec 19, 2025" }}
+                        {% elif order.status == 'processing' %}
+                            Being processed
+                        {% elif order.status == 'pending' %}
+                            Awaiting confirmation
+                        {% elif order.status == 'cancelled' %}
+                            Order cancelled
+                        {% else %}
+                            Order received
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Payment Status -->
+                <div style="border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <span style="color: #64748b;">Payment Status:</span>
+                        <span class="badge {% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'pending' %}warning{% elif order.payment_status == 'failed' %}danger{% else %}primary{% endif %}">
+                            {{ order.get_payment_status_display }}
+                        </span>
+                    </div>
+                    {% if order.payment_method %}
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 16px;">
+                        <span style="color: #64748b;">Payment Method:</span>
+                        <span>{{ order.payment_method }}</span>
+                    </div>
+                    {% endif %}
+                    {% if order.payment_transaction_id %}
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="color: #64748b;">Transaction ID:</span>
+                        <code>{{ order.payment_transaction_id }}</code>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="data-table" style="margin-bottom: 24px;">
+            <div class="table-header">
+                <h3 class="table-title">Quick Actions</h3>
+            </div>
+            <div style="padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+                <a href="/orders/{{ order.order_id }}/update/" class="btn btn-primary" style="justify-content: center;">
+                    <i class="fas fa-edit"></i>
+                    Update Order
+                </a>
+                <button onclick="printOrder()" class="btn btn-outline" style="justify-content: center;">
+                    <i class="fas fa-print"></i>
+                    Print Order
+                </button>
+                <button onclick="sendEmail()" class="btn btn-success" style="justify-content: center;">
+                    <i class="fas fa-envelope"></i>
+                    Email Customer
+                </button>
+                {% if order.status == 'pending' or order.status == 'confirmed' %}
+                <a href="/orders/{{ order.order_id }}/cancel/" 
+                   class="btn btn-danger" style="justify-content: center;"
+                   onclick="return confirm('Cancel this order?')">
+                    <i class="fas fa-times"></i>
+                    Cancel Order
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Order Timeline -->
+        <div class="data-table">
+            <div class="table-header">
+                <h3 class="table-title">Order Timeline</h3>
+            </div>
+            <div style="padding: 24px;">
+                <div style="position: relative; padding-left: 30px;">
+                    <div style="position: absolute; left: 10px; top: 0; bottom: 0; width: 2px; background: #e2e8f0;"></div>
+                    
+                    <div style="position: relative; margin-bottom: 20px;">
+                        <div style="position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; background: #10b981; border-radius: 50%;"></div>
+                        <div style="font-weight: 600; color: #1e293b;">Order Placed</div>
+                        <div style="font-size: 12px; color: #64748b;">{{ order.created_at|date:"M d, Y H:i"|default:"Dec 20, 2025 14:30" }}</div>
+                    </div>
+                    
+                    {% if order.status != 'pending' %}
+                    <div style="position: relative; margin-bottom: 20px;">
+                        <div style="position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; background: #3b82f6; border-radius: 50%;"></div>
+                        <div style="font-weight: 600; color: #1e293b;">Payment Confirmed</div>
+                        <div style="font-size: 12px; color: #64748b;">{{ order.updated_at|date:"M d, Y H:i"|default:"Dec 20, 2025 14:35" }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if order.status == 'shipped' or order.status == 'delivered' %}
+                    <div style="position: relative; margin-bottom: 20px;">
+                        <div style="position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; background: #f59e0b; border-radius: 50%;"></div>
+                        <div style="font-weight: 600; color: #1e293b;">Order Shipped</div>
+                        <div style="font-size: 12px; color: #64748b;">{{ order.shipped_at|date:"M d, Y H:i"|default:"Dec 21, 2025 09:00" }}</div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if order.status == 'delivered' %}
+                    <div style="position: relative;">
+                        <div style="position: absolute; left: -25px; top: 5px; width: 12px; height: 12px; background: #10b981; border-radius: 50%;"></div>
+                        <div style="font-weight: 600; color: #1e293b;">Delivered</div>
+                        <div style="font-size: 12px; color: #64748b;">{{ order.delivered_at|date:"M d, Y H:i"|default:"Dec 22, 2025 15:20" }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function printOrder() {
+    window.print();
+}
+
+function sendEmail() {
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+});
+</script>
+{% endblock %}

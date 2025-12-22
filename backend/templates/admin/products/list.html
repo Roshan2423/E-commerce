@@ -1,0 +1,168 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Products - E-Commerce Admin{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 20px;">
+    <h1 class="page-title" style="margin-bottom: 0;">Product Management</h1>
+</div>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div></div>
+    <a href="/products/add/" class="btn btn-primary">
+        <i class="fas fa-plus"></i>
+        Add New Product
+    </a>
+</div>
+
+<!-- Filters -->
+<div class="data-table" style="margin-bottom: 24px;">
+    <div style="padding: 24px;">
+        <form method="get" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; align-items: end;">
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Search</label>
+                <input type="text" class="form-control" name="search" 
+                       value="{{ search }}" placeholder="Search products...">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Category</label>
+                <select class="form-control" name="category">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" 
+                            {% if category.id|slugify == selected_category %}selected{% endif %}>
+                        {{ category.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label class="form-label">Stock Status</label>
+                <select class="form-control" name="stock_status">
+                    <option value="">All Status</option>
+                    <option value="in_stock" {% if selected_stock_status == 'in_stock' %}selected{% endif %}>In Stock</option>
+                    <option value="low_stock" {% if selected_stock_status == 'low_stock' %}selected{% endif %}>Low Stock</option>
+                    <option value="out_of_stock" {% if selected_stock_status == 'out_of_stock' %}selected{% endif %}>Out of Stock</option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i>
+                    Filter
+                </button>
+                <a href="/products/" class="btn btn-outline">
+                    <i class="fas fa-times"></i>
+                    Clear
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="data-table">
+    <div class="table-header">
+        <h3 class="table-title">Products ({{ products|length }} found)</h3>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Name</th>
+                    <th>SKU</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>
+                        <div style="width: 50px; height: 50px; background: linear-gradient(135deg, #f8f9fa, #e9ecef); border: 2px solid #dee2e6; border-radius: 8px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+                            <!-- Product placeholder design -->
+                            <div style="background: linear-gradient(45deg, #495057 25%, transparent 25%, transparent 75%, #495057 75%), linear-gradient(45deg, #495057 25%, transparent 25%, transparent 75%, #495057 75%); background-size: 8px 8px; background-position: 0 0, 4px 4px; width: 100%; height: 100%; opacity: 0.1; position: absolute;"></div>
+                            <i class="fas fa-box" style="color: #495057; font-size: 18px; z-index: 1;"></i>
+                        </div>
+                    </td>
+                    <td>
+                        <div>
+                            <strong>{{ product.name|truncatechars:40 }}</strong>
+                            {% if product.is_featured %}
+                                <span class="badge warning" style="margin-left: 8px;">Featured</span>
+                            {% endif %}
+                        </div>
+                        <div style="font-size: 12px; color: #64748b;">{{ product.short_description|default:"No description"|truncatechars:60 }}</div>
+                    </td>
+                    <td><code>{{ product.sku|default:"N/A" }}</code></td>
+                    <td>{{ product.category.name|default:"No Category" }}</td>
+                    <td>
+                        <strong>Rs {{ product.price|default:0|floatformat:2 }}</strong>
+                        {% if product.compare_price %}
+                            <br><small style="color: #64748b; text-decoration: line-through;">
+                                Rs {{ product.compare_price|floatformat:2 }}
+                            </small>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="badge {% if product.stock_quantity > 10 %}success{% elif product.stock_quantity > 0 %}warning{% else %}danger{% endif %}">
+                            {{ product.stock_quantity|default:0 }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if product.is_active %}
+                            <span class="badge success">Active</span>
+                        {% else %}
+                            <span class="badge danger">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 8px;">
+                            {% if product.pk %}
+                                <a href="/products/{{ product.pk }}/" 
+                                   class="btn btn-outline" style="padding: 8px 12px;">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="/products/{{ product.pk }}/edit/" 
+                                   class="btn btn-warning" style="padding: 8px 12px;">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="/products/{{ product.pk }}/delete/" 
+                                   class="btn btn-danger delete-btn" style="padding: 8px 12px;"
+                                   data-item-name="{{ product.name }}">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            {% else %}
+                                <span style="color: #dc2626; font-size: 12px; padding: 8px;">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    Invalid Product ID
+                                </span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" style="text-align: center; padding: 60px;">
+                        <div style="color: #64748b;">
+                            <i class="fas fa-box fa-3x" style="margin-bottom: 16px;"></i>
+                            <h3 style="margin: 0 0 8px 0;">No products found</h3>
+                            <p style="margin: 0 0 20px 0;">Add your first product to get started.</p>
+                            <a href="/products/add/" class="btn btn-primary">
+                                <i class="fas fa-plus"></i>
+                                Add Product
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
