@@ -57,6 +57,8 @@ class Product(models.Model):
     height = models.DecimalField(max_digits=8, decimal_places=2, blank=True, null=True, help_text="Height in cm")
     is_active = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False)
+    is_flash_sale = models.BooleanField(default=False, help_text="Show this product in Flash Sale section")
+    flash_sale_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True, help_text="Special price for flash sale")
     meta_title = models.CharField(max_length=160, blank=True)
     meta_description = models.TextField(max_length=320, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -131,13 +133,26 @@ class Product(models.Model):
         return self.name
 
     def get_discount_percentage(self):
-        if self.compare_price and self.compare_price > self.price:
-            return round(((self.compare_price - self.price) / self.compare_price) * 100, 0)
+        try:
+            if self.compare_price and float(self.compare_price) > float(self.price):
+                return round(((float(self.compare_price) - float(self.price)) / float(self.compare_price)) * 100, 0)
+        except (TypeError, ValueError, AttributeError):
+            pass
         return 0
 
     def get_main_image(self):
-        main_image = self.images.filter(is_main=True).first()
-        return main_image.image.url if main_image else None
+        try:
+            # Use a simple approach to avoid complex filtering that breaks with Djongo
+            images = list(self.images.all())
+            for image in images:
+                if hasattr(image, 'is_main') and image.is_main:
+                    return image.image.url if image.image else None
+            # If no main image, return the first image
+            if images:
+                return images[0].image.url if images[0].image else None
+        except Exception:
+            pass
+        return None
 
 
 class ProductImage(models.Model):
@@ -175,3 +190,54 @@ class ProductVariant(models.Model):
 
     def __str__(self):
         return f"{self.product.name} - {self.name}: {self.value}"
+
+
+class Review(models.Model):
+    """Product reviews from customers who purchased the product"""
+
+    STATUS_CHOICES = [
+        ('pending', 'Pending Approval'),
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+    ]
+
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='reviews')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reviews')
+    order = models.ForeignKey('orders.Order', on_delete=models.SET_NULL, null=True, blank=True, related_name='reviews')
+    rating = models.PositiveIntegerField(choices=[(i, str(i)) for i in range(1, 6)])  # 1-5 stars
+    title = models.CharField(max_length=200, blank=True)
+    comment = models.TextField()
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    admin_response = models.TextField(blank=True, null=True, help_text="Admin reply to the review")
+    is_verified_purchase = models.BooleanField(default=False)
+    helpful_count = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        unique_together = ['product', 'user', 'order']  # One review per order per product
+
+    def __str__(self):
+        return f"{self.user.username} - {self.product.name} ({self.rating} stars)"
+
+    def save(self, *args, **kwargs):
+        # Check if this is a verified purchase
+        if self.order and self.order.status == 'delivered':
+            self.is_verified_purchase = True
+        super().save(*args, **kwargs)
+
+
+class ReviewImage(models.Model):
+    """Images uploaded with reviews"""
+
+    review = models.ForeignKey(Review, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='reviews/')
+    alt_text = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Image for review {self.review.id}"

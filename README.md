@@ -1,260 +1,186 @@
-# Django E-Commerce Platform with MongoDB
+# OVN Store - E-Commerce Platform
 
-A comprehensive e-commerce platform built with Django and MongoDB, featuring a powerful admin panel with vertical navigation for managing products, orders, and analytics.
+A modern e-commerce platform built with Django. Single server setup serving both the customer-facing store and admin panel.
 
-## 🚀 Features
+## Features
 
-### Backend (Django + MongoDB)
-- **Modern Admin Panel** with vertical sidebar navigation
-- **Product Management**: Full CRUD operations with categories, variants, and images
-- **Order Management**: Complete order processing workflow
-- **User Authentication**: Custom user model with email-based login
-- **Analytics Dashboard**: Sales reports, customer insights, and business metrics
-- **Security Features**: CSRF protection, secure headers, input validation
-- **MongoDB Integration**: Using Djongo for seamless Django-MongoDB compatibility
+### Customer Store
+- Modern, responsive design with glassmorphism effects
+- Product catalog with categories
+- Shopping cart functionality
+- User authentication (Email & Google OAuth)
+- Product search and filtering
 
-### Admin Panel Sections
-- 📊 **Dashboard**: Analytics, recent orders, low stock alerts
-- 📦 **Products**: Product catalog management with categories
-- 🛒 **Orders**: Order processing and tracking
-- 📈 **Reports**: Sales, product, and customer analytics
+### Admin Panel
+- Modern dashboard with analytics
+- Product management (CRUD)
+- Order management and tracking
+- Customer management
+- Sales reports and insights
 
-### Frontend (Sample)
-- Responsive Bootstrap-based design
-- Sample product showcase
-- Admin panel access links
-- Modern UI with animations
+## Tech Stack
 
-## 🛠️ Technology Stack
+- **Backend**: Django 4.2, Python 3.8+
+- **Database**: SQLite (default) or PostgreSQL
+- **Frontend**: Vanilla JavaScript, Modern CSS
+- **Authentication**: Django Sessions, Google OAuth
 
-- **Backend**: Django 4.2.7, Python 3.8+
-- **Database**: MongoDB with Djongo ORM
-- **Frontend**: Bootstrap 5, HTML5, CSS3, JavaScript
-- **Authentication**: Django Allauth
-- **Security**: Multiple layers of security implementation
-
-## 📁 Project Structure
+## Project Structure
 
 ```
-ecommerce-platform/
+e-commerce/
 ├── backend/
-│   ├── ecommerce/          # Django project settings
-│   ├── accounts/           # User management
+│   ├── ecommerce/          # Django settings
+│   ├── accounts/           # User authentication
 │   ├── products/           # Product catalog
 │   ├── orders/             # Order processing
 │   ├── dashboard/          # Admin dashboard
-│   ├── reports/            # Analytics & reports
+│   ├── reports/            # Analytics
+│   ├── frontend/           # Frontend app
 │   ├── templates/          # HTML templates
-│   ├── static/             # CSS, JS, images
+│   │   ├── admin/          # Admin panel templates
+│   │   └── frontend/       # Store templates
+│   ├── static/
+│   │   ├── css/            # Admin CSS
+│   │   ├── js/             # Admin JS
+│   │   └── frontend/       # Store CSS/JS
 │   └── manage.py
-├── frontend/
-│   └── index.html          # Sample frontend
-├── setup_project.py        # Automated setup script
+├── start.py                # Single startup script
 └── README.md
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
-- Python 3.8 or higher
-- MongoDB installed and running
-- pip (Python package installer)
+- Python 3.8+
+- pip
 
 ### Installation
 
-1. **Clone and Setup**
-   ```bash
-   git clone <your-repo>
-   cd ecommerce-platform
-   python setup_project.py
-   ```
+```bash
+# 1. Clone and enter directory
+cd e-commerce
 
-2. **Manual Setup (Alternative)**
-   ```bash
-   # Create virtual environment
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   
-   # Install dependencies
-   cd backend
-   pip install -r requirements.txt
-   
-   # Setup environment
-   cp .env.example .env
-   # Edit .env with your settings
-   
-   # Run migrations
-   python manage.py makemigrations
-   python manage.py migrate
-   
-   # Create superuser
-   python manage.py createsuperuser
-   
-   # Start server
-   python manage.py runserver
-   ```
+# 2. Install dependencies
+pip install -r backend/requirements.txt
 
-### 🔧 Configuration
+# 3. Run migrations
+cd backend
+python manage.py migrate
 
-Edit `backend/.env` file:
+# 4. Create admin user
+python manage.py createsuperuser
+
+# 5. Start the server
+cd ..
+python start.py
+```
+
+### Access Points
+
+| URL | Description |
+|-----|-------------|
+| http://127.0.0.1:8000/ | Customer Store |
+| http://127.0.0.1:8000/login | Login Page |
+| http://127.0.0.1:8000/dashboard/ | Admin Dashboard |
+| http://127.0.0.1:8000/products/ | Product Management |
+| http://127.0.0.1:8000/orders/ | Order Management |
+
+## Configuration
+
+Create `backend/.env` file (optional):
 
 ```env
-# Django Settings
 DEBUG=True
 SECRET_KEY=your-secret-key-here
 ALLOWED_HOSTS=localhost,127.0.0.1
-
-# MongoDB Settings
-MONGODB_HOST=localhost
-MONGODB_PORT=27017
-MONGODB_NAME=ecommerce_db
-MONGODB_USER=
-MONGODB_PASSWORD=
-
-# Email Settings (for user verification)
-EMAIL_HOST=smtp.gmail.com
-EMAIL_PORT=587
-EMAIL_USE_TLS=True
-EMAIL_HOST_USER=your-email@gmail.com
-EMAIL_HOST_PASSWORD=your-app-password
 ```
 
-## 🎯 Usage
+## Google OAuth Setup (Optional)
 
-### Admin Panel Access
-- **Custom Dashboard**: `http://localhost:8000/dashboard/`
-- **Django Admin**: `http://localhost:8000/admin/`
-- **Sample Frontend**: `../frontend/index.html`
+To enable Google Sign-In:
 
-### Admin Panel Features
+1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+2. Create or select your OAuth 2.0 Client ID
+3. Add these **Authorized JavaScript origins**:
+   - `http://localhost:8000`
+   - `http://127.0.0.1:8000`
+4. Add these **Authorized redirect URIs**:
+   - `http://localhost:8000/login`
+   - `http://127.0.0.1:8000/login`
+5. Save and wait 5 minutes for changes to propagate
 
-#### 📊 Dashboard
-- Real-time analytics and KPIs
-- Recent orders overview
-- Low stock alerts
-- Top-selling products
-- Sales charts and graphs
+## Authentication Flow
 
-#### 📦 Product Management
-- Add/edit/delete products
-- Category management
-- Product variants and images
-- Inventory tracking
-- SEO optimization fields
+1. User visits `/dashboard/` or any admin page
+2. If not logged in, redirected to `/login`
+3. User logs in via email/password or Google OAuth
+4. Admin users automatically redirected to dashboard
+5. Regular users stay on the store
 
-#### 🛒 Order Management
-- Order status tracking
-- Payment status updates
-- Shipping management
-- Order cancellation
-- Customer communication
+## Deployment
 
-#### 📈 Reports & Analytics
-- Sales reports with date filtering
-- Product performance metrics
-- Customer acquisition data
-- Revenue analytics
+### Single Server Benefits
+- No CORS configuration needed
+- Same-origin cookies work automatically
+- One process to manage
+- Simpler deployment
+- Lower hosting cost
 
-## 🔒 Security Features
+### Production Checklist
+1. Set `DEBUG=False`
+2. Set a strong `SECRET_KEY`
+3. Configure `ALLOWED_HOSTS`
+4. Set up SSL (HTTPS)
+5. Run `python manage.py collectstatic`
+6. Use a production server (Gunicorn + Nginx)
 
-- CSRF protection enabled
-- Secure headers configuration
-- Input validation and sanitization
-- User authentication and authorization
-- Password complexity requirements
-- Secure session management
-- XSS protection
+### Deploy to Railway/Render
 
-## 📊 Database Models
-
-### Key Models:
-- **User**: Custom user model with email authentication
-- **Product**: Complete product information with variants
-- **Category**: Product categorization
-- **Order**: Order processing and tracking
-- **OrderItem**: Individual order line items
-- **Address**: User shipping/billing addresses
-
-## 🔄 API Structure
-
-The platform is designed to be easily extended with REST API capabilities:
-- All views use class-based views for consistency
-- Models are well-structured for API serialization
-- Authentication system ready for API token integration
-
-## 🚀 Deployment
-
-### Production Checklist:
-1. Set `DEBUG=False` in production
-2. Configure proper database credentials
-3. Set up email backend for notifications
-4. Configure static files serving
-5. Set up SSL certificates
-6. Configure proper logging
-
-### Environment Variables:
-```env
-DEBUG=False
-SECRET_KEY=your-production-secret-key
-ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com
-MONGODB_HOST=your-mongo-host
-SECURE_SSL_REDIRECT=True
+```bash
+# Just push to git - CI/CD handles the rest
+git push origin main
 ```
 
-## 🤝 Contributing
+## Development
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+### Running the Server
+```bash
+python start.py
+# or
+cd backend && python manage.py runserver
+```
 
-## 📋 TODO / Future Enhancements
+### Creating New Admin User
+```bash
+cd backend
+python manage.py createsuperuser
+```
 
-- [ ] REST API implementation
-- [ ] Shopping cart functionality
-- [ ] Payment gateway integration (Stripe/PayPal)
-- [ ] Email notifications
-- [ ] Product reviews and ratings
-- [ ] Inventory management
-- [ ] Multi-vendor support
-- [ ] Advanced search and filtering
-- [ ] Wishlist functionality
-- [ ] Mobile app support
+### Collecting Static Files
+```bash
+cd backend
+python manage.py collectstatic
+```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
-### Common Issues:
+### Static Files Not Loading
+```bash
+cd backend
+python manage.py collectstatic --noinput
+```
 
-1. **MongoDB Connection Error**
-   ```
-   Ensure MongoDB is running: mongod
-   Check connection settings in .env file
-   ```
+### Migration Issues
+```bash
+cd backend
+python manage.py makemigrations
+python manage.py migrate
+```
 
-2. **Migration Errors**
-   ```
-   python manage.py makemigrations --empty accounts
-   python manage.py migrate
-   ```
+## License
 
-3. **Static Files Not Loading**
-   ```
-   python manage.py collectstatic
-   Check STATIC_ROOT and STATIC_URL settings
-   ```
-
-## 📞 Support
-
-For support and questions:
-- Create an issue in the repository
-- Check the troubleshooting section
-- Review Django and MongoDB documentation
-
-## 📄 License
-
-This project is open source and available under the [MIT License](LICENSE).
+MIT License - feel free to use for your projects.
 
 ---
-
-**Built with ❤️ using Django and MongoDB**
+**Built with Django**

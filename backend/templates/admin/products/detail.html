@@ -66,15 +66,15 @@
                     <table style="width: 100%;">
                         <tr>
                             <td style="padding: 8px 0; color: #64748b; width: 120px;">Price:</td>
-                            <td style="padding: 8px 0;"><strong>${{ product.price|default:0|floatformat:2 }}</strong></td>
+                            <td style="padding: 8px 0;"><strong>Rs {{ product.price|default:0|floatformat:2 }}</strong></td>
                         </tr>
                         <tr>
-                            <td style="padding: 8px 0; color: #64748b;">Compare Price:</td>
-                            <td style="padding: 8px 0;">${{ product.compare_price|default:0|floatformat:2 }}</td>
+                            <td style="padding: 8px 0; color: #64748b;">Special Price:</td>
+                            <td style="padding: 8px 0;">Rs {{ product.compare_price|default:0|floatformat:2 }}</td>
                         </tr>
                         <tr>
                             <td style="padding: 8px 0; color: #64748b;">Cost Price:</td>
-                            <td style="padding: 8px 0;">${{ product.cost_price|default:0|floatformat:2 }}</td>
+                            <td style="padding: 8px 0;">Rs {{ product.cost_price|default:0|floatformat:2 }}</td>
                         </tr>
                         {% if product.compare_price %}
                         <tr>

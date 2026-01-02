@@ -1,20 +1,13 @@
-from django.shortcuts import render
 from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
 from datetime import timedelta
 from products.models import Product, Category
 from orders.models import Order, OrderItem
 from django.contrib.auth import get_user_model
+from ecommerce.mixins import AdminRequiredMixin
 
 User = get_user_model()
-
-
-class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
-    """Mixin to require admin/staff access"""
-    def test_func(self):
-        return self.request.user.is_staff or self.request.user.is_superuser
 
 
 class DashboardView(AdminRequiredMixin, TemplateView):
@@ -72,7 +65,3 @@ class DashboardView(AdminRequiredMixin, TemplateView):
             })
         
         return context
-
-
-class DashboardOverviewView(AdminRequiredMixin, TemplateView):
-    template_name = 'admin/dashboard/overview.html'

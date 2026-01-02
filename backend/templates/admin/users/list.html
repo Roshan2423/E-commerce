@@ -1,0 +1,341 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Customers - E-Commerce Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Customers</h1>
+    <p class="page-subtitle">Manage all registered customers and their accounts.</p>
+</div>
+
+<!-- Customer Statistics -->
+<div style="display: flex; gap: 16px; margin-bottom: 24px;">
+    <div style="background: white; border-radius: 10px; padding: 16px 24px; display: flex; align-items: center; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-users" style="color: white; font-size: 16px;"></i>
+        </div>
+        <div>
+            <div style="font-size: 24px; font-weight: 700; color: #1f2937;">{{ total_users }}</div>
+            <div style="font-size: 13px; color: #64748b;">Total Customers</div>
+        </div>
+    </div>
+
+    <div style="background: white; border-radius: 10px; padding: 16px 24px; display: flex; align-items: center; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #10b981, #059669); display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-user-check" style="color: white; font-size: 16px;"></i>
+        </div>
+        <div>
+            <div style="font-size: 24px; font-weight: 700; color: #1f2937;">{{ active_users }}</div>
+            <div style="font-size: 13px; color: #64748b;">Active</div>
+        </div>
+    </div>
+
+    <div style="background: white; border-radius: 10px; padding: 16px 24px; display: flex; align-items: center; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-user-shield" style="color: white; font-size: 16px;"></i>
+        </div>
+        <div>
+            <div style="font-size: 24px; font-weight: 700; color: #1f2937;">{{ staff_users }}</div>
+            <div style="font-size: 13px; color: #64748b;">Admins</div>
+        </div>
+    </div>
+</div>
+
+<!-- Customer List -->
+<div class="data-table">
+    <div class="table-header">
+        <h3 class="table-title">Customer List</h3>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div style="padding: 16px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+        <form method="GET" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            <input type="text" name="search" placeholder="Search by email or name..." value="{{ current_search }}"
+                   style="padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; min-width: 250px; flex: 1;">
+
+            <select name="role" style="padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; min-width: 140px; background: white;">
+                <option value="">All Roles</option>
+                <option value="admin" {% if current_role == 'admin' %}selected{% endif %}>Admin</option>
+                <option value="customer" {% if current_role == 'customer' %}selected{% endif %}>Customer</option>
+            </select>
+
+            <select name="status" style="padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; min-width: 140px; background: white;">
+                <option value="">All Status</option>
+                <option value="active" {% if current_status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i> Search
+            </button>
+
+            {% if current_search or current_role or current_status %}
+            <a href="{% url 'user_management:user_list' %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Clear
+            </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Status</th>
+                    <th>Role</th>
+                    <th>Joined</th>
+                    <th style="text-align: center;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in users %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                            <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 600;">
+                                {{ user.first_name|slice:":1"|upper|default:user.email|slice:":1"|upper }}
+                            </div>
+                            <div>
+                                <strong>{% if user.get_full_name %}{{ user.get_full_name }}{% else %}{{ user.username }}{% endif %}</strong>
+                                <br><small style="color: #64748b;">@{{ user.username }}</small>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.phone_number|default:"—" }}</td>
+                    <td>
+                        {% if user.is_superuser %}
+                            <span class="badge success" title="Superusers cannot be deactivated">Active</span>
+                        {% else %}
+                            <button class="toggle-status" data-user-id="{{ user.id }}" data-current-status="{{ user.is_active }}" style="border: none; background: none; cursor: pointer;" title="Click to toggle status">
+                                <span class="badge {% if user.is_active %}success{% else %}danger{% endif %}">
+                                    {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </button>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if user.is_superuser %}
+                            <span class="badge" style="background: #dc2626; color: white;">Superuser</span>
+                        {% elif user.is_staff %}
+                            <button class="toggle-admin" data-user-id="{{ user.id }}" data-is-admin="true" style="border: none; background: none; cursor: pointer;">
+                                <span class="badge warning">Admin</span>
+                            </button>
+                        {% else %}
+                            <button class="toggle-admin" data-user-id="{{ user.id }}" data-is-admin="false" style="border: none; background: none; cursor: pointer;">
+                                <span class="badge info">Customer</span>
+                            </button>
+                        {% endif %}
+                    </td>
+                    <td>{{ user.date_joined|date:"M d, Y" }}</td>
+                    <td>
+                        <div style="display: flex; gap: 8px; justify-content: center;">
+                            <a href="{% url 'user_management:user_detail' user.id %}" class="btn btn-sm btn-primary" title="View Details">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'user_management:user_edit' user.id %}" class="btn btn-sm btn-secondary" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            {% if not user.is_superuser %}
+                            <button class="btn btn-sm btn-danger delete-user" data-user-id="{{ user.id }}" data-user-name="{{ user.get_full_name|default:user.email }}" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 60px; color: #64748b;">
+                        <i class="fas fa-users fa-3x" style="margin-bottom: 16px; opacity: 0.3;"></i>
+                        <br>
+                        <strong>No customers found</strong>
+                        <br>
+                        <small>Try adjusting your search criteria</small>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div style="padding: 16px; display: flex; justify-content: center;">
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if current_search %}&search={{ current_search }}{% endif %}">&laquo; First</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if current_search %}&search={{ current_search }}{% endif %}">Previous</a>
+            {% endif %}
+
+            <span style="padding: 8px 16px;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if current_search %}&search={{ current_search }}{% endif %}">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if current_search %}&search={{ current_search }}{% endif %}">Last &raquo;</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; padding: 32px; max-width: 400px; width: 90%; text-align: center;">
+        <div style="width: 60px; height: 60px; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 24px; color: #dc2626;"></i>
+        </div>
+        <h3 style="margin-bottom: 12px; color: #1f2937;">Delete Customer?</h3>
+        <p style="color: #6b7280; margin-bottom: 24px;">Are you sure you want to delete <strong id="deleteUserName"></strong>? This action cannot be undone.</p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <button id="cancelDelete" class="btn btn-secondary">Cancel</button>
+            <button id="confirmDelete" class="btn btn-danger">Delete</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let deleteUserId = null;
+
+    // Toggle user active status
+    $('.toggle-status').click(function() {
+        const userId = $(this).data('user-id');
+        const button = $(this);
+
+        $.post(`/users/${userId}/toggle-status/`, {
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        })
+        .done(function(response) {
+            if (response.success) {
+                const badge = button.find('.badge');
+                if (response.new_status) {
+                    badge.removeClass('danger').addClass('success').text('Active');
+                } else {
+                    badge.removeClass('success').addClass('danger').text('Inactive');
+                }
+                showToast(response.message, 'success');
+            }
+        })
+        .fail(function() {
+            showToast('Failed to update status', 'error');
+        });
+    });
+
+    // Toggle admin status
+    $('.toggle-admin').click(function() {
+        const userId = $(this).data('user-id');
+        const button = $(this);
+
+        $.post(`/users/${userId}/toggle-admin/`, {
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        })
+        .done(function(response) {
+            if (response.success) {
+                const badge = button.find('.badge');
+                if (response.is_admin) {
+                    badge.removeClass('info').addClass('warning').text('Admin');
+                } else {
+                    badge.removeClass('warning').addClass('info').text('Customer');
+                }
+                button.data('is-admin', response.is_admin);
+                showToast(response.message, 'success');
+            }
+        })
+        .fail(function() {
+            showToast('Failed to update role', 'error');
+        });
+    });
+
+    // Delete user - show modal
+    $('.delete-user').click(function() {
+        deleteUserId = $(this).data('user-id');
+        const userName = $(this).data('user-name');
+        $('#deleteUserName').text(userName);
+        $('#deleteModal').css('display', 'flex');
+    });
+
+    // Cancel delete
+    $('#cancelDelete').click(function() {
+        $('#deleteModal').hide();
+        deleteUserId = null;
+    });
+
+    // Confirm delete
+    $('#confirmDelete').click(function() {
+        if (deleteUserId) {
+            $.post(`/users/${deleteUserId}/delete/`, {
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            })
+            .done(function(response) {
+                if (response.success) {
+                    showToast(response.message, 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } else {
+                    showToast(response.message || 'Failed to delete user', 'error');
+                }
+            })
+            .fail(function() {
+                showToast('Failed to delete user', 'error');
+            });
+        }
+        $('#deleteModal').hide();
+    });
+
+    // Close modal on outside click
+    $('#deleteModal').click(function(e) {
+        if (e.target === this) {
+            $(this).hide();
+            deleteUserId = null;
+        }
+    });
+
+    // Toast notification function
+    function showToast(message, type) {
+        const toast = $('<div>')
+            .addClass('toast-notification')
+            .addClass('toast-' + type)
+            .html(`<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`)
+            .appendTo('body');
+
+        setTimeout(() => toast.addClass('show'), 100);
+        setTimeout(() => {
+            toast.removeClass('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    }
+});
+</script>
+
+<style>
+.toast-notification {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 14px 20px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    z-index: 10000;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.toast-notification.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+.toast-success { background: #10b981; }
+.toast-error { background: #ef4444; }
+</style>
+{% endblock %}

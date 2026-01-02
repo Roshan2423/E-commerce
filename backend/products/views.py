@@ -1,68 +1,91 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.db.models import Q
 from django.db import models
-from .models import Product, Category, ProductImage, ProductVariant
+from .models import Product, Category, ProductImage, ProductVariant, Review, ReviewImage
 from .forms import ProductForm, CategoryForm, ProductImageForm
+from ecommerce.mixins import AdminRequiredMixin
+from ecommerce.utils import process_uploaded_images, is_admin_user
 
 
-class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
-    """Mixin to require admin/staff access"""
-    def test_func(self):
-        return self.request.user.is_staff or self.request.user.is_superuser
-
-
-class ProductListView(AdminRequiredMixin, ListView):
-    model = Product
-    template_name = 'admin/products/list.html'
-    context_object_name = 'products'
-    paginate_by = 20
+def product_list_view(request):
+    """Simple function-based view to avoid ListView complexity"""
+    # Check if user is admin
+    if not (request.user.is_staff or request.user.is_superuser):
+        from django.contrib.auth.decorators import login_required
+        from django.http import HttpResponseForbidden
+        if not request.user.is_authenticated:
+            from django.shortcuts import redirect
+            return redirect('accounts:login')
+        return HttpResponseForbidden()
     
-    def get_queryset(self):
+    context = {
+        'products': [],
+        'categories': [],
+        'search': '',
+        'selected_category': '',
+        'selected_stock_status': '',
+        'selected_is_active': '',
+    }
+    
+    try:
+        # Get all products as a simple list
+        products = list(Product.objects.all())
+        context['products'] = products
+        print(f"Loaded {len(products)} products successfully")
+        
+        # Get all categories
+        categories = list(Category.objects.all())
+        context['categories'] = categories
+        print(f"Loaded {len(categories)} categories successfully")
+        
+    except Exception as e:
+        print(f"Error loading products: {e}")
+        import traceback
+        traceback.print_exc()
+        # Keep empty lists as defaults
+        
+    return render(request, 'admin/products/list.html', context)
+
+
+def product_detail_view(request, pk):
+    """Simple function-based view for product details"""
+    # Check if user is admin
+    if not (request.user.is_staff or request.user.is_superuser):
+        from django.http import HttpResponseForbidden
+        if not request.user.is_authenticated:
+            from django.shortcuts import redirect
+            return redirect('accounts:login')
+        return HttpResponseForbidden()
+    
+    try:
+        product = Product.objects.get(pk=pk)
+        
+        context = {
+            'product': product,
+            'images': [],
+            'variants': [],
+        }
+        
         try:
-            queryset = Product.objects.all()
+            context['images'] = list(product.images.all())
+            context['variants'] = list(product.variants.all())
+        except Exception as e:
+            print(f"Error loading related objects: {e}")
+            # Keep empty lists as defaults
             
-            # Search functionality
-            search = self.request.GET.get('search')
-            if search:
-                queryset = queryset.filter(name__icontains=search)
-            
-            # Category filter
-            category = self.request.GET.get('category')
-            if category:
-                queryset = queryset.filter(category__id=category)
-            
-            return queryset.order_by('-id')
-        except:
-            return Product.objects.none()
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        try:
-            context['categories'] = Category.objects.all()
-        except:
-            context['categories'] = []
-        context['search'] = self.request.GET.get('search', '')
-        context['selected_category'] = self.request.GET.get('category', '')
-        context['selected_stock_status'] = self.request.GET.get('stock_status', '')
-        context['selected_is_active'] = self.request.GET.get('is_active', '')
-        return context
-
-
-class ProductDetailView(AdminRequiredMixin, DetailView):
-    model = Product
-    template_name = 'admin/products/detail.html'
-    context_object_name = 'product'
-    
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context['images'] = self.object.images.all()
-        context['variants'] = self.object.variants.all()
-        return context
+        return render(request, 'admin/products/detail.html', context)
+        
+    except Product.DoesNotExist:
+        messages.error(request, 'Product not found.')
+        return redirect('products:list')
+    except Exception as e:
+        print(f"Error loading product {pk}: {e}")
+        messages.error(request, 'Error loading product.')
+        return redirect('products:list')
 
 
 class ProductCreateView(AdminRequiredMixin, CreateView):
@@ -84,7 +107,7 @@ class ProductCreateView(AdminRequiredMixin, CreateView):
             print(f"DEBUG: Product SKU: {self.object.sku}")
             
             # Process uploaded images
-            self.process_uploaded_images()
+            self.handle_uploaded_images()
             
             messages.success(self.request, 'Product created successfully!')
             print(f"DEBUG: Success message added, redirecting...")
@@ -102,67 +125,9 @@ class ProductCreateView(AdminRequiredMixin, CreateView):
         messages.error(self.request, 'Please correct the errors below.')
         return super().form_invalid(form)
     
-    def process_uploaded_images(self):
+    def handle_uploaded_images(self):
         """Process images from the JavaScript upload system"""
-        import json
-        import base64
-        from django.core.files.base import ContentFile
-        from io import BytesIO
-        
-        print(f"DEBUG: Processing images for product {self.object.name}")
-        
-        # Look for image_data_* fields in POST data
-        image_data_fields = [key for key in self.request.POST.keys() if key.startswith('image_data_')]
-        print(f"DEBUG: Found image fields: {image_data_fields}")
-        
-        for field_name in image_data_fields:
-            try:
-                image_data_json = self.request.POST.get(field_name)
-                print(f"DEBUG: Processing {field_name}")
-                
-                if image_data_json:
-                    image_data = json.loads(image_data_json)
-                    print(f"DEBUG: Image data keys: {image_data.keys()}")
-                    
-                    # Extract base64 data (format: data:image/jpeg;base64,/9j/4AAQ...)
-                    image_src = image_data.get('src', '')
-                    if image_src.startswith('data:image'):
-                        print(f"DEBUG: Processing base64 image")
-                        
-                        # Split the data URL to get just the base64 part
-                        format_part, imgstr = image_src.split(';base64,')
-                        ext = format_part.split('/')[-1]  # Get file extension
-                        
-                        # Decode base64 to binary
-                        img_data = base64.b64decode(imgstr)
-                        print(f"DEBUG: Decoded image data, size: {len(img_data)} bytes")
-                        
-                        # Create file name
-                        original_name = image_data.get('name', 'uploaded_image.jpg')
-                        file_name = f"{self.object.slug}_{original_name}"
-                        print(f"DEBUG: Creating file: {file_name}")
-                        
-                        # Create Django file object
-                        img_file = ContentFile(img_data, name=file_name)
-                        
-                        # Create ProductImage instance
-                        product_image = ProductImage(
-                            product=self.object,
-                            image=img_file,
-                            alt_text=f"{self.object.name} image",
-                            is_main=image_data.get('isMain', False)
-                        )
-                        product_image.save()
-                        print(f"DEBUG: Successfully saved ProductImage {product_image.id}")
-                        
-                    else:
-                        print(f"DEBUG: Image source doesn't start with data:image")
-                        
-            except (json.JSONDecodeError, ValueError, KeyError) as e:
-                print(f"ERROR: Processing image {field_name}: {e}")
-                continue
-        
-        print(f"DEBUG: Finished processing images. Total images for product: {self.object.images.count()}")
+        process_uploaded_images(self.request, self.object, ProductImage)
 
 
 
@@ -174,8 +139,36 @@ class ProductUpdateView(AdminRequiredMixin, UpdateView):
     success_url = reverse_lazy('products:list')
     
     def form_valid(self, form):
-        messages.success(self.request, 'Product updated successfully!')
-        return super().form_valid(form)
+        try:
+            response = super().form_valid(form)
+            
+            # Handle deletion of existing images
+            self.process_image_deletions()
+            
+            # Process uploaded images
+            process_uploaded_images(self.request, self.object, ProductImage)
+
+            messages.success(self.request, 'Product updated successfully!')
+            return response
+        except Exception as e:
+            print(f"ERROR: Failed to update product: {e}")
+            import traceback
+            traceback.print_exc()
+            messages.error(self.request, f'Error updating product: {str(e)}')
+            return super().form_invalid(form)
+
+    def process_image_deletions(self):
+        """Delete images marked for deletion"""
+        delete_fields = [key for key in self.request.POST.keys() if key.startswith('delete_image_')]
+        print(f"DEBUG: Found {len(delete_fields)} images to delete: {delete_fields}")
+
+        for field_name in delete_fields:
+            try:
+                image_id = int(field_name.replace('delete_image_', ''))
+                deleted = ProductImage.objects.filter(id=image_id, product=self.object).delete()
+                print(f"DEBUG: Deleted image {image_id}: {deleted}")
+            except (ValueError, ProductImage.DoesNotExist) as e:
+                print(f"DEBUG: Error deleting image: {e}")
 
 
 class ProductDeleteView(AdminRequiredMixin, DeleteView):
@@ -194,9 +187,13 @@ class CategoryListView(AdminRequiredMixin, ListView):
     context_object_name = 'categories'
     
     def get_queryset(self):
-        return Category.objects.annotate(
-            product_count=models.Count('products')
-        ).order_by('name')
+        try:
+            # Simplified query without complex aggregation
+            categories = list(Category.objects.all())
+            return categories
+        except Exception as e:
+            print(f"Error loading categories: {e}")
+            return []
 
 
 class CategoryCreateView(AdminRequiredMixin, CreateView):
@@ -221,15 +218,12 @@ class CategoryUpdateView(AdminRequiredMixin, UpdateView):
         return super().form_valid(form)
 
 
-def is_admin_user(user):
-    return user.is_staff or user.is_superuser
-
 @login_required
 @user_passes_test(is_admin_user)
 def delete_category(request, pk):
     """Direct category deletion without confirmation page"""
     category = get_object_or_404(Category, pk=pk)
-    
+
     # Check if category has products
     if category.products.count() > 0:
         messages.error(request, f'Cannot delete "{category.name}" because it has {category.products.count()} products. Please move or delete the products first.')
@@ -237,5 +231,226 @@ def delete_category(request, pk):
         category_name = category.name
         category.delete()
         messages.success(request, f'Category "{category_name}" deleted successfully!')
-    
+
     return redirect('products:categories')
+
+
+# ============ Flash Sale Admin Views ============
+
+@login_required
+@user_passes_test(is_admin_user)
+def flash_sale_view(request):
+    """Manage flash sale products"""
+    context = {
+        'products': [],
+        'flash_sale_products': [],
+    }
+
+    try:
+        all_products = list(Product.objects.filter(is_active=True))
+        flash_sale_products = [p for p in all_products if p.is_flash_sale]
+        non_flash_products = [p for p in all_products if not p.is_flash_sale]
+
+        context['products'] = non_flash_products
+        context['flash_sale_products'] = flash_sale_products
+
+    except Exception as e:
+        print(f"Error loading flash sale products: {e}")
+        messages.error(request, f'Error loading products: {str(e)}')
+
+    return render(request, 'admin/products/flash_sale.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_user)
+def toggle_flash_sale(request, pk):
+    """Toggle flash sale status for a product"""
+    product = get_object_or_404(Product, pk=pk)
+    product.is_flash_sale = not product.is_flash_sale
+
+    # Clear flash sale price when removing from flash sale
+    if not product.is_flash_sale:
+        product.flash_sale_price = None
+
+    product.save()
+    return redirect('products:flash_sale')
+
+
+@login_required
+@user_passes_test(is_admin_user)
+def update_flash_price(request, pk):
+    """Update flash sale price for a product"""
+    if request.method == 'POST':
+        product = get_object_or_404(Product, pk=pk)
+        flash_price = request.POST.get('flash_sale_price', '').strip()
+
+        if flash_price:
+            try:
+                product.flash_sale_price = float(flash_price)
+                product.save()
+            except ValueError:
+                pass
+        else:
+            product.flash_sale_price = None
+            product.save()
+
+    return redirect('products:flash_sale')
+
+
+# ============ Review Admin Views ============
+
+@login_required
+@user_passes_test(is_admin_user)
+def review_list_view(request):
+    """List all reviews with filtering"""
+    context = {
+        'reviews': [],
+        'selected_status': request.GET.get('status', ''),
+        'selected_rating': request.GET.get('rating', ''),
+        'search': request.GET.get('search', ''),
+    }
+
+    try:
+        reviews = list(Review.objects.select_related('product', 'user', 'order').all())
+
+        # Filter by status
+        if context['selected_status']:
+            reviews = [r for r in reviews if r.status == context['selected_status']]
+
+        # Filter by rating
+        if context['selected_rating']:
+            try:
+                rating_val = int(context['selected_rating'])
+                reviews = [r for r in reviews if r.rating == rating_val]
+            except ValueError:
+                pass
+
+        # Search by product name or user
+        if context['search']:
+            search_term = context['search'].lower()
+            reviews = [r for r in reviews if
+                       search_term in r.product.name.lower() or
+                       search_term in r.user.username.lower() or
+                       (r.user.first_name and search_term in r.user.first_name.lower())]
+
+        context['reviews'] = reviews
+        context['pending_count'] = len([r for r in Review.objects.all() if r.status == 'pending'])
+
+    except Exception as e:
+        print(f"Error loading reviews: {e}")
+        import traceback
+        traceback.print_exc()
+
+    return render(request, 'admin/reviews/list.html', context)
+
+
+@login_required
+@user_passes_test(is_admin_user)
+def review_detail_view(request, pk):
+    """View single review details"""
+    try:
+        review = Review.objects.select_related('product', 'user', 'order').get(pk=pk)
+        images = list(review.images.all())
+
+        context = {
+            'review': review,
+            'images': images,
+        }
+
+        return render(request, 'admin/reviews/detail.html', context)
+
+    except Review.DoesNotExist:
+        messages.error(request, 'Review not found.')
+        return redirect('products:reviews')
+    except Exception as e:
+        print(f"Error loading review {pk}: {e}")
+        messages.error(request, 'Error loading review.')
+        return redirect('products:reviews')
+
+
+@login_required
+@user_passes_test(is_admin_user)
+def review_update_view(request, pk):
+    """Update review status and admin response"""
+    try:
+        review = Review.objects.select_related('product', 'user', 'order').get(pk=pk)
+
+        if request.method == 'POST':
+            new_status = request.POST.get('status')
+            admin_response = request.POST.get('admin_response', '').strip()
+
+            if new_status in ['pending', 'approved', 'rejected']:
+                review.status = new_status
+
+            review.admin_response = admin_response if admin_response else None
+            review.save()
+
+            messages.success(request, 'Review updated successfully!')
+            return redirect('products:reviews')
+
+        context = {
+            'review': review,
+            'images': list(review.images.all()),
+        }
+
+        return render(request, 'admin/reviews/edit.html', context)
+
+    except Review.DoesNotExist:
+        messages.error(request, 'Review not found.')
+        return redirect('products:reviews')
+    except Exception as e:
+        print(f"Error updating review {pk}: {e}")
+        messages.error(request, 'Error updating review.')
+        return redirect('products:reviews')
+
+
+@login_required
+@user_passes_test(is_admin_user)
+def review_delete_view(request, pk):
+    """Delete a review"""
+    try:
+        review = Review.objects.get(pk=pk)
+
+        if request.method == 'POST':
+            review.delete()
+            messages.success(request, 'Review deleted successfully!')
+            return redirect('products:reviews')
+
+        context = {
+            'review': review,
+        }
+
+        return render(request, 'admin/reviews/confirm_delete.html', context)
+
+    except Review.DoesNotExist:
+        messages.error(request, 'Review not found.')
+        return redirect('products:reviews')
+    except Exception as e:
+        print(f"Error deleting review {pk}: {e}")
+        messages.error(request, 'Error deleting review.')
+        return redirect('products:reviews')
+
+
+@login_required
+@user_passes_test(is_admin_user)
+def review_quick_action(request, pk, action):
+    """Quick approve/reject action for reviews"""
+    try:
+        review = Review.objects.get(pk=pk)
+
+        if action == 'approve':
+            review.status = 'approved'
+            review.save()
+            messages.success(request, 'Review approved!')
+        elif action == 'reject':
+            review.status = 'rejected'
+            review.save()
+            messages.success(request, 'Review rejected!')
+        else:
+            messages.error(request, 'Invalid action.')
+
+        return redirect('products:reviews')
+
+    except Review.DoesNotExist:
+        messages.error(request, 'Review not found.')
+        return redirect('products:reviews')

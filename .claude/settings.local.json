@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(tree:*)",
+      "Bash(grep:*)",
+      "Bash(rm:*)",
+      "Bash(dir:*)",
+      "Bash(python:*)",
+      "Bash(del \"C:\\\\Users\\\\rosha\\\\OneDrive\\\\Desktop\\\\code for fun\\\\code for fun\\\\e commerce\\\\DEVELOPMENT_RULES.md\")",
+      "Bash(del \"C:\\\\Users\\\\rosha\\\\OneDrive\\\\Desktop\\\\code for fun\\\\code for fun\\\\e commerce\\\\PROJECT_OVERVIEW.md\")",
+      "Bash(del \"C:\\\\Users\\\\rosha\\\\OneDrive\\\\Desktop\\\\code for fun\\\\code for fun\\\\e commerce\\\\SIMPLE_START_GUIDE.md\")",
+      "Bash(del \"C:\\\\Users\\\\rosha\\\\OneDrive\\\\Desktop\\\\code for fun\\\\code for fun\\\\e commerce\\\\GOOGLE_OAUTH_SETUP.md\")",
+      "Bash(pip install:*)",
+      "Bash(curl:*)",
+      "Bash(timeout:*)",
+      "Bash(ping:*)",
+      "Bash(node -c:*)",
+      "Bash(ren:*)",
+      "Bash(move:*)",
+      "Bash(cmd /c:*)",
+      "Bash(del \"C:\\\\Users\\\\rosha\\\\OneDrive\\\\Desktop\\\\code for fun\\\\code for fun\\\\e commerce\\\\backend\\\\products\\\\migrations\\\\0003_add_flash_sale_price.py\")",
+      "Bash(copy \"C:\\\\Users\\\\rosha\\\\OneDrive\\\\Desktop\\\\code for fun\\\\code for fun\\\\e commerce\\\\nul\" \"C:\\\\Users\\\\rosha\\\\OneDrive\\\\Desktop\\\\code for fun\\\\code for fun\\\\e commerce\\\\backend\\\\static\\\\frontend\\\\images\\\\hero-banner.jpg\")",
+      "Bash(powershell -Command \"Get-ChildItem ''C:\\\\Users\\\\rosha\\\\Downloads'' -Filter ''Gemini*'' | Select-Object Name, FullName\")",
+      "Bash(powershell -Command:*)",
+      "Bash(systeminfo:*)",
+      "Bash(findstr /B /C:\"OS Name\" /C:\"Total Physical Memory\" /C:\"Processor\")",
+      "Bash(wmic path win32_VideoController get name,adapterram:*)",
+      "Bash(python server.py:*)",
+      "Bash(timeout /t 3 /nobreak)",
+      "Bash(python -c \"import os; os.remove\\(''\\\\\\\\?\\\\C:\\\\Users\\\\rosha\\\\OneDrive\\\\Desktop\\\\code for fun\\\\code for fun\\\\e commerce\\\\nul''\\)\")",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git reset:*)"
+    ]
+  }
+}

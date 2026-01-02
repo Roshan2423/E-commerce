@@ -1,0 +1,145 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Edit Customer - {{ user_obj.get_full_name|default:user_obj.email }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Edit Customer</h1>
+    <p class="page-subtitle">Update customer information for {{ user_obj.get_full_name|default:user_obj.email }}</p>
+    <div style="margin-top: 16px;">
+        <a href="{% url 'user_management:user_list' %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Customers
+        </a>
+    </div>
+</div>
+
+<div style="max-width: 800px;">
+    <form method="POST" class="data-table">
+        {% csrf_token %}
+
+        <div class="table-header">
+            <h3 class="table-title">Customer Information</h3>
+        </div>
+
+        <div style="padding: 32px;">
+            <!-- Read-only Fields -->
+            <div style="margin-bottom: 32px; padding: 20px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                <h4 style="margin-bottom: 16px; color: #64748b; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    <i class="fas fa-lock"></i> Protected Information (Cannot be edited)
+                </h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div>
+                        <label style="font-weight: 600; color: #374151; margin-bottom: 6px; display: block; font-size: 14px;">Username</label>
+                        <div style="padding: 12px 16px; background: #e2e8f0; border-radius: 6px; color: #64748b;">
+                            {{ user_obj.username }}
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-weight: 600; color: #374151; margin-bottom: 6px; display: block; font-size: 14px;">Full Name</label>
+                        <div style="padding: 12px 16px; background: #e2e8f0; border-radius: 6px; color: #64748b;">
+                            {{ user_obj.get_full_name|default:"Not provided" }}
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-weight: 600; color: #374151; margin-bottom: 6px; display: block; font-size: 14px;">First Name</label>
+                        <div style="padding: 12px 16px; background: #e2e8f0; border-radius: 6px; color: #64748b;">
+                            {{ user_obj.first_name|default:"Not provided" }}
+                        </div>
+                    </div>
+                    <div>
+                        <label style="font-weight: 600; color: #374151; margin-bottom: 6px; display: block; font-size: 14px;">Last Name</label>
+                        <div style="padding: 12px 16px; background: #e2e8f0; border-radius: 6px; color: #64748b;">
+                            {{ user_obj.last_name|default:"Not provided" }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Editable Fields -->
+            <h4 style="margin-bottom: 20px; color: #374151; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+                <i class="fas fa-edit"></i> Editable Information
+            </h4>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px;">
+                <div>
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">Email Address</label>
+                    <input type="email" name="email" value="{{ user_obj.email }}" required
+                           style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 15px;">
+                </div>
+                <div>
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">Phone Number</label>
+                    <input type="tel" name="phone_number" value="{{ user_obj.phone_number|default:'' }}"
+                           placeholder="Enter 10 digit phone number"
+                           pattern="[0-9]{10}" maxlength="10" minlength="10"
+                           oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)"
+                           style="width: 100%; padding: 12px 16px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 15px;">
+                    <small style="color: #6b7280; margin-top: 4px; display: block;">Must be exactly 10 digits</small>
+                </div>
+            </div>
+
+            <!-- Status Toggles -->
+            <h4 style="margin-bottom: 20px; color: #374151; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px;">
+                <i class="fas fa-sliders-h"></i> Account Status
+            </h4>
+
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <input type="checkbox" name="is_active" {% if user_obj.is_active %}checked{% endif %}
+                           style="width: 20px; height: 20px; accent-color: #10b981;">
+                    <div>
+                        <strong style="color: #374151;">Active Account</strong>
+                        <p style="margin: 4px 0 0; color: #6b7280; font-size: 14px;">User can login and access the platform</p>
+                    </div>
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; background: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
+                    <input type="checkbox" name="is_verified" {% if user_obj.is_verified %}checked{% endif %}
+                           style="width: 20px; height: 20px; accent-color: #10b981;">
+                    <div>
+                        <strong style="color: #374151;">Verified Account</strong>
+                        <p style="margin: 4px 0 0; color: #6b7280; font-size: 14px;">Email has been verified</p>
+                    </div>
+                </label>
+
+                {% if not user_obj.is_superuser %}
+                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; background: #fef3c7; border-radius: 8px; border: 1px solid #fcd34d;">
+                    <input type="checkbox" name="is_staff" {% if user_obj.is_staff %}checked{% endif %}
+                           style="width: 20px; height: 20px; accent-color: #f59e0b;">
+                    <div>
+                        <strong style="color: #92400e;">Admin Access</strong>
+                        <p style="margin: 4px 0 0; color: #a16207; font-size: 14px;">User can access the admin dashboard</p>
+                    </div>
+                </label>
+                {% else %}
+                <div style="padding: 16px; background: #fef2f2; border-radius: 8px; border: 1px solid #fecaca;">
+                    <strong style="color: #991b1b;"><i class="fas fa-shield-alt"></i> Superuser Account</strong>
+                    <p style="margin: 4px 0 0; color: #b91c1c; font-size: 14px;">Superuser privileges cannot be modified</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Account Info -->
+            <div style="margin-top: 32px; padding: 20px; background: #f0fdf4; border-radius: 8px; border: 1px solid #bbf7d0;">
+                <h4 style="margin-bottom: 12px; color: #166534; font-size: 14px;">
+                    <i class="fas fa-info-circle"></i> Account Information
+                </h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; color: #15803d; font-size: 14px;">
+                    <div><strong>Joined:</strong> {{ user_obj.date_joined|date:"F d, Y H:i" }}</div>
+                    <div><strong>Last Login:</strong> {{ user_obj.last_login|date:"F d, Y H:i"|default:"Never" }}</div>
+                </div>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div style="margin-top: 32px; display: flex; gap: 12px; justify-content: flex-end;">
+                <a href="{% url 'user_management:user_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> Cancel
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

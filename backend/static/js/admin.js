@@ -1,286 +1,332 @@
 // Modern Admin Panel JavaScript
-$(document).ready(function () {
-    // Sidebar is always visible - no toggle needed
+(function() {
+    'use strict';
 
-    // Dropdown menu functionality
-    $('.dropdown-toggle').on('click', function(e) {
-        e.preventDefault();
-        const target = $(this).data('target');
-        const dropdown = $('#' + target);
-        const icon = $(this).find('.fa-chevron-down');
-        
-        // Close other dropdowns
-        $('.dropdown-menu').not(dropdown).removeClass('show');
-        $('.dropdown-toggle .fa-chevron-down').not(icon).removeClass('fa-rotate-180');
-        
-        // Toggle current dropdown
-        dropdown.toggleClass('show');
-        icon.toggleClass('fa-rotate-180');
+    // DOM Ready
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('Admin Panel loaded');
+        initDropdowns();
+        initAlerts();
+        initSearch();
+        initAnimations();
+        initCharts();
     });
 
-    // Close dropdown when clicking outside
-    $(document).on('click', function(e) {
-        if (!$(e.target).closest('.dropdown-toggle').length) {
-            $('.dropdown-menu').removeClass('show');
-            $('.dropdown-toggle .fa-chevron-down').removeClass('fa-rotate-180');
-        }
-    });
+    // Dropdown Navigation
+    function initDropdowns() {
+        const dropdownToggles = document.querySelectorAll('.dropdown-toggle');
 
-    // Auto-hide alerts after 5 seconds
-    setTimeout(function() {
-        $('.alert').fadeOut('slow');
-    }, 5000);
+        dropdownToggles.forEach(function(toggle) {
+            toggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
 
-    // Smooth animations for cards
-    $('.stat-card').each(function(index) {
-        $(this).css('animation-delay', (index * 0.1) + 's');
-        $(this).addClass('slide-in');
-    });
+                const navItem = this.closest('.nav-item');
+                const isActive = navItem.classList.contains('active');
 
-    // Loading button functionality
-    $('.btn').on('click', function(e) {
-        const btn = $(this);
-        if (btn.hasClass('loading-btn')) return;
-        
-        const originalText = btn.html();
-        btn.addClass('loading-btn');
-        btn.html('<span class="loading"></span> Loading...');
-        
-        // Reset after 3 seconds (you can remove this in production)
-        setTimeout(() => {
-            btn.removeClass('loading-btn');
-            btn.html(originalText);
-        }, 3000);
-    });
+                // Close all other dropdowns
+                document.querySelectorAll('.nav-item.has-dropdown').forEach(function(item) {
+                    if (item !== navItem) {
+                        item.classList.remove('active');
+                    }
+                });
 
-    // Confirm deletion modals
-    $('.delete-btn').on('click', function(e) {
-        e.preventDefault();
-        const deleteUrl = $(this).attr('href');
-        const itemName = $(this).data('item-name') || 'this item';
-        
-        if (confirm(`Are you sure you want to delete ${itemName}? This action cannot be undone.`)) {
-            window.location.href = deleteUrl;
-        }
-    });
-
-    // Search functionality
-    $('#searchInput').on('keyup', function() {
-        const value = $(this).val().toLowerCase();
-        $('#dataTable tbody tr').filter(function() {
-            $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1);
+                // Toggle current dropdown
+                navItem.classList.toggle('active', !isActive);
+            });
         });
-    });
 
-    // Responsive sidebar for mobile
-    if (window.innerWidth <= 768) {
-        $('#sidebar').addClass('active');
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.nav-item')) {
+                document.querySelectorAll('.nav-item.has-dropdown.active').forEach(function(item) {
+                    item.classList.remove('active');
+                });
+            }
+        });
+
+        // Prevent dropdown menu clicks from closing
+        document.querySelectorAll('.dropdown-menu').forEach(function(menu) {
+            menu.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        });
     }
 
-    $(window).on('resize', function() {
-        if (window.innerWidth <= 768) {
-            $('#sidebar').addClass('active');
-        } else {
-            $('#sidebar').removeClass('active');
-        }
-    });
+    // Alert Auto-dismiss
+    function initAlerts() {
+        const alerts = document.querySelectorAll('.alert');
 
-    // Counter animation
-    function animateCounter(element, start, end, duration) {
-        let startTimestamp = null;
-        const step = (timestamp) => {
-            if (!startTimestamp) startTimestamp = timestamp;
-            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-            const current = Math.floor(progress * (end - start) + start);
-            element.text(current.toLocaleString());
+        alerts.forEach(function(alert) {
+            // Auto-dismiss after 5 seconds
+            setTimeout(function() {
+                alert.style.transition = 'all 0.3s ease';
+                alert.style.opacity = '0';
+                alert.style.transform = 'translateY(-10px)';
+
+                setTimeout(function() {
+                    alert.remove();
+                }, 300);
+            }, 5000);
+        });
+    }
+
+    // Global Search
+    function initSearch() {
+        const searchInput = document.getElementById('globalSearch');
+        const tableSearchInput = document.getElementById('searchInput');
+
+        if (searchInput) {
+            searchInput.addEventListener('keyup', function(e) {
+                if (e.key === 'Enter') {
+                    const query = this.value.trim();
+                    if (query) {
+                        // Search functionality - can be extended
+                        console.log('Searching for:', query);
+                    }
+                }
+            });
+        }
+
+        // Table search
+        if (tableSearchInput) {
+            tableSearchInput.addEventListener('keyup', function() {
+                const value = this.value.toLowerCase();
+                const rows = document.querySelectorAll('#dataTable tbody tr');
+
+                rows.forEach(function(row) {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(value) ? '' : 'none';
+                });
+            });
+        }
+    }
+
+    // Animations
+    function initAnimations() {
+        // Animate stat cards
+        const statCards = document.querySelectorAll('.stat-card');
+
+        statCards.forEach(function(card, index) {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+
+            setTimeout(function() {
+                card.style.transition = 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)';
+                card.style.opacity = '1';
+                card.style.transform = 'translateY(0)';
+            }, 100 + (index * 100));
+        });
+
+        // Animate stat values (counter animation)
+        const statValues = document.querySelectorAll('.stat-value');
+
+        statValues.forEach(function(el) {
+            const text = el.textContent;
+            const numMatch = text.match(/[\d,]+/);
+
+            if (numMatch) {
+                const target = parseInt(numMatch[0].replace(/,/g, ''));
+                const prefix = text.substring(0, text.indexOf(numMatch[0]));
+                const suffix = text.substring(text.indexOf(numMatch[0]) + numMatch[0].length);
+
+                if (target > 0) {
+                    animateCounter(el, 0, target, 1500, prefix, suffix);
+                }
+            }
+        });
+
+        // Table row animations
+        const tableRows = document.querySelectorAll('tbody tr');
+
+        tableRows.forEach(function(row, index) {
+            row.style.opacity = '0';
+            row.style.transform = 'translateX(-10px)';
+
+            setTimeout(function() {
+                row.style.transition = 'all 0.3s ease';
+                row.style.opacity = '1';
+                row.style.transform = 'translateX(0)';
+            }, 200 + (index * 50));
+        });
+    }
+
+    // Counter Animation
+    function animateCounter(element, start, end, duration, prefix, suffix) {
+        prefix = prefix || '';
+        suffix = suffix || '';
+
+        let startTime = null;
+
+        function step(timestamp) {
+            if (!startTime) startTime = timestamp;
+
+            const progress = Math.min((timestamp - startTime) / duration, 1);
+            const easeProgress = 1 - Math.pow(1 - progress, 3); // Ease out cubic
+            const current = Math.floor(easeProgress * (end - start) + start);
+
+            element.textContent = prefix + current.toLocaleString() + suffix;
+
             if (progress < 1) {
                 window.requestAnimationFrame(step);
             }
-        };
+        }
+
         window.requestAnimationFrame(step);
     }
 
-    // Animate counters on page load
-    $('.stat-value').each(function() {
-        const $this = $(this);
-        const countTo = parseInt($this.text().replace(/[^0-9]/g, ''));
-        if (countTo > 0) {
-            $this.text('0');
-            animateCounter($this, 0, countTo, 1500);
-        }
-    });
+    // Charts (if Chart.js is available)
+    function initCharts() {
+        if (typeof Chart === 'undefined') return;
 
-    // Form validation enhancement
-    $('.form-control').on('blur', function() {
-        const $this = $(this);
-        if ($this.val().trim() === '' && $this.attr('required')) {
-            $this.addClass('is-invalid');
-        } else {
-            $this.removeClass('is-invalid');
-        }
-    });
+        // Sales Chart
+        const salesCanvas = document.getElementById('salesChart');
+        if (salesCanvas) {
+            const ctx = salesCanvas.getContext('2d');
 
-    // Status badge hover effects
-    $('.badge').hover(
-        function() {
-            $(this).css('transform', 'scale(1.05)');
-        },
-        function() {
-            $(this).css('transform', 'scale(1)');
-        }
-    );
-});
+            const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+            gradient.addColorStop(0, 'rgba(99, 102, 241, 0.3)');
+            gradient.addColorStop(1, 'rgba(99, 102, 241, 0.02)');
 
-// Chart.js configuration for dashboard
-function initializeDashboardCharts() {
-    // Sales Chart
-    if (document.getElementById('salesChart')) {
-        const ctx = document.getElementById('salesChart').getContext('2d');
-        
-        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
-        gradient.addColorStop(1, 'rgba(59, 130, 246, 0.05)');
-
-        new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-                datasets: [{
-                    label: 'Sales',
-                    data: [12000, 19000, 15000, 25000, 22000, 30000],
-                    borderColor: 'rgb(59, 130, 246)',
-                    backgroundColor: gradient,
-                    borderWidth: 3,
-                    fill: true,
-                    tension: 0.4,
-                    pointBackgroundColor: 'rgb(59, 130, 246)',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 3,
-                    pointRadius: 6,
-                    pointHoverRadius: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Revenue',
+                        data: [12000, 19000, 15000, 25000, 22000, 30000],
+                        borderColor: '#6366f1',
+                        backgroundColor: gradient,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointBackgroundColor: '#6366f1',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: 3,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
                 },
-                scales: {
-                    x: {
-                        grid: {
-                            display: false
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#64748b' }
                         },
-                        ticks: {
-                            color: '#64748b'
+                        y: {
+                            grid: { color: 'rgba(100, 116, 139, 0.1)' },
+                            ticks: {
+                                color: '#64748b',
+                                callback: function(value) {
+                                    return 'Rs ' + value.toLocaleString();
+                                }
+                            }
                         }
                     },
-                    y: {
-                        grid: {
-                            color: 'rgba(100, 116, 139, 0.1)'
-                        },
-                        ticks: {
-                            color: '#64748b',
-                            callback: function(value) {
-                                return 'Rs ' + value.toLocaleString();
-                            }
-                        }
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
                     }
+                }
+            });
+        }
+
+        // Orders Chart
+        const ordersCanvas = document.getElementById('ordersChart');
+        if (ordersCanvas) {
+            new Chart(ordersCanvas, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Pending', 'Processing', 'Shipped', 'Delivered'],
+                    datasets: [{
+                        data: [30, 20, 25, 25],
+                        backgroundColor: [
+                            'rgba(245, 158, 11, 0.85)',
+                            'rgba(99, 102, 241, 0.85)',
+                            'rgba(139, 92, 246, 0.85)',
+                            'rgba(16, 185, 129, 0.85)'
+                        ],
+                        borderColor: '#ffffff',
+                        borderWidth: 3
+                    }]
                 },
-                interaction: {
-                    intersect: false,
-                    mode: 'index'
-                }
-            }
-        });
-    }
-
-    // Orders Chart (Doughnut)
-    if (document.getElementById('ordersChart')) {
-        const ctx2 = document.getElementById('ordersChart').getContext('2d');
-        new Chart(ctx2, {
-            type: 'doughnut',
-            data: {
-                labels: ['Pending', 'Processing', 'Shipped', 'Delivered'],
-                datasets: [{
-                    data: [30, 20, 25, 25],
-                    backgroundColor: [
-                        'rgba(245, 158, 11, 0.8)',
-                        'rgba(59, 130, 246, 0.8)',
-                        'rgba(139, 92, 246, 0.8)',
-                        'rgba(16, 185, 129, 0.8)'
-                    ],
-                    borderColor: [
-                        '#f59e0b',
-                        '#3b82f6',
-                        '#8b5cf6',
-                        '#10b981'
-                    ],
-                    borderWidth: 3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '60%',
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            padding: 20,
-                            color: '#64748b',
-                            font: {
-                                size: 14,
-                                weight: '500'
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 16,
+                                color: '#64748b',
+                                font: { size: 13, weight: '500' }
                             }
                         }
                     }
                 }
+            });
+        }
+    }
+
+    // Utility: Show Notification
+    window.showNotification = function(message, type) {
+        type = type || 'success';
+
+        const icons = {
+            success: 'fa-check-circle',
+            error: 'fa-exclamation-circle',
+            warning: 'fa-exclamation-triangle',
+            info: 'fa-info-circle'
+        };
+
+        const notification = document.createElement('div');
+        notification.className = 'alert ' + type;
+        notification.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px; max-width: 450px;';
+        notification.innerHTML = '<i class="fas ' + icons[type] + '"></i><span>' + message + '</span><button class="alert-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>';
+
+        document.body.appendChild(notification);
+
+        setTimeout(function() {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateY(-10px)';
+            setTimeout(function() {
+                notification.remove();
+            }, 300);
+        }, 4000);
+    };
+
+    // Utility: Format Currency
+    window.formatCurrency = function(amount) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD'
+        }).format(amount);
+    };
+
+    // Utility: Format Number
+    window.formatNumber = function(num) {
+        return new Intl.NumberFormat('en-US').format(num);
+    };
+
+    // Delete Confirmation
+    document.addEventListener('click', function(e) {
+        if (e.target.matches('.delete-btn, .delete-btn *')) {
+            e.preventDefault();
+
+            const btn = e.target.closest('.delete-btn');
+            const deleteUrl = btn.getAttribute('href');
+            const itemName = btn.dataset.itemName || 'this item';
+
+            if (confirm('Are you sure you want to delete ' + itemName + '? This action cannot be undone.')) {
+                window.location.href = deleteUrl;
             }
-        });
-    }
-}
+        }
+    });
 
-// Utility functions
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD'
-    }).format(amount);
-}
-
-function formatNumber(num) {
-    return new Intl.NumberFormat('en-US').format(num);
-}
-
-function showNotification(message, type = 'success') {
-    const notification = $(`
-        <div class="alert ${type} fade-in" style="position: fixed; top: 20px; right: 20px; z-index: 9999; min-width: 300px;">
-            <i class="fas fa-check-circle" style="margin-right: 8px;"></i>
-            ${message}
-        </div>
-    `);
-    
-    $('body').append(notification);
-    
-    setTimeout(() => {
-        notification.fadeOut(() => {
-            notification.remove();
-        });
-    }, 4000);
-}
-
-// Initialize everything when document is ready
-$(document).ready(function() {
-    // Add loading class to body initially
-    $('body').addClass('fade-in');
-    
-    // Initialize charts if Chart.js is available
-    if (typeof Chart !== 'undefined') {
-        initializeDashboardCharts();
-    }
-    
-    console.log('🚀 Modern Admin Panel Loaded Successfully!');
-});
+})();

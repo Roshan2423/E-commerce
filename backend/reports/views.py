@@ -1,21 +1,14 @@
-from django.shortcuts import render
 from django.views.generic import TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models import Sum, Count, Q, F, Avg
 from django.utils import timezone
 from datetime import timedelta, datetime
 from products.models import Product, Category
 from orders.models import Order, OrderItem
 from django.contrib.auth import get_user_model
+from ecommerce.mixins import AdminRequiredMixin
 import json
 
 User = get_user_model()
-
-
-class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
-    """Mixin to require admin/staff access"""
-    def test_func(self):
-        return self.request.user.is_staff or self.request.user.is_superuser
 
 
 class ReportsHomeView(AdminRequiredMixin, TemplateView):

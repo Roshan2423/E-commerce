@@ -8,13 +8,13 @@ User = get_user_model()
 
 class Order(models.Model):
     STATUS_CHOICES = [
-        ('pending', 'Pending'),
-        ('confirmed', 'Confirmed'),
         ('processing', 'Processing'),
+        ('confirmed', 'Confirmed'),
+        ('packed', 'Packed'),
         ('shipped', 'Shipped'),
         ('delivered', 'Delivered'),
+        ('returned', 'Returned'),
         ('cancelled', 'Cancelled'),
-        ('refunded', 'Refunded'),
     ]
 
     PAYMENT_STATUS_CHOICES = [
@@ -25,8 +25,11 @@ class Order(models.Model):
     ]
 
     order_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders')
-    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='pending')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='orders', null=True, blank=True)
+    # Guest checkout fields
+    guest_email = models.EmailField(blank=True, null=True)
+    is_guest_order = models.BooleanField(default=False)
+    status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='processing')
     payment_status = models.CharField(max_length=15, choices=PAYMENT_STATUS_CHOICES, default='pending')
     
     # Order totals
@@ -52,6 +55,10 @@ class Order(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     shipped_at = models.DateTimeField(null=True, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
+
+    # Soft delete
+    is_deleted = models.BooleanField(default=False)
+    deleted_at = models.DateTimeField(null=True, blank=True)
 
     class Meta:
         verbose_name = 'Order'
@@ -101,3 +108,27 @@ class ShippingMethod(models.Model):
 
     def __str__(self):
         return f"{self.name} - ${self.cost}"
+
+
+class OrderHistory(models.Model):
+    ACTION_CHOICES = [
+        ('created', 'Order Created'),
+        ('status_changed', 'Status Changed'),
+        ('payment_changed', 'Payment Status Changed'),
+        ('updated', 'Order Updated'),
+    ]
+
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='history')
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    old_value = models.CharField(max_length=50, blank=True)
+    new_value = models.CharField(max_length=50, blank=True)
+    note = models.TextField(blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name_plural = 'Order histories'
+
+    def __str__(self):
+        return f"{self.order.get_order_number()} - {self.get_action_display()}"
