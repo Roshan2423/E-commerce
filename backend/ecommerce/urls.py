@@ -28,6 +28,7 @@ urlpatterns = [
     path('orders/', include('orders.urls')),
     path('users/', include('accounts.user_urls')),
     path('reports/', include('reports.urls')),
+    path('admin/chatbot/', include('chatbot.urls')),
     path('', include('contacts.urls')),
 
     # Frontend routes (must be last - catches all remaining URLs)

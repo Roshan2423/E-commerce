@@ -1,347 +1,330 @@
 """
-OVN Store Intelligent Chatbot
-Uses Groq API (FREE) with Llama 3.1 for smart responses
-Connects to MongoDB database for real product/order data
+OVN Store Advanced Chatbot
+Main orchestrator for all chatbot functionality
 """
+from typing import Dict, List, Optional, Any
 
-import re
-import os
-from pymongo import MongoClient
-from groq import Groq
-from dotenv import load_dotenv
+# Core modules
+from core.session import SessionManager, SessionData, ConversationState
+from core.state_machine import StateMachine
+from core.intent import IntentDetector, EntityExtractor
+from core.ai_engine import AIEngine
 
-# Load environment variables
-load_dotenv()
+# Handlers
+from handlers.product import ProductHandler
+from handlers.order_tracking import OrderTrackingHandler
+from handlers.order_placement import OrderPlacementHandler
+from handlers.support import SupportHandler
+from handlers.review import ReviewHandler
 
-# MongoDB Configuration
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/")
-DATABASE_NAME = os.getenv("DATABASE_NAME", "ovn_store")
+# API client
+from api.django_client import DjangoAPIClient
 
-# Groq API Configuration (get from environment variable)
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+# Config
+from config import RESPONSES, QUICK_REPLIES
 
 
 class OVNStoreChatbot:
+    """
+    Advanced chatbot orchestrator.
+    Routes messages to appropriate handlers based on intent and state.
+    """
+
     def __init__(self):
-        # Initialize MongoDB client
-        try:
-            self.client = MongoClient(MONGO_URI)
-            self.db = self.client[DATABASE_NAME]
-            self.products_col = self.db['products']
-            self.categories_col = self.db['categories']
-            self.db_connected = True
-            print("Connected to MongoDB successfully!")
-        except Exception as e:
-            print(f"MongoDB connection failed: {e}")
-            self.db_connected = False
+        # Initialize core components
+        self.session_manager = SessionManager()
+        self.state_machine = StateMachine()
+        self.intent_detector = IntentDetector()
+        self.entity_extractor = EntityExtractor()
+        self.ai_engine = AIEngine()
+        self.api_client = DjangoAPIClient()
 
-        # Initialize Groq client
-        self.groq_client = Groq(api_key=GROQ_API_KEY)
-        self.conversation_history = []
-
-        # System prompt
-        self.system_prompt = """You are OVN Store's friendly AI shopping assistant.
-
-IMPORTANT: Look at the "Products found" count in the context.
-- If products found > 0: Say "Here are the products I found!" or similar welcoming message
-- If products found = 0: Say "Sorry, I couldn't find products matching your search. Try browsing all products!"
-
-STORE INFO:
-- Free shipping on orders above Rs. 1000
-- 7-day return policy
-- Cash on Delivery available
-- Delivery: 3-5 business days in Nepal
-
-Keep responses brief (1-2 sentences). Product cards with images appear automatically below your message.
-"""
-
-    def format_product(self, product):
-        """Format a MongoDB product document - matches Django API logic"""
-        # Get prices
-        regular_price = float(product.get("price", 0))
-        special_price = float(product.get("compare_price")) if product.get("compare_price") else None
-        flash_price = float(product.get("flash_sale_price")) if product.get("flash_sale_price") else None
-        is_flash_sale = product.get("is_flash_sale", False)
-
-        # Determine display price and compare price (matches api_views.py logic)
-        if flash_price:
-            # Flash sale with flash_sale_price: show flash price, strikethrough special or regular
-            display_price = flash_price
-            original_price = special_price if special_price else regular_price
-        elif special_price:
-            # Has special/compare price: show special price, strikethrough regular
-            display_price = special_price
-            original_price = regular_price
-        else:
-            # Just regular price
-            display_price = regular_price
-            original_price = 0
-
-        return {
-            "id": product.get("django_id", ""),  # Use Django ID for frontend URLs
-            "name": product.get("name", ""),
-            "price": display_price,  # Display price (flash/special/regular)
-            "compare_price": original_price,  # Original price for strikethrough
-            "flash_sale_price": flash_price,
-            "image": product.get("main_image", ""),
-            "category": product.get("category_name", "General"),
-            "stock": product.get("stock_quantity", 0),
-            "rating": product.get("avg_rating", 0),  # Average rating from reviews
-            "review_count": product.get("review_count", 0),
-            "is_featured": product.get("is_featured", False),
-            "is_flash_sale": is_flash_sale,
-            "description": (product.get("description", "") or "")[:100]
+        # Initialize handlers
+        self.handlers = {
+            'product': ProductHandler(self.api_client),
+            'order_tracking': OrderTrackingHandler(self.api_client),
+            'order_placement': OrderPlacementHandler(self.api_client),
+            'support': SupportHandler(self.api_client),
+            'review': ReviewHandler(self.api_client)
         }
 
-    def get_all_products(self, limit=20):
-        """Get all active products"""
-        try:
-            products = self.products_col.find({"is_active": True}).limit(limit)
-            return [self.format_product(p) for p in products]
-        except Exception as e:
-            print(f"Error: {e}")
-            return []
+        # Intent to handler mapping
+        self.intent_handler_map = {
+            'product_search': 'product',
+            'flash_sale': 'product',
+            'categories': 'product',
+            'product_detail': 'product',
+            'order_tracking': 'order_tracking',
+            'order_placement': 'order_placement',
+            'support': 'support',
+            'review_view': 'review',
+            'review_submit': 'review'
+        }
 
-    def get_featured_products(self, limit=10):
-        """Get featured products"""
-        try:
-            products = self.products_col.find({
-                "is_active": True,
-                "$or": [{"is_featured": True}, {"is_flash_sale": True}]
-            }).limit(limit)
-            return [self.format_product(p) for p in products]
-        except Exception as e:
-            print(f"Error: {e}")
-            return []
+        print("OVN Store Chatbot initialized!")
 
-    def search_products(self, query, max_price=None, limit=10):
-        """Search products by name or description"""
-        try:
-            # Extract keywords
-            keywords = re.findall(r'\b\w+\b', query.lower())
-            stop_words = {'show', 'me', 'the', 'a', 'an', 'i', 'want', 'need', 'find', 'search',
-                         'looking', 'for', 'can', 'you', 'please', 'what', 'do', 'have', 'products',
-                         'product', 'all', 'everything', 'browse', 'see'}
-            keywords = [k for k in keywords if k not in stop_words and len(k) > 2]
+    def chat(self, user_message: str, session_id: str = "default") -> Dict[str, Any]:
+        """
+        Main chat function - processes user message and returns response.
 
-            if not keywords:
-                return self.get_all_products(limit)
+        Args:
+            user_message: The user's message
+            session_id: Unique session identifier
 
-            # Build regex pattern for search
-            regex_patterns = []
-            for keyword in keywords:
-                regex_patterns.append({"name": {"$regex": keyword, "$options": "i"}})
-                regex_patterns.append({"description": {"$regex": keyword, "$options": "i"}})
+        Returns:
+            Dictionary with message, products, categories, quick_replies, etc.
+        """
+        # Get or create session
+        session = self.session_manager.get_or_create(session_id)
 
-            query_filter = {"is_active": True, "$or": regex_patterns}
+        # Add user message to history
+        session.add_message("user", user_message)
 
-            if max_price:
-                query_filter["price"] = {"$lte": max_price}
+        # Check if user wants to cancel current flow
+        if self.state_machine.should_cancel(user_message) and self.state_machine.is_in_flow(session):
+            session.reset_state()
+            return self._build_response(
+                "Cancelled. How else can I help you?",
+                quick_replies=QUICK_REPLIES.get('greeting', [])
+            )
 
-            products = self.products_col.find(query_filter).limit(limit)
-            return [self.format_product(p) for p in products]
-        except Exception as e:
-            print(f"Error: {e}")
-            return []
+        # Detect intent and extract entities
+        intent_result = self.intent_detector.detect(
+            user_message,
+            session.get_recent_history()
+        )
+        entity_result = self.entity_extractor.extract(user_message, intent_result.intent)
 
-    def get_all_categories(self):
-        """Get all category names"""
-        try:
-            categories = self.categories_col.find({}, {"name": 1})
-            return [cat["name"] for cat in categories]
-        except:
-            return []
+        # Combine entities with intent info
+        entities = entity_result.entities
+        entities['intent'] = intent_result.intent
+        entities['confidence'] = intent_result.confidence
 
-    def get_products_by_category(self, category_name, limit=10):
-        """Get products by category"""
-        try:
-            products = self.products_col.find({
-                "is_active": True,
-                "category_name": {"$regex": category_name, "$options": "i"}
-            }).limit(limit)
-            return [self.format_product(p) for p in products]
-        except Exception as e:
-            print(f"Error: {e}")
-            return []
+        # Smart phone number detection - if user just sends a phone number in IDLE state
+        # assume they want to track an order
+        if session.state == ConversationState.IDLE:
+            phone = entities.get('phone')
+            clean_msg = user_message.strip()
+            # Check if message is primarily a phone number (10 digits, with possible formatting)
+            digits_only = ''.join(filter(str.isdigit, clean_msg))
+            if phone or (len(digits_only) == 10 and len(clean_msg) <= 15):
+                # User sent a phone number - assume order tracking
+                intent_result.intent = 'order_tracking'
+                entities['intent'] = 'order_tracking'
+                if not phone and len(digits_only) == 10:
+                    entities['phone'] = digits_only
 
-    def get_product_stats(self):
-        """Get store statistics"""
-        try:
-            return {
-                "total_products": self.products_col.count_documents({"is_active": True}),
-                "categories": self.get_all_categories(),
-                "featured_count": self.products_col.count_documents({"is_active": True, "is_featured": True})
-            }
-        except:
-            return {}
+        # Smart product name detection - triggers for product-like patterns
+        # Only when intent is 'general' with very low confidence (greeting/thanks/bye have higher confidence now)
+        if session.state == ConversationState.IDLE and intent_result.intent == 'general' and intent_result.confidence < 0.3:
+            msg_lower = user_message.lower().strip()
+            import re
 
-    def get_product_detail(self, query):
-        """Get detailed info about a specific product"""
-        try:
-            # Extract keywords from query
-            keywords = re.findall(r'\b\w+\b', query.lower())
-            stop_words = {'tell', 'me', 'more', 'about', 'the', 'a', 'an', 'what', 'is',
-                         'details', 'detail', 'info', 'information', 'describe', 'show'}
-            keywords = [k for k in keywords if k not in stop_words and len(k) > 2]
+            # Pattern-based detection for product queries
+            product_patterns = [
+                r'\d+\s*(ml|l|g|kg|oz|cm|mm|inch)',  # 220ml, 500g, etc.
+                r'\d+\s*(pcs|pieces|pack)',  # 3pcs, 10 pack
+                r'\d+[a-zA-Z]+',  # 220clover, 40oz (number immediately followed by letters)
+                # Product type words - only match if they're the main word (not greetings)
+                r'\b(jar|cup|bottle|brush|lamp|toothbrush|bag|phone|stand|clover|stanley|vacuum)\b',
+            ]
+            is_product_query = any(re.search(pattern, msg_lower) for pattern in product_patterns)
 
-            if not keywords:
-                return None
+            if is_product_query:
+                intent_result.intent = 'product_search'
+                entities['intent'] = 'product_search'
+                intent_result.confidence = 0.7
 
-            # Search for product matching keywords
-            for keyword in keywords:
-                product = self.products_col.find_one({
-                    "is_active": True,
-                    "$or": [
-                        {"name": {"$regex": keyword, "$options": "i"}},
-                        {"description": {"$regex": keyword, "$options": "i"}}
-                    ]
-                })
-                if product:
-                    return product
-            return None
-        except Exception as e:
-            print(f"Error: {e}")
-            return None
+        # Determine which handler to use
+        handler = self._get_handler(intent_result.intent, session.state)
 
-    def detect_intent_and_get_products(self, user_message):
-        """Detect user intent and fetch relevant products"""
-        message_lower = user_message.lower()
-        products = []
-        intent = "general"
-        product_detail = None
+        if handler:
+            # Process with appropriate handler
+            response = handler.handle(user_message, session, entities)
 
-        # Product detail request (tell me more about, what is, details about)
-        if any(phrase in message_lower for phrase in ["tell me more", "tell me about", "more about", "details about", "what is the", "describe"]):
-            product_detail = self.get_product_detail(user_message)
-            if product_detail:
-                products = [self.format_product(product_detail)]
-                intent = "product_detail"
-                return intent, products, product_detail
+            # Update session state if needed
+            if response.next_state:
+                session.set_state(response.next_state)
+            if response.reset_state:
+                session.reset_state()
 
-        # Flash sale / deals / featured
-        if any(word in message_lower for word in ["flash", "sale", "deal", "offer", "discount", "featured", "special"]):
-            products = self.get_featured_products(limit=8)
-            intent = "featured"
+            # Add assistant message to history
+            session.add_message("assistant", response.message)
 
-        # Category query
-        elif "category" in message_lower or "categories" in message_lower:
-            intent = "categories"
+            return self._build_response(
+                response.message,
+                products=response.products,
+                categories=response.categories,
+                quick_replies=response.quick_replies,
+                intent=intent_result.intent,
+                metadata=response.metadata
+            )
 
-        # Product search
-        elif any(word in message_lower for word in ["show", "find", "search", "looking", "want", "need", "buy", "product", "all"]):
-            price_match = re.search(r'(?:under|below|less than|max|budget)\s*(?:rs\.?|npr\.?)?\s*(\d+[,\d]*)', message_lower)
-            max_price = int(price_match.group(1).replace(",", "")) if price_match else None
-            products = self.search_products(user_message, max_price=max_price, limit=8)
-            intent = "search"
+        # Handle general intents without specific handler
+        return self._handle_general_intent(user_message, intent_result.intent, session, entities)
 
-        # Greetings
-        elif any(word in message_lower for word in ["hi", "hello", "hey", "good morning", "good evening"]):
-            intent = "greeting"
+    def _get_handler(self, intent: str, state: ConversationState):
+        """Get the appropriate handler for intent and state"""
+        # First check if we're in an active flow
+        if state != ConversationState.IDLE:
+            handler_type = self.state_machine.get_handler_type(state)
+            if handler_type and handler_type in self.handlers:
+                return self.handlers[handler_type]
 
-        # Help/policy
-        elif any(word in message_lower for word in ["return", "shipping", "delivery", "policy", "help", "how"]):
-            intent = "help"
+        # Check intent mapping
+        handler_type = self.intent_handler_map.get(intent)
+        if handler_type and handler_type in self.handlers:
+            handler = self.handlers[handler_type]
+            if handler.can_handle(intent, state):
+                return handler
 
-        # Default - show all products
-        else:
-            products = self.get_all_products(limit=6)
-            intent = "browse"
+        return None
 
-        return intent, products, None
+    def _handle_general_intent(self, message: str, intent: str, session: SessionData, entities: Dict) -> Dict:
+        """Handle general intents that don't need specific handlers"""
 
-    def generate_response(self, intent, products, categories, user_message, product_detail=None):
-        """Generate appropriate response based on intent and results"""
-        product_count = len(products)
+        if intent == 'greeting':
+            response = RESPONSES.get('greeting', "Hello! How can I help you?")
+            session.add_message("assistant", response)
+            return self._build_response(
+                response,
+                quick_replies=QUICK_REPLIES.get('greeting', []),
+                intent='greeting'
+            )
 
-        if intent == "product_detail" and products and len(products) > 0:
-            # Use formatted product data (with correct pricing)
-            p = products[0]
-            name = p.get("name", "")
-            desc = p.get("description", "")
-            price = p.get("price", 0)
-            compare = p.get("compare_price", 0)
-            stock = p.get("stock", 0)
-            category = p.get("category", "")
-            rating = p.get("rating", 0)
-            review_count = p.get("review_count", 0)
+        elif intent == 'thanks':
+            response = RESPONSES.get('thanks', "You're welcome!")
+            session.add_message("assistant", response)
+            return self._build_response(response, intent='thanks')
 
-            response = f"**{name}**\n\n"
-            if desc:
-                response += f"{desc}...\n\n"
-            response += f"**Price:** Rs. {price:,.0f}"
-            if compare and compare > price:
-                response += f" ~~Rs. {compare:,.0f}~~"
-            response += f"\n**Category:** {category}"
-            response += f"\n**Stock:** {'In Stock' if stock > 0 else 'Out of Stock'}"
-            if rating > 0:
-                response += f"\n**Rating:** {'★' * int(rating)}{'☆' * (5-int(rating))} ({rating}/5 - {review_count} reviews)"
-            response += f"\n\nClick the product card below to buy now!"
-            return response
+        elif intent == 'bye':
+            response = RESPONSES.get('bye', "Goodbye!")
+            session.add_message("assistant", response)
+            return self._build_response(response, intent='bye')
 
-        if intent == "greeting":
-            return "Hello! Welcome to OVN Store. How can I help you today? You can browse products, check deals, or ask about our policies!"
+        elif intent == 'policy':
+            response = """📋 **OVN Store Policies:**
 
-        elif intent == "categories":
-            if categories:
-                return f"We have products in these categories: **{', '.join(categories)}**. Click on any category to explore!"
-            return "We're currently updating our categories. Please browse all products!"
-
-        elif intent == "featured":
-            if product_count > 0:
-                return f"Here are our {product_count} featured product{'s' if product_count > 1 else ''}! Great deals just for you."
-            return "No featured products right now. Check out our regular products below!"
-
-        elif intent == "search" or intent == "browse":
-            if product_count > 0:
-                return f"Here are {product_count} product{'s' if product_count > 1 else ''} I found for you! Click any product to view details."
-            return "I couldn't find products matching your search. Try browsing all products or searching with different keywords!"
-
-        elif intent == "help":
-            return """**Store Policies:**
-* Free shipping on orders above Rs. 1,000
-* 7-day return policy for unused items
-* Cash on Delivery available
-* Delivery: 3-5 business days in Nepal
+• 🚚 **Free Shipping:** On orders above Rs. 1,000
+• ↩️ **Return Policy:** 7-day return for unused items
+• 💰 **Payment:** Cash on Delivery available
+• 📅 **Delivery:** 3-5 business days in Nepal
 
 How else can I help you?"""
+            session.add_message("assistant", response)
+            return self._build_response(
+                response,
+                quick_replies=['Browse Products', 'Track Order'],
+                intent='policy'
+            )
 
-        else:
-            if product_count > 0:
-                return f"Here are {product_count} product{'s' if product_count > 1 else ''} you might like!"
-            return "How can I help you today? Try asking about products, deals, or our store policies!"
+        # Smart fallback for any unexpected/unusual questions
+        return self._handle_unexpected_question(message, intent, session, entities)
 
-    def chat(self, user_message, user_info=None):
-        """Main chat function"""
-        intent, products, product_detail = self.detect_intent_and_get_products(user_message)
-        categories = self.get_all_categories()
+    def _handle_unexpected_question(self, message: str, intent: str, session: SessionData, entities: Dict) -> Dict:
+        """
+        Handler for unexpected/unusual questions.
+        Uses fast AI response or pattern-based fallback.
+        """
+        # First try pattern-based response (instant, no AI needed)
+        # Check for specific hardcoded responses first
+        pattern_response = self._get_friendly_fallback(message)
+        if pattern_response:
+            session.add_message("assistant", pattern_response)
+            return self._build_response(pattern_response)
 
-        # Generate smart response
-        ai_message = self.generate_response(intent, products, categories, user_message, product_detail)
+        # Use AI for intelligent responses
+        if self.ai_engine.is_available():
+            # Use fast mode - quick response
+            ai_response = self.ai_engine.generate_response(
+                message,
+                context=session.state_context,
+                intent=intent,
+                fast_mode=True
+            )
+            session.add_message("assistant", ai_response)
+            return self._build_response(ai_response)
 
-        # Store in history
-        self.conversation_history.append({"role": "user", "content": user_message})
-        self.conversation_history.append({"role": "assistant", "content": ai_message})
-        if len(self.conversation_history) > 10:
-            self.conversation_history = self.conversation_history[-10:]
+        # Fallback if AI not available
+        fallback = "🤔 I'm not sure how to help with that. I can help you browse products, track orders, or place new orders. What would you like to do?"
+        session.add_message("assistant", fallback)
+        return self._build_response(fallback)
 
+    def _get_friendly_fallback(self, message: str) -> str:
+        """Get a friendly fallback response - returns None to let AI handle most queries"""
+        message_lower = message.lower()
+
+        # Only handle VERY specific store-related questions with hardcoded answers
+        # Let AI handle everything else for intelligent responses
+
+        # Store location question (we're online only)
+        if any(phrase in message_lower for phrase in ['where is your store', 'your shop location', 'physical store', 'visit your shop']):
+            return "📍 OVN Store is an online store! We deliver across Nepal within 3-5 business days. You can browse products and order directly through this chat."
+
+        # Payment method question
+        if any(phrase in message_lower for phrase in ['payment method', 'how to pay', 'accept card', 'online payment']):
+            return "💰 We accept Cash on Delivery (COD) only. You pay when your order arrives - no advance payment needed!"
+
+        # Who are you / what is this (about the bot itself)
+        if any(phrase in message_lower for phrase in ['who are you', 'what are you', 'are you a bot', 'are you human', 'what is ovn']):
+            return "🤖 I'm OVN Store's AI shopping assistant! I can help you find products, place orders, track deliveries, and answer questions. What would you like to do?"
+
+        # Return None for everything else - let AI handle it
+        return None
+
+    def _build_response(self, message: str, **kwargs) -> Dict[str, Any]:
+        """Build standardized response dictionary"""
         return {
-            "message": ai_message,
-            "products": products,
-            "categories": categories if intent == "categories" else [],
-            "intent": intent
+            'success': True,
+            'response': message,
+            'message': message,  # Alias for compatibility
+            'products': kwargs.get('products', []),
+            'categories': kwargs.get('categories', []),
+            'quick_replies': kwargs.get('quick_replies', []),
+            'intent': kwargs.get('intent', 'general'),
+            'metadata': kwargs.get('metadata', {}),
+            'session_id': kwargs.get('session_id', 'default')
         }
 
-    def clear_history(self):
-        """Clear conversation history"""
-        self.conversation_history = []
-        return "Conversation history cleared!"
+    def get_session_info(self, session_id: str) -> Dict:
+        """Get session information for debugging"""
+        session = self.session_manager.get(session_id)
+        if session:
+            return session.to_dict()
+        return {'session_id': session_id, 'exists': False}
+
+    def clear_session(self, session_id: str) -> str:
+        """Clear a session"""
+        self.session_manager.delete(session_id)
+        return "Session cleared!"
+
+    def get_active_sessions(self) -> int:
+        """Get count of active sessions"""
+        return self.session_manager.get_active_sessions_count()
 
 
+# For backward compatibility and testing
 if __name__ == "__main__":
     bot = OVNStoreChatbot()
-    print("\nTesting chatbot...")
-    result = bot.chat("Show me all products")
-    print(f"Message: {result['message']}")
-    print(f"Products found: {len(result['products'])}")
-    for p in result['products'][:3]:
-        print(f"  - {p['name'][:40]}: Rs. {p['price']}, Image: {p['image'][:50] if p['image'] else 'None'}...")
+
+    print("\n" + "="*50)
+    print("OVN Store Chatbot - Testing")
+    print("="*50)
+
+    test_messages = [
+        "Hello!",
+        "Show me all products",
+        "I want to buy the vacuum cup",
+        "Track my order",
+        "I have a complaint",
+        "Reviews for pet brush"
+    ]
+
+    for msg in test_messages:
+        print(f"\nUser: {msg}")
+        result = bot.chat(msg)
+        print(f"Bot: {result['message'][:200]}...")
+        if result['products']:
+            print(f"     (Showing {len(result['products'])} products)")
+        if result['quick_replies']:
+            print(f"     Quick replies: {result['quick_replies']}")

@@ -234,6 +234,22 @@ class APIClient {
         }
     }
 
+    async getSiteStats() {
+        try {
+            const response = await fetch(`${this.baseURL}/products/api/site-stats/`);
+            if (!response.ok) throw new Error('Failed to fetch site stats');
+            const data = await response.json();
+            if (data.success && data.stats) {
+                console.log(`✅ Loaded site stats from backend`);
+                return data.stats;
+            }
+            return null;
+        } catch (error) {
+            console.error('Failed to fetch site stats:', error);
+            return null;
+        }
+    }
+
     // Helper method to convert relative image URLs to absolute URLs
     getFullImageURL(imageUrl) {
         if (!imageUrl) {

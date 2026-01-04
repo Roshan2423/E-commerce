@@ -111,7 +111,7 @@
                         <td>
                             <strong>#{{ order.get_order_number }}</strong>
                         </td>
-                        <td>{{ order.user.get_full_name|default:order.user.email }}</td>
+                        <td>{% if order.user %}{{ order.user.get_full_name|default:order.user.email }}{% else %}{{ order.guest_email|default:"Guest" }}{% endif %}</td>
                         <td>
                             <span class="badge {% if order.status == 'delivered' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'cancelled' %}danger{% else %}primary{% endif %}">
                                 {{ order.get_status_display }}

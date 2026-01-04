@@ -37,4 +37,8 @@ urlpatterns = [
     path('api/<int:product_id>/reviews/', api_views.product_reviews_api, name='api_reviews'),
     path('api/<int:product_id>/can-review/', api_views.can_review_product, name='api_can_review'),
     path('api/<int:product_id>/submit-review/', api_views.submit_review, name='api_submit_review'),
+    path('api/my-reviews/', api_views.my_reviews_api, name='api_my_reviews'),
+
+    # Site stats API
+    path('api/site-stats/', api_views.site_stats_api, name='api_site_stats'),
 ]

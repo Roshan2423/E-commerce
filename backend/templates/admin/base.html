@@ -166,6 +166,29 @@
                         </div>
                     </li>
 
+                    <!-- Chatbot Admin -->
+                    <li class="nav-item has-dropdown {% if request.resolver_match.app_name == 'chatbot' %}active{% endif %}">
+                        <a href="#" class="nav-link dropdown-toggle" data-target="chatbot-menu">
+                            <div class="nav-icon">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <span class="nav-text">Chatbot</span>
+                            <div class="dropdown-icon">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu" id="chatbot-menu">
+                            <a href="{% url 'chatbot:sessions' %}" class="dropdown-link">
+                                <i class="fas fa-comments"></i>
+                                <span>Chat Logs</span>
+                            </a>
+                            <a href="{% url 'chatbot:analytics' %}" class="dropdown-link">
+                                <i class="fas fa-chart-area"></i>
+                                <span>Chat Analytics</span>
+                            </a>
+                        </div>
+                    </li>
+
                     <div class="nav-divider"></div>
 
                     <!-- External Links -->
@@ -202,6 +225,20 @@
                 </div>
 
                 <div class="user-menu">
+                    <!-- Groq AI Token Usage -->
+                    <div class="groq-usage-widget" id="groqUsageWidget" title="Groq AI Token Usage">
+                        <div class="groq-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="groq-info">
+                            <span class="groq-label">AI Tokens</span>
+                            <span class="groq-value" id="groqTokens">--</span>
+                        </div>
+                        <div class="groq-bar">
+                            <div class="groq-bar-fill" id="groqBarFill" style="width: 0%"></div>
+                        </div>
+                    </div>
+
                     <button class="notification-btn">
                         <i class="fas fa-bell"></i>
                         <span class="notification-badge"></span>
@@ -299,6 +336,54 @@
                     }, 300);
                 }, 1000);
             });
+
+            // Groq Usage Widget - Fetch and update
+            function updateGroqUsage() {
+                fetch('/dashboard/api/groq-usage/')
+                    .then(response => response.json())
+                    .then(data => {
+                        const tokenEl = document.getElementById('groqTokens');
+                        const barEl = document.getElementById('groqBarFill');
+                        const widgetEl = document.getElementById('groqUsageWidget');
+
+                        if (data.success && data.available) {
+                            tokenEl.textContent = data.remaining_tokens_formatted + '/' + data.limit_tokens_formatted;
+                            barEl.style.width = data.tokens_percent + '%';
+
+                            // Color based on remaining percentage
+                            if (data.tokens_percent > 50) {
+                                barEl.style.background = 'linear-gradient(90deg, #10b981, #34d399)';
+                                widgetEl.classList.remove('warning', 'danger');
+                            } else if (data.tokens_percent > 20) {
+                                barEl.style.background = 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+                                widgetEl.classList.add('warning');
+                                widgetEl.classList.remove('danger');
+                            } else {
+                                barEl.style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
+                                widgetEl.classList.add('danger');
+                                widgetEl.classList.remove('warning');
+                            }
+
+                            widgetEl.title = 'Groq AI: ' + data.remaining_tokens + ' tokens remaining (' + data.tokens_percent + '%)' +
+                                            '\nRequests: ' + data.remaining_requests + '/' + data.limit_requests +
+                                            '\nLast checked: ' + data.last_checked;
+                        } else {
+                            tokenEl.textContent = 'N/A';
+                            barEl.style.width = '0%';
+                            widgetEl.title = data.error || 'Groq API not available';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to fetch Groq usage:', error);
+                        document.getElementById('groqTokens').textContent = 'Error';
+                    });
+            }
+
+            // Initial fetch
+            updateGroqUsage();
+
+            // Refresh every 2 minutes
+            setInterval(updateGroqUsage, 120000);
         });
     </script>
 

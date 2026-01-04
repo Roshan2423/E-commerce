@@ -74,7 +74,13 @@ def create_frontend_order(request):
                     'error': f'Product not found: {product_id}'
                 }, status=400)
 
-            unit_price = product.price
+            # Price priority: flash_sale_price > compare_price (special price) > price (market price)
+            if product.flash_sale_price:
+                unit_price = product.flash_sale_price
+            elif product.compare_price:
+                unit_price = product.compare_price  # This is the actual selling price
+            else:
+                unit_price = product.price  # Fallback to market price
             item_total = unit_price * quantity
             subtotal += item_total
 
@@ -203,12 +209,21 @@ def get_user_orders(request):
         for order in orders:
             items = []
             for item in order.items.all():
-                # Get product image
+                # Get product image and current price
                 product_image = None
+                current_price = float(item.unit_price)  # Default to stored price
+
                 if item.product:
                     main_image = item.product.get_main_image()
                     if main_image:
                         product_image = main_image
+                    # Price priority: flash_sale_price > compare_price (special price) > price (market price)
+                    if item.product.flash_sale_price:
+                        current_price = float(item.product.flash_sale_price)
+                    elif item.product.compare_price:
+                        current_price = float(item.product.compare_price)  # Actual selling price
+                    else:
+                        current_price = float(item.product.price)  # Market price fallback
 
                 items.append({
                     'product_id': item.product.id if item.product else None,
@@ -216,8 +231,8 @@ def get_user_orders(request):
                     'product_sku': item.product_sku if hasattr(item, 'product_sku') else '',
                     'product_image': product_image,
                     'quantity': item.quantity,
-                    'unit_price': float(item.unit_price),
-                    'total_price': float(item.total_price),
+                    'unit_price': current_price,  # Use actual selling price
+                    'total_price': current_price * item.quantity,
                 })
 
             orders_data.append({
@@ -284,12 +299,21 @@ def get_order_detail(request, order_id):
         # Get order items
         items = []
         for item in order.items.all():
-            # Get product image
+            # Get product image and current price
             product_image = None
+            current_price = float(item.unit_price)  # Default to stored price
+
             if item.product:
                 main_image = item.product.get_main_image()
                 if main_image:
                     product_image = main_image
+                # Price priority: flash_sale_price > compare_price (special price) > price (market price)
+                if item.product.flash_sale_price:
+                    current_price = float(item.product.flash_sale_price)
+                elif item.product.compare_price:
+                    current_price = float(item.product.compare_price)  # Actual selling price
+                else:
+                    current_price = float(item.product.price)  # Market price fallback
 
             items.append({
                 'product_id': item.product.id if item.product else None,
@@ -297,8 +321,8 @@ def get_order_detail(request, order_id):
                 'product_sku': item.product_sku,
                 'product_image': product_image,
                 'quantity': item.quantity,
-                'unit_price': float(item.unit_price),
-                'total_price': float(item.total_price),
+                'unit_price': current_price,  # Use actual selling price
+                'total_price': current_price * item.quantity,
             })
 
         # Get order history

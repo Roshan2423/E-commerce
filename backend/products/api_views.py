@@ -464,3 +464,100 @@ def submit_review(request, product_id):
         return JsonResponse({'success': False, 'error': 'Invalid data'}, status=400)
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@require_GET
+@login_required
+def my_reviews_api(request):
+    """Get all reviews by the current user"""
+    try:
+        reviews = Review.objects.filter(user=request.user).select_related('product', 'order').order_by('-created_at')
+
+        reviews_data = []
+        for review in reviews:
+            # Get review images
+            images = [{'url': img.image.url, 'alt': img.alt_text} for img in review.images.all()]
+
+            # Get product image
+            product_image = review.product.get_main_image() if review.product else None
+
+            reviews_data.append({
+                'id': review.id,
+                'product': {
+                    'id': review.product.id,
+                    'name': review.product.name,
+                    'image': product_image,
+                    'slug': review.product.slug if hasattr(review.product, 'slug') else '',
+                },
+                'order_id': str(review.order.order_id)[:8].upper() if review.order else None,
+                'rating': review.rating,
+                'title': review.title,
+                'comment': review.comment,
+                'images': images,
+                'status': review.status,
+                'status_display': review.get_status_display(),
+                'admin_response': review.admin_response,
+                'is_verified_purchase': review.is_verified_purchase,
+                'helpful_count': review.helpful_count,
+                'created_at': review.created_at.strftime('%B %d, %Y'),
+                'updated_at': review.updated_at.strftime('%B %d, %Y'),
+            })
+
+        # Stats
+        total_reviews = len(reviews_data)
+        approved_count = sum(1 for r in reviews_data if r['status'] == 'approved')
+        pending_count = sum(1 for r in reviews_data if r['status'] == 'pending')
+        avg_rating = sum(r['rating'] for r in reviews_data) / total_reviews if total_reviews > 0 else 0
+
+        return JsonResponse({
+            'success': True,
+            'reviews': reviews_data,
+            'stats': {
+                'total': total_reviews,
+                'approved': approved_count,
+                'pending': pending_count,
+                'average_rating': round(avg_rating, 1),
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@require_GET
+def site_stats_api(request):
+    """Get real site statistics for hero section"""
+    try:
+        # Count total unique customers (users who have placed at least one delivered order)
+        delivered_orders = Order.objects.filter(status='delivered')
+        unique_customers = set()
+        for order in delivered_orders:
+            if order.user:
+                unique_customers.add(order.user.id)
+            elif order.guest_email:
+                unique_customers.add(order.guest_email)
+        total_customers = len(unique_customers)
+
+        # Calculate average rating from approved reviews
+        approved_reviews = Review.objects.filter(status='approved')
+        total_reviews = approved_reviews.count()
+        if total_reviews > 0:
+            total_rating = sum([r.rating for r in approved_reviews])
+            avg_rating = round(total_rating / total_reviews, 1)
+        else:
+            avg_rating = 5.0  # Default if no reviews
+
+        # Count total active products
+        all_products = Product.objects.all()
+        total_products = len([p for p in all_products if p.is_active])
+
+        return JsonResponse({
+            'success': True,
+            'stats': {
+                'total_customers': total_customers,
+                'avg_rating': avg_rating,
+                'total_products': total_products,
+                'total_reviews': total_reviews,
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

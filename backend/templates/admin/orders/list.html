@@ -115,8 +115,8 @@
                     </td>
                     <td>
                         <div class="customer-cell">
-                            <div class="customer-name">{{ order.user.get_full_name|default:order.user.username }}</div>
-                            <div class="created-by">Created by: {{ order.user.get_full_name|default:order.user.username }}</div>
+                            <div class="customer-name">{% if order.user %}{{ order.user.get_full_name|default:order.user.username }}{% else %}Guest{% endif %}</div>
+                            <div class="created-by">{% if order.is_guest_order %}<span style="color: #f59e0b;">Guest Order</span>{% else %}Created by: {% if order.user %}{{ order.user.get_full_name|default:order.user.username }}{% else %}System{% endif %}{% endif %}</div>
                         </div>
                     </td>
                     <td>

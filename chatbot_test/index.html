@@ -438,6 +438,154 @@
             color: #94a3b8;
             font-size: 32px;
         }
+
+        /* Quick Reply Buttons */
+        .quick-replies {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 5px 0;
+        }
+
+        .quick-reply-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+        }
+
+        .quick-reply-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .quick-reply-btn:active {
+            transform: translateY(0);
+        }
+
+        /* Order status badges */
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-processing { background: #fef3c7; color: #d97706; }
+        .status-confirmed { background: #d1fae5; color: #059669; }
+        .status-shipped { background: #dbeafe; color: #2563eb; }
+        .status-delivered { background: #d1fae5; color: #059669; }
+        .status-cancelled { background: #fee2e2; color: #dc2626; }
+
+        /* Order Item Cards - Non-clickable, shows quantity */
+        .order-items-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+            padding: 5px;
+        }
+
+        .order-item-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border: 2px solid #e2e8f0;
+        }
+
+        .order-item-card .product-image-container {
+            width: 100%;
+            height: 100px;
+            overflow: hidden;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .order-item-card .product-image {
+            width: 100%;
+            height: 100px;
+            object-fit: contain;
+            background: #f8fafc;
+            padding: 8px;
+        }
+
+        .order-item-card .no-image {
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(135deg, #e2e8f0 0%, #f1f5f9 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            font-size: 28px;
+        }
+
+        .order-item-card .product-info {
+            padding: 10px;
+        }
+
+        .order-item-card .product-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 6px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.3;
+            height: 28px;
+        }
+
+        .order-item-card .quantity-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 10px;
+            margin-bottom: 4px;
+        }
+
+        .order-item-card .item-price {
+            font-size: 12px;
+            font-weight: 700;
+            color: #667eea;
+        }
+
+        .order-item-card .item-total {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        .order-item-card .item-delivery {
+            font-size: 10px;
+            color: #f59e0b;
+            margin-top: 2px;
+        }
+
+        .order-item-card .item-grand-total {
+            font-size: 12px;
+            font-weight: 700;
+            color: #059669;
+            margin-top: 4px;
+            padding-top: 4px;
+            border-top: 1px dashed #e2e8f0;
+        }
     </style>
 </head>
 <body>
@@ -494,10 +642,14 @@
             localStorage.setItem('chatSessionId', sessionId);
         }
 
-        function addMessage(content, isUser = false, products = [], categories = []) {
+        function addMessage(content, isUser = false, products = [], categories = [], quickReplies = []) {
             // Remove welcome message if exists
             const welcome = document.querySelector('.welcome-message');
             if (welcome) welcome.remove();
+
+            // Remove previous quick replies
+            const oldQuickReplies = document.querySelectorAll('.quick-replies');
+            oldQuickReplies.forEach(qr => qr.remove());
 
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user' : 'bot'}`;
@@ -511,20 +663,14 @@
 
             const contentDiv = document.createElement('div');
             contentDiv.className = 'message-content';
-            contentDiv.innerHTML = formatMessage(content);
+
+            // For user messages, show instantly. For bot messages, use typing effect
+            if (isUser) {
+                contentDiv.innerHTML = formatMessage(content);
+            } else {
+                contentDiv.innerHTML = ''; // Start empty for typing effect
+            }
             contentWrapper.appendChild(contentDiv);
-
-            // Add product cards if available
-            if (products && products.length > 0) {
-                const productsGrid = createProductsGrid(products);
-                contentWrapper.appendChild(productsGrid);
-            }
-
-            // Add categories if available
-            if (categories && categories.length > 0) {
-                const categoriesList = createCategoriesList(categories);
-                contentWrapper.appendChild(categoriesList);
-            }
 
             messageDiv.appendChild(avatar);
             messageDiv.appendChild(contentWrapper);
@@ -532,6 +678,112 @@
 
             // Scroll to bottom
             chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // For bot messages, apply typing effect then show products/categories
+            if (!isUser) {
+                typeMessage(content, contentDiv, () => {
+                    // After typing is done, add product cards if available
+                    if (products && products.length > 0) {
+                        // Check if these are order items or regular products
+                        const isOrderItems = products[0].is_order_item === true;
+                        if (isOrderItems) {
+                            const orderItemsGrid = createOrderItemsGrid(products);
+                            contentWrapper.appendChild(orderItemsGrid);
+                        } else {
+                            const productsGrid = createProductsGrid(products);
+                            contentWrapper.appendChild(productsGrid);
+                        }
+                    }
+
+                    // Add categories if available
+                    if (categories && categories.length > 0) {
+                        const categoriesList = createCategoriesList(categories);
+                        contentWrapper.appendChild(categoriesList);
+                    }
+
+                    // Scroll to bottom after adding products/categories
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                });
+            } else {
+                // For user messages, add products/categories immediately
+                if (products && products.length > 0) {
+                    const isOrderItems = products[0].is_order_item === true;
+                    if (isOrderItems) {
+                        const orderItemsGrid = createOrderItemsGrid(products);
+                        contentWrapper.appendChild(orderItemsGrid);
+                    } else {
+                        const productsGrid = createProductsGrid(products);
+                        contentWrapper.appendChild(productsGrid);
+                    }
+                }
+                if (categories && categories.length > 0) {
+                    const categoriesList = createCategoriesList(categories);
+                    contentWrapper.appendChild(categoriesList);
+                }
+            }
+        }
+
+        // Typing effect function
+        function typeMessage(text, element, callback) {
+            const formattedText = formatMessage(text);
+            let index = 0;
+            const speed = 8; // milliseconds per character (adjust for faster/slower)
+
+            // Parse HTML and type it out
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = formattedText;
+            const fullHTML = tempDiv.innerHTML;
+
+            element.innerHTML = '';
+
+            function typeChar() {
+                if (index < fullHTML.length) {
+                    // Handle HTML tags - add them all at once
+                    if (fullHTML[index] === '<') {
+                        const closingIndex = fullHTML.indexOf('>', index);
+                        if (closingIndex !== -1) {
+                            element.innerHTML += fullHTML.substring(index, closingIndex + 1);
+                            index = closingIndex + 1;
+                        } else {
+                            element.innerHTML += fullHTML[index];
+                            index++;
+                        }
+                    } else {
+                        element.innerHTML += fullHTML[index];
+                        index++;
+                    }
+
+                    // Scroll while typing
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+                    setTimeout(typeChar, speed);
+                } else {
+                    // Typing complete
+                    if (callback) callback();
+                }
+            }
+
+            typeChar();
+        }
+
+        function createQuickReplies(replies) {
+            const container = document.createElement('div');
+            container.className = 'quick-replies';
+
+            replies.forEach(reply => {
+                const btn = document.createElement('button');
+                btn.className = 'quick-reply-btn';
+                btn.textContent = reply;
+                btn.onclick = () => {
+                    // Remove quick replies when clicked
+                    container.remove();
+                    chatInput.value = reply;
+                    sendMessage();
+                };
+                container.appendChild(btn);
+            });
+
+            return container;
         }
 
         function createProductsGrid(products) {
@@ -542,8 +794,9 @@
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 card.onclick = () => {
-                    // Open product in main store (adjust URL as needed)
-                    window.open(`http://localhost:8000/product/${product.id}`, '_blank');
+                    // Send message to chatbot to order this product
+                    chatInput.value = `I want to order ${product.name}`;
+                    sendMessage();
                 };
 
                 // Backend already handles flash sale pricing
@@ -610,6 +863,76 @@
                         <span class="rating-text">(${rating.toFixed(1)}) ${product.review_count ? `• ${product.review_count} review${product.review_count > 1 ? 's' : ''}` : ''}</span>
                     </div>
                 `;
+                card.appendChild(infoDiv);
+
+                grid.appendChild(card);
+            });
+
+            return grid;
+        }
+
+        function createOrderItemsGrid(items) {
+            const grid = document.createElement('div');
+            grid.className = 'order-items-grid';
+
+            items.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'order-item-card';
+
+                // Format price
+                const formatPrice = (num) => num ? `Rs. ${num.toLocaleString()}` : '';
+
+                // Image URL - handle relative paths
+                let imageUrl = item.image || '';
+                if (imageUrl && !imageUrl.startsWith('http')) {
+                    imageUrl = `http://localhost:8000${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`;
+                }
+
+                // Create image element
+                const imgContainer = document.createElement('div');
+                imgContainer.className = 'product-image-container';
+
+                if (imageUrl) {
+                    const img = document.createElement('img');
+                    img.src = imageUrl;
+                    img.alt = '';
+                    img.className = 'product-image';
+                    img.onerror = function() {
+                        this.style.display = 'none';
+                        const fallback = document.createElement('div');
+                        fallback.className = 'no-image';
+                        fallback.textContent = '📦';
+                        this.parentElement.appendChild(fallback);
+                    };
+                    imgContainer.appendChild(img);
+                } else {
+                    const fallback = document.createElement('div');
+                    fallback.className = 'no-image';
+                    fallback.textContent = '📦';
+                    imgContainer.appendChild(fallback);
+                }
+
+                card.appendChild(imgContainer);
+
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'product-info';
+
+                let priceHtml = `
+                    <div class="product-name">${item.name}</div>
+                    <span class="quantity-badge">Qty: ${item.quantity}</span>
+                    <div class="item-price">${formatPrice(item.price)}</div>
+                    <div class="item-total">Subtotal: ${formatPrice(item.item_total || item.total_price)}</div>
+                `;
+
+                // Show delivery and order total for single item orders
+                if (item.delivery_charge !== null && item.delivery_charge !== undefined) {
+                    priceHtml += `<div class="item-delivery">Delivery: ${formatPrice(item.delivery_charge)}</div>`;
+                }
+                if (item.order_total !== null && item.order_total !== undefined) {
+                    priceHtml += `<div class="item-grand-total">Total: ${formatPrice(item.order_total)}</div>`;
+                }
+
+                infoDiv.innerHTML = priceHtml;
                 card.appendChild(infoDiv);
 
                 grid.appendChild(card);
@@ -696,15 +1019,16 @@
                 hideTyping();
 
                 if (data.success) {
-                    // Add message with products and categories
+                    // Add message with products, categories, and quick replies
                     addMessage(
                         data.response,
                         false,
                         data.products || [],
-                        data.categories || []
+                        data.categories || [],
+                        data.quick_replies || []
                     );
                 } else {
-                    addMessage('Sorry, something went wrong. Please try again.');
+                    addMessage('Sorry, something went wrong. Please try again.', false, [], [], ['Try Again', 'Browse Products']);
                 }
             } catch (error) {
                 hideTyping();

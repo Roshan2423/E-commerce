@@ -712,10 +712,11 @@ class ECommerceApp {
             // Fetch real data from backend API
             console.log('Fetching products from backend...');
             try {
-                const [categoriesData, productsData, flashSaleData] = await Promise.all([
+                const [categoriesData, productsData, flashSaleData, siteStatsData] = await Promise.all([
                     this.api.getCategories(),
                     this.api.getProducts(),
-                    this.api.getFlashSaleProducts()
+                    this.api.getFlashSaleProducts(),
+                    this.api.getSiteStats()
                 ]);
 
                 if (categoriesData && categoriesData.length > 0) {
@@ -738,16 +739,25 @@ class ECommerceApp {
                     this.flashSaleProducts = flashSaleData;
                     console.log(`✅ Loaded ${flashSaleData.length} flash sale products from API`);
                 }
+
+                if (siteStatsData) {
+                    this.siteStats = siteStatsData;
+                    console.log(`✅ Loaded site stats from API`);
+                } else {
+                    this.siteStats = { total_customers: 0, avg_rating: 5.0, total_products: 0 };
+                }
             } catch (error) {
                 console.error('❌ Failed to fetch from API, using mock data:', error);
                 this.categories = await this.getMockCategories();
                 this.products = await this.getMockProducts();
+                this.siteStats = { total_customers: 0, avg_rating: 5.0, total_products: 0 };
             }
         } catch (error) {
             console.error('Failed to load initial data:', error);
             // Last resort fallback
             this.categories = await this.getMockCategories();
             this.products = await this.getMockProducts();
+            this.siteStats = { total_customers: 0, avg_rating: 5.0, total_products: 0 };
         } finally {
             this.isLoading = false;
             // Build search index after products are loaded
@@ -1028,6 +1038,9 @@ class ECommerceApp {
             case currentPath === '/my-orders':
                 content = this.renderOrdersPage();
                 break;
+            case currentPath === '/my-reviews':
+                content = this.renderMyReviewsPage();
+                break;
             case !!orderDetailMatch:
                 content = this.renderOrderDetailPage(orderDetailMatch[1]);
                 break;
@@ -1134,6 +1147,12 @@ class ECommerceApp {
                                                 <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l4.59-4.58L18 11l-6 6z"/>
                                             </svg>
                                             My Orders
+                                        </a>
+                                        <a href="/my-reviews" data-route="/my-reviews" style="display: flex; align-items: center; gap: 8px; padding: 12px 20px; color: #374151; text-decoration: none; border-radius: 8px; margin-bottom: 8px; background: #f3f4f6; font-weight: 500;">
+                                            <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                                            </svg>
+                                            My Reviews
                                         </a>
                                         ${this.currentUser.is_staff || this.currentUser.is_superuser ? `
                                             <button class="admin-dashboard-btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; margin-bottom: 8px; cursor: pointer; width: 100%; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 8px;">
@@ -1250,25 +1269,25 @@ class ECommerceApp {
                 <div class="hero-main-content">
                     <div class="hero-text-side">
                         <h1 class="hero-banner-title">
-                            <span class="glow-text">Discover</span>
-                            <span class="glow-text gradient-glow">Tomorrow's</span>
-                            <span class="glow-text">Shopping</span>
+                            <span class="glow-text">Shop Smart,</span>
+                            <span class="glow-text gradient-glow">Save More</span>
+                            <span class="glow-text">Every Day</span>
                         </h1>
                         <p class="hero-banner-subtitle">
-                            Experience the future of e-commerce with our revolutionary platform.
-                            Cutting-edge technology meets unparalleled user experience.
+                            Discover quality products at unbeatable prices.
+                            Fast delivery across Nepal with secure payments.
                         </p>
                         <div class="hero-stats">
                             <div class="hero-stat">
-                                <span class="stat-num">50K+</span>
+                                <span class="stat-num">1000+</span>
                                 <span class="stat-label">Happy Customers</span>
                             </div>
                             <div class="hero-stat">
-                                <span class="stat-num">4.9</span>
-                                <span class="stat-label">Rating</span>
+                                <span class="stat-num">${this.siteStats ? this.siteStats.avg_rating : 5.0}</span>
+                                <span class="stat-label">Avg Rating</span>
                             </div>
                             <div class="hero-stat">
-                                <span class="stat-num">500+</span>
+                                <span class="stat-num">${this.siteStats ? this.siteStats.total_products : 0}</span>
                                 <span class="stat-label">Products</span>
                             </div>
                         </div>
@@ -1284,7 +1303,7 @@ class ECommerceApp {
                         ${floatingProducts.map((product, index) => {
                             const displayPrice = product.compare_price || product.price;
                             return `
-                            <div class="floating-product float-${index + 1}" data-slot="${index}" data-product-id="${product.id}">
+                            <div class="floating-product float-${index + 1}" data-slot="${index}" data-product-id="${product.id}" onclick="window.app.navigate('/product/${product.id}')" style="cursor: pointer;">
                                 <div class="fp-badge">${badges[index]}</div>
                                 <div class="fp-image-wrap">
                                     <img src="${product.image}" alt="${product.name}" loading="lazy">
@@ -2942,6 +2961,9 @@ class ECommerceApp {
             `<option value="${loc.district} - ${loc.location}" data-rate="${loc.rate}">${loc.district} - ${loc.location}</option>`
         ).join('');
 
+        // Get saved guest info
+        const savedGuest = this.loadGuestInfo();
+
         return `
             <div class="admin-checkout-page">
                 <!-- Page Header -->
@@ -2956,6 +2978,42 @@ class ECommerceApp {
                         </a>
                     </div>
                 </div>
+
+                <!-- Checkout Options Banner -->
+                ${this.isLoggedIn ? `
+                    <div class="checkout-options-banner member-banner">
+                        <div class="banner-content">
+                            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                            </svg>
+                            <span><strong>2% Member Discount Applied!</strong> Thank you for being a valued member.</span>
+                        </div>
+                    </div>
+                ` : `
+                    <div class="checkout-options-banner guest-banner">
+                        <div class="banner-content">
+                            <div class="banner-text">
+                                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                                </svg>
+                                <span><strong>Get 2% discount!</strong> Login to save on your order</span>
+                            </div>
+                            <div class="banner-actions">
+                                <button type="button" class="btn-login-google" onclick="window.app.loginWithGoogle()">
+                                    <svg width="18" height="18" viewBox="0 0 24 24">
+                                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                                    </svg>
+                                    Login with Google
+                                </button>
+                                <span class="banner-divider">or</span>
+                                <span class="guest-continue">Continue as Guest</span>
+                            </div>
+                        </div>
+                    </div>
+                `}
 
                 <form id="checkoutForm" onsubmit="window.app.submitOrder(event)">
                     <div class="checkout-grid-admin">
@@ -2976,12 +3034,13 @@ class ECommerceApp {
                                         <div class="form-group">
                                             <label class="form-label">Customer Name *</label>
                                             <input type="text" name="customer_name" class="form-control" required
-                                                   placeholder="Enter full name" value="${this.currentUser?.first_name || ''}">
+                                                   placeholder="Enter full name" value="${this.currentUser?.first_name || savedGuest?.name || ''}">
                                         </div>
                                         <div class="form-group">
                                             <label class="form-label">Contact Number *</label>
                                             <input type="tel" name="contact_number" class="form-control" required
                                                    placeholder="10 digit number" pattern="[0-9]{10}" maxlength="10"
+                                                   value="${savedGuest?.phone || ''}"
                                                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)">
                                         </div>
                                     </div>
@@ -2997,7 +3056,7 @@ class ECommerceApp {
                                         <div class="form-group">
                                             <label class="form-label">Landmark / Address Detail</label>
                                             <input type="text" name="landmark" class="form-control"
-                                                   placeholder="Street, Near...">
+                                                   placeholder="Street, Near..." value="${savedGuest?.landmark || ''}">
                                         </div>
                                     </div>
                                 </div>
@@ -3256,6 +3315,53 @@ class ECommerceApp {
         }
     }
 
+    // Save guest checkout info for future use
+    saveGuestInfo(orderData) {
+        try {
+            const guestInfo = {
+                name: orderData.customer_name,
+                phone: orderData.contact_number,
+                location: orderData.location,
+                landmark: orderData.landmark,
+                savedAt: new Date().toISOString()
+            };
+            localStorage.setItem('guestInfo', JSON.stringify(guestInfo));
+            console.log('Guest info saved:', guestInfo);
+        } catch (error) {
+            console.error('Failed to save guest info:', error);
+        }
+    }
+
+    // Load saved guest info
+    loadGuestInfo() {
+        try {
+            const saved = localStorage.getItem('guestInfo');
+            if (saved) {
+                const guestInfo = JSON.parse(saved);
+                // Check if info is less than 30 days old
+                const savedDate = new Date(guestInfo.savedAt);
+                const now = new Date();
+                const daysDiff = (now - savedDate) / (1000 * 60 * 60 * 24);
+                if (daysDiff < 30) {
+                    return guestInfo;
+                }
+                // Remove old info
+                localStorage.removeItem('guestInfo');
+            }
+        } catch (error) {
+            console.error('Failed to load guest info:', error);
+        }
+        return null;
+    }
+
+    // Login with Google - redirect to Google auth
+    loginWithGoogle() {
+        // Save current cart before redirect
+        const returnUrl = window.location.pathname;
+        localStorage.setItem('authReturnUrl', returnUrl);
+        window.location.href = '/api/google-auth/';
+    }
+
     // Get unique list of Nepal districts
     getNepalDistricts() {
         const districts = [...new Set(NEPAL_DELIVERY_RATES.map(item => item.district))];
@@ -3400,6 +3506,16 @@ class ECommerceApp {
             console.log('Order API response:', result);
 
             if (result.success) {
+                // Save guest info for future orders (if not logged in)
+                if (!this.isLoggedIn) {
+                    this.saveGuestInfo({
+                        customer_name: customerName,
+                        contact_number: contactNumber,
+                        location: location,
+                        landmark: landmark
+                    });
+                }
+
                 // Clear cart
                 this.cart = [];
                 localStorage.removeItem('cart');
@@ -4079,6 +4195,211 @@ class ECommerceApp {
                 `;
             }
         }
+    }
+
+    // ==========================================
+    // MY REVIEWS PAGE
+    // ==========================================
+    renderMyReviewsPage() {
+        // Load reviews when page renders
+        setTimeout(() => this.loadUserReviews(), 100);
+
+        return `
+            <div class="my-reviews-page">
+                <div class="container">
+                    <!-- Page Header -->
+                    <div class="reviews-page-header">
+                        <div class="header-content">
+                            <h1><svg width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg> My Reviews</h1>
+                            <p>View and manage your product reviews</p>
+                        </div>
+                    </div>
+
+                    <div id="reviewsListContainer">
+                        <div class="reviews-loading">
+                            <div class="loading-spinner"></div>
+                            <p>Loading your reviews...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async loadUserReviews() {
+        try {
+            const response = await fetch('/products/api/my-reviews/', {
+                credentials: 'same-origin'
+            });
+            const data = await response.json();
+
+            const container = document.getElementById('reviewsListContainer');
+            if (!container) return;
+
+            if (!data.success || data.reviews.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-reviews-state">
+                        <div class="empty-icon">
+                            <svg width="80" height="80" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
+                            </svg>
+                        </div>
+                        <h2>No Reviews Yet</h2>
+                        <p>You haven't written any reviews yet. Order products and share your experience!</p>
+                        <a href="/my-orders" data-route="/my-orders" class="shop-now-btn">
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l4.59-4.58L18 11l-6 6z"/>
+                            </svg>
+                            View My Orders
+                        </a>
+                    </div>
+                `;
+                return;
+            }
+
+            const stats = data.stats;
+
+            container.innerHTML = `
+                <!-- Review Stats -->
+                <div class="review-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon total">
+                            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-number">${stats.total}</span>
+                            <span class="stat-label">Total Reviews</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon active">
+                            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-number">${stats.approved}</span>
+                            <span class="stat-label">Approved</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon pending">
+                            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-number">${stats.pending}</span>
+                            <span class="stat-label">Pending</span>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon rating">
+                            <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+                            </svg>
+                        </div>
+                        <div class="stat-info">
+                            <span class="stat-number">${stats.average_rating}</span>
+                            <span class="stat-label">Avg Rating</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reviews List -->
+                <div class="reviews-list">
+                    ${data.reviews.map(review => this.renderUserReviewCard(review)).join('')}
+                </div>
+            `;
+        } catch (error) {
+            console.error('Failed to load reviews:', error);
+            const container = document.getElementById('reviewsListContainer');
+            if (container) {
+                container.innerHTML = `
+                    <div class="error-state">
+                        <svg width="64" height="64" fill="none" viewBox="0 0 24 24" stroke="#ef4444">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                        </svg>
+                        <p>Failed to load reviews. Please try again.</p>
+                        <button onclick="window.app.loadUserReviews()" class="retry-btn">Retry</button>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    renderUserReviewCard(review) {
+        const statusColors = {
+            'approved': { color: '#16a34a', bg: '#dcfce7', label: 'Approved' },
+            'pending': { color: '#d97706', bg: '#fef3c7', label: 'Pending' },
+            'rejected': { color: '#dc2626', bg: '#fee2e2', label: 'Rejected' }
+        };
+        const status = statusColors[review.status] || statusColors['pending'];
+
+        const stars = Array(5).fill(0).map((_, i) =>
+            i < review.rating
+                ? '<svg width="16" height="16" fill="#fbbf24" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>'
+                : '<svg width="16" height="16" fill="#e5e7eb" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>'
+        ).join('');
+
+        return `
+            <div class="user-review-card">
+                <div class="review-card-header">
+                    <div class="product-info">
+                        <div class="product-image">
+                            ${review.product.image
+                                ? `<img src="${review.product.image}" alt="${review.product.name}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                   <div class="no-image" style="display:none;"><svg width="24" height="24" fill="#94a3b8" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></div>`
+                                : `<div class="no-image"><svg width="24" height="24" fill="#94a3b8" viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg></div>`
+                            }
+                        </div>
+                        <div class="product-details">
+                            <a href="/product/${review.product.id}" data-route="/product/${review.product.id}" class="product-name">${review.product.name}</a>
+                            ${review.order_id ? `<span class="order-ref">Order #${review.order_id}</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="review-meta">
+                        <span class="review-status" style="background: ${status.bg}; color: ${status.color};">${status.label}</span>
+                        <span class="review-date">${review.created_at}</span>
+                    </div>
+                </div>
+
+                <div class="review-content">
+                    <div class="review-rating">
+                        <div class="stars">${stars}</div>
+                        <span class="rating-text">${review.rating}/5</span>
+                        ${review.is_verified_purchase ? '<span class="verified-badge"><svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> Verified Purchase</span>' : ''}
+                    </div>
+                    ${review.title ? `<h4 class="review-title">${review.title}</h4>` : ''}
+                    <p class="review-comment">${review.comment}</p>
+
+                    ${review.images && review.images.length > 0 ? `
+                        <div class="review-images">
+                            ${review.images.map(img => `<img src="${img.url}" alt="${img.alt || 'Review image'}" class="review-thumb">`).join('')}
+                        </div>
+                    ` : ''}
+
+                    ${review.admin_response ? `
+                        <div class="admin-response">
+                            <div class="response-header">
+                                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/></svg>
+                                <strong>Response from OVN Store</strong>
+                            </div>
+                            <p>${review.admin_response}</p>
+                        </div>
+                    ` : ''}
+                </div>
+
+                <div class="review-footer">
+                    <span class="helpful-count">
+                        <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>
+                        ${review.helpful_count} found helpful
+                    </span>
+                </div>
+            </div>
+        `;
     }
 
     initializeInteractiveComponents() {

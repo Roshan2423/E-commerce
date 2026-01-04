@@ -1,11 +1,15 @@
 from django.views.generic import TemplateView
 from django.db.models import Sum, Count, Q
 from django.utils import timezone
+from django.http import JsonResponse
+from django.views.decorators.http import require_GET
+from django.contrib.admin.views.decorators import staff_member_required
 from datetime import timedelta
 from products.models import Product, Category
 from orders.models import Order, OrderItem
 from django.contrib.auth import get_user_model
 from ecommerce.mixins import AdminRequiredMixin
+from ecommerce.groq_utils import get_groq_usage, format_token_count
 
 User = get_user_model()
 
@@ -65,3 +69,39 @@ class DashboardView(AdminRequiredMixin, TemplateView):
             })
         
         return context
+
+
+@staff_member_required
+@require_GET
+def groq_usage_api(request):
+    """API endpoint to get Groq API usage stats"""
+    try:
+        usage = get_groq_usage()
+
+        # Format for display
+        response_data = {
+            'success': True,
+            'available': usage.get('available', False),
+            'remaining_requests': usage.get('remaining_requests', 0),
+            'remaining_tokens': usage.get('remaining_tokens', 0),
+            'remaining_tokens_formatted': format_token_count(usage.get('remaining_tokens', 0)),
+            'limit_requests': usage.get('limit_requests', 30),
+            'limit_tokens': usage.get('limit_tokens', 30000),
+            'limit_tokens_formatted': format_token_count(usage.get('limit_tokens', 30000)),
+            'requests_percent': usage.get('requests_percent', 0),
+            'tokens_percent': usage.get('tokens_percent', 0),
+            'last_checked': usage.get('last_checked', ''),
+            'error': usage.get('error', '')
+        }
+
+        return JsonResponse(response_data)
+
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e),
+            'available': False,
+            'remaining_tokens': 0,
+            'remaining_tokens_formatted': '0',
+            'tokens_percent': 0
+        })

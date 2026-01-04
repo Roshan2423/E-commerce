@@ -66,7 +66,9 @@ class Order(models.Model):
         ordering = ['-created_at']
 
     def __str__(self):
-        return f"Order {self.order_id} - {self.user.email}"
+        if self.user:
+            return f"Order {self.order_id} - {self.user.email}"
+        return f"Order {self.order_id} - {self.guest_email or 'Guest'}"
 
     def get_order_number(self):
         return str(self.order_id)[:8].upper()
