@@ -1,0 +1,235 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ vendor.business_name }} - Online Store</title>
+
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Meta tags for SEO -->
+    <meta name="description" content="{{ vendor.description|default:vendor.business_name }}">
+
+    <!-- Favicon -->
+    {% if vendor.logo %}
+    <link rel="icon" type="image/png" href="{{ vendor.logo.url }}">
+    {% else %}
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23grad)'/%3E%3Ctext x='50' y='72' font-family='Arial,sans-serif' font-size='65' font-weight='900' fill='white' text-anchor='middle'%3E{{ vendor.business_name.0|upper }}%3C/text%3E%3C/svg%3E">
+    {% endif %}
+
+    <!-- CSS - Same as main store -->
+    <link rel="stylesheet" href="{% static 'frontend/css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'frontend/css/notification-styles.css' %}">
+
+    <style>
+        /* Vendor store customization based on theme colors */
+        :root {
+            --vendor-primary: {% if storefront and storefront.primary_color %}{{ storefront.primary_color }}{% else %}#667eea{% endif %};
+            --vendor-secondary: {% if storefront and storefront.secondary_color %}{{ storefront.secondary_color }}{% else %}#764ba2{% endif %};
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Application Container -->
+    <div id="app"></div>
+
+    <!-- Vendor Store Configuration -->
+    <script>
+        // Vendor store mode - NOT demo mode, full functionality
+        window.IS_VENDOR_STORE = true;
+        window.IS_DEMO_MODE = false;
+
+        // Vendor information
+        window.VENDOR_CONFIG = {
+            id: {{ vendor.id }},
+            slug: '{{ vendor.slug }}',
+            name: '{{ vendor.business_name|escapejs }}',
+            description: '{{ vendor.description|default:""|escapejs }}',
+            logo: {% if vendor.logo %}'{{ vendor.logo.url }}'{% else %}null{% endif %},
+            phone: '{{ vendor.phone|default:""|escapejs }}',
+            email: '{{ vendor.email|default:""|escapejs }}',
+            address: '{{ vendor.address|default:""|escapejs }}',
+            plan: '{{ vendor.plan }}',
+            primaryColor: '{% if storefront and storefront.primary_color %}{{ storefront.primary_color }}{% else %}#667eea{% endif %}',
+            secondaryColor: '{% if storefront and storefront.secondary_color %}{{ storefront.secondary_color }}{% else %}#764ba2{% endif %}',
+            heroTitle: '{% if storefront and storefront.hero_title %}{{ storefront.hero_title|escapejs }}{% else %}{{ vendor.business_name|escapejs }}{% endif %}',
+            heroSubtitle: '{% if storefront and storefront.hero_subtitle %}{{ storefront.hero_subtitle|escapejs }}{% else %}Discover amazing products{% endif %}',
+            heroImage: {% if storefront and storefront.hero_image %}'{{ storefront.hero_image.url }}'{% else %}null{% endif %},
+            // About page content
+            aboutTitle: '{% if storefront and storefront.about_title %}{{ storefront.about_title|escapejs }}{% else %}{% endif %}',
+            aboutTagline: '{% if storefront and storefront.about_tagline %}{{ storefront.about_tagline|escapejs }}{% else %}Your Trusted Shopping Destination in Nepal{% endif %}',
+            aboutStory: '{% if storefront and storefront.about_story %}{{ storefront.about_story|escapejs }}{% else %}{% endif %}',
+            aboutMission: '{% if storefront and storefront.about_mission %}{{ storefront.about_mission|escapejs }}{% else %}{% endif %}',
+            aboutVision: '{% if storefront and storefront.about_vision %}{{ storefront.about_vision|escapejs }}{% else %}{% endif %}',
+            // Contact page content
+            contactAddress: '{% if storefront and storefront.contact_address %}{{ storefront.contact_address|escapejs }}{% else %}{% endif %}',
+            contactCity: '{% if storefront and storefront.contact_city %}{{ storefront.contact_city|escapejs }}{% else %}Nepal{% endif %}',
+            contactPhone: '{% if storefront and storefront.contact_phone %}{{ storefront.contact_phone|escapejs }}{% else %}{% endif %}',
+            contactEmail: '{% if storefront and storefront.contact_email %}{{ storefront.contact_email|escapejs }}{% else %}{% endif %}',
+            contactHours: '{% if storefront and storefront.contact_hours %}{{ storefront.contact_hours|escapejs }}{% else %}Sun - Fri: 10 AM - 6 PM{% endif %}',
+            contactHoursNote: '{% if storefront and storefront.contact_hours_note %}{{ storefront.contact_hours_note|escapejs }}{% else %}Saturday: Closed{% endif %}'
+        };
+
+        // API Base URL for this vendor's store
+        window.API_BASE_URL = '/v/{{ vendor.slug }}';
+
+        // Placeholder images
+        window.placeholderImageService = 'https://picsum.photos';
+
+        document.addEventListener('error', function(e) {
+            if (e.target.tagName === 'IMG') {
+                const width = e.target.getAttribute('data-width') || 400;
+                const height = e.target.getAttribute('data-height') || 400;
+                e.target.src = 'https://via.placeholder.com/' + width + 'x' + height + '/667eea/ffffff?text={{ vendor.business_name.0|upper }}';
+            }
+        }, true);
+    </script>
+
+    <!-- Override navigation to stay within vendor store context -->
+    <script>
+        // Vendor store base path
+        const VENDOR_BASE = '/v/{{ vendor.slug }}';
+        window.VENDOR_BASE_PATH = VENDOR_BASE;
+
+        // Override history.pushState to prepend vendor base path
+        const originalPushState = history.pushState;
+        history.pushState = function(state, title, url) {
+            if (url && typeof url === 'string') {
+                // Don't modify if already has vendor base or is absolute URL
+                if (!url.startsWith(VENDOR_BASE) && !url.startsWith('http') && url.startsWith('/')) {
+                    url = VENDOR_BASE + url;
+                }
+            }
+            return originalPushState.call(this, state, title, url);
+        };
+
+        // Override history.replaceState similarly
+        const originalReplaceState = history.replaceState;
+        history.replaceState = function(state, title, url) {
+            if (url && typeof url === 'string') {
+                if (!url.startsWith(VENDOR_BASE) && !url.startsWith('http') && url.startsWith('/')) {
+                    url = VENDOR_BASE + url;
+                }
+            }
+            return originalReplaceState.call(this, state, title, url);
+        };
+    </script>
+
+    <!-- Intercept API calls to use vendor-specific endpoints -->
+    <script>
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options) {
+            let newUrl = url;
+
+            // Redirect product API calls to vendor's storefront API endpoints
+            if (typeof url === 'string') {
+                const vendorBase = '/v/{{ vendor.slug }}';
+
+                if (url.includes('/products/api/list')) {
+                    newUrl = vendorBase + '/api/products/';
+                } else if (url.includes('/products/api/flash-sale')) {
+                    newUrl = vendorBase + '/api/flash-sale/';
+                } else if (url.includes('/products/api/categories')) {
+                    newUrl = vendorBase + '/api/categories/';
+                } else if (url.includes('/products/api/site-stats')) {
+                    // Return vendor stats
+                    return Promise.resolve(new Response(JSON.stringify({
+                        success: true,
+                        stats: {
+                            total_products: {{ product_count|default:0 }},
+                            total_categories: {{ category_count|default:0 }},
+                            total_reviews: 0
+                        }
+                    }), { headers: { 'Content-Type': 'application/json' }}));
+                } else if (url.match(/\/products\/api\/(\d+)\//)) {
+                    const productId = url.match(/\/products\/api\/(\d+)\//)[1];
+                    newUrl = vendorBase + `/api/product/${productId}/`;
+                }
+            }
+
+            return originalFetch.call(this, newUrl, options);
+        };
+    </script>
+
+    <!-- Scripts - Same as main store -->
+    <script src="{% static 'frontend/js/google-auth.js' %}"></script>
+    <script src="{% static 'frontend/js/api-integration.js' %}"></script>
+    <script src="{% static 'frontend/js/app.js' %}"></script>
+
+    <script>
+        // Error handling
+        window.addEventListener('error', (e) => {
+            console.error('Application error:', e.error);
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled promise rejection:', e.reason);
+        });
+
+        // Theme detection
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+        function handleThemeChange(e) {
+            document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+        }
+        prefersDark.addEventListener('change', handleThemeChange);
+        handleThemeChange(prefersDark);
+
+        // Viewport height fix for mobile
+        function setVH() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+        setVH();
+        window.addEventListener('resize', setVH);
+
+        // Customize store for vendor
+        function customizeVendorStore() {
+            if (window.VENDOR_CONFIG) {
+                // Update logo/store name
+                const logoText = document.querySelector('.logo-text, .store-name');
+                if (logoText) {
+                    logoText.textContent = window.VENDOR_CONFIG.name;
+                }
+
+                // Update logo icon if vendor has a logo
+                const logoIcon = document.querySelector('.logo-icon');
+                if (logoIcon && window.VENDOR_CONFIG.logo) {
+                    logoIcon.innerHTML = `<img src="${window.VENDOR_CONFIG.logo}" alt="${window.VENDOR_CONFIG.name}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">`;
+                } else if (logoIcon) {
+                    logoIcon.textContent = window.VENDOR_CONFIG.name.charAt(0).toUpperCase();
+                }
+
+                // Update hero section if exists
+                const heroTitle = document.querySelector('.hero-title h1, .hero h1');
+                const heroSubtitle = document.querySelector('.hero-subtitle, .hero p');
+                if (heroTitle && window.VENDOR_CONFIG.heroTitle) {
+                    heroTitle.textContent = window.VENDOR_CONFIG.heroTitle;
+                }
+                if (heroSubtitle && window.VENDOR_CONFIG.heroSubtitle) {
+                    heroSubtitle.textContent = window.VENDOR_CONFIG.heroSubtitle;
+                }
+            }
+        }
+
+        // Run customization after app renders
+        setTimeout(customizeVendorStore, 300);
+        setTimeout(customizeVendorStore, 600);
+        setTimeout(customizeVendorStore, 1000);
+
+        // Also observe for app changes
+        const appEl = document.getElementById('app');
+        if (appEl) {
+            const obs = new MutationObserver(customizeVendorStore);
+            obs.observe(appEl, { childList: true, subtree: true });
+            setTimeout(() => obs.disconnect(), 5000);
+        }
+    </script>
+</body>
+</html>

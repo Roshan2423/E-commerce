@@ -1,0 +1,233 @@
+{% load static %}
+<!-- Split Hero: Image and text side by side -->
+<section class="hero hero-split" id="heroSection">
+    <div class="container">
+        <div class="hero-split-grid">
+            <!-- Text Side -->
+            <div class="hero-text-side">
+                <div class="hero-text-content">
+                    {% if storefront.hero_title %}
+                    <h1 class="hero-title">{{ storefront.hero_title }}</h1>
+                    {% else %}
+                    <h1 class="hero-title">Welcome to {{ vendor.business_name }}</h1>
+                    {% endif %}
+
+                    {% if storefront.hero_subtitle %}
+                    <p class="hero-subtitle">{{ storefront.hero_subtitle }}</p>
+                    {% else %}
+                    <p class="hero-subtitle">Discover our amazing collection of products crafted with care and precision.</p>
+                    {% endif %}
+
+                    <div class="hero-cta-group">
+                        {% if storefront.hero_cta_text %}
+                        <a href="{{ storefront.hero_cta_link|default:'/v/'|add:vendor.slug|add:'/products/' }}" class="btn btn-primary btn-lg">
+                            {{ storefront.hero_cta_text }}
+                        </a>
+                        {% else %}
+                        <a href="/v/{{ vendor.slug }}/products/" class="btn btn-primary btn-lg">Shop Now</a>
+                        {% endif %}
+                        <a href="/v/{{ vendor.slug }}/products/?is_featured=true" class="btn btn-outline btn-lg">View Collection</a>
+                    </div>
+
+                    <!-- Trust badges -->
+                    <div class="hero-badges">
+                        <div class="badge-item">
+                            <i class="fas fa-shipping-fast"></i>
+                            <span>Free Shipping</span>
+                        </div>
+                        <div class="badge-item">
+                            <i class="fas fa-undo"></i>
+                            <span>Easy Returns</span>
+                        </div>
+                        <div class="badge-item">
+                            <i class="fas fa-lock"></i>
+                            <span>Secure Payment</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Image Side -->
+            <div class="hero-image-side">
+                <div class="hero-image-container">
+                    {% if storefront.hero_image %}
+                    <img src="{{ storefront.hero_image.url }}" alt="{{ storefront.hero_title|default:'Hero Image' }}" class="hero-main-image">
+                    {% else %}
+                    <div class="hero-image-placeholder">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    {% endif %}
+                    <!-- Decorative Elements -->
+                    <div class="hero-decoration hero-decoration-1"></div>
+                    <div class="hero-decoration hero-decoration-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .hero-split {
+        padding: 6rem 0;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        min-height: calc(100vh - 80px);
+        display: flex;
+        align-items: center;
+    }
+
+    .hero-split-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 4rem;
+        align-items: center;
+    }
+
+    .hero-text-content {
+        max-width: 540px;
+    }
+
+    .hero-split .hero-title {
+        font-size: clamp(2rem, 4vw, 3.5rem);
+        font-weight: 800;
+        color: #1a202c;
+        line-height: 1.15;
+        margin-bottom: 1.5rem;
+    }
+
+    .hero-split .hero-subtitle {
+        font-size: 1.125rem;
+        color: #64748b;
+        line-height: 1.7;
+        margin-bottom: 2rem;
+    }
+
+    .hero-cta-group {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 3rem;
+    }
+
+    .hero-cta-group .btn {
+        padding: 0.875rem 2rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .hero-cta-group .btn-primary {
+        background: {{ storefront.primary_color|default:'#667eea' }};
+        color: white;
+        border: 2px solid {{ storefront.primary_color|default:'#667eea' }};
+    }
+
+    .hero-cta-group .btn-primary:hover {
+        background: transparent;
+        color: {{ storefront.primary_color|default:'#667eea' }};
+    }
+
+    .hero-cta-group .btn-outline {
+        background: transparent;
+        color: #1a202c;
+        border: 2px solid #e2e8f0;
+    }
+
+    .hero-cta-group .btn-outline:hover {
+        border-color: {{ storefront.primary_color|default:'#667eea' }};
+        color: {{ storefront.primary_color|default:'#667eea' }};
+    }
+
+    .hero-badges {
+        display: flex;
+        gap: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .badge-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+
+    .badge-item i {
+        color: {{ storefront.accent_color|default:'#10b981' }};
+    }
+
+    .hero-image-side {
+        position: relative;
+    }
+
+    .hero-image-container {
+        position: relative;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
+    }
+
+    .hero-main-image {
+        width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    .hero-image-placeholder {
+        aspect-ratio: 4/5;
+        background: linear-gradient(135deg, {{ storefront.primary_color|default:'#667eea' }} 0%, {{ storefront.secondary_color|default:'#764ba2' }} 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: rgba(255,255,255,0.3);
+    }
+
+    .hero-decoration {
+        position: absolute;
+        border-radius: 50%;
+        z-index: -1;
+    }
+
+    .hero-decoration-1 {
+        width: 300px;
+        height: 300px;
+        background: {{ storefront.primary_color|default:'#667eea' }};
+        opacity: 0.1;
+        top: -50px;
+        right: -50px;
+    }
+
+    .hero-decoration-2 {
+        width: 150px;
+        height: 150px;
+        background: {{ storefront.accent_color|default:'#10b981' }};
+        opacity: 0.15;
+        bottom: -30px;
+        left: -30px;
+    }
+
+    @media (max-width: 992px) {
+        .hero-split-grid {
+            grid-template-columns: 1fr;
+            gap: 3rem;
+        }
+
+        .hero-text-side {
+            order: 2;
+            text-align: center;
+        }
+
+        .hero-text-content {
+            max-width: none;
+        }
+
+        .hero-image-side {
+            order: 1;
+        }
+
+        .hero-cta-group,
+        .hero-badges {
+            justify-content: center;
+        }
+    }
+</style>

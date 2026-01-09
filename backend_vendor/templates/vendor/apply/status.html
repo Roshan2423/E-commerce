@@ -1,0 +1,584 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Status - OVN Store</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f4f4f5;
+            color: #18181b;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e4e4e7;
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #18181b;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: white;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-links a {
+            color: #52525b;
+            text-decoration: none;
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #18181b;
+            background: #f4f4f5;
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem;
+        }
+
+        .page-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .page-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+
+        .page-header p {
+            color: #71717a;
+        }
+
+        /* Status Card */
+        .status-card {
+            background: white;
+            border: 1px solid #e4e4e7;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .status-header {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            padding: 2rem;
+            color: white;
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        }
+
+        .status-approved {
+            background: linear-gradient(135deg, #10b981, #34d399);
+        }
+
+        .status-rejected {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+        }
+
+        .status-more_info {
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        }
+
+        .status-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+        }
+
+        .status-info h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0 0 0.25rem;
+        }
+
+        .status-info p {
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        /* Notice boxes */
+        .notice-box {
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid #e4e4e7;
+        }
+
+        .notice-box.rejection {
+            background: #fef2f2;
+        }
+
+        .notice-box.info {
+            background: #fefce8;
+        }
+
+        .notice-box.approved {
+            background: #ecfdf5;
+        }
+
+        .notice-box h4 {
+            font-size: 0.9375rem;
+            font-weight: 600;
+            margin: 0 0 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .notice-box.rejection h4 { color: #dc2626; }
+        .notice-box.info h4 { color: #ca8a04; }
+        .notice-box.approved h4 { color: #059669; }
+
+        .notice-box p {
+            margin: 0;
+            font-size: 0.9375rem;
+            color: #52525b;
+        }
+
+        /* Card Body */
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0 0 1.25rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 1px solid #e4e4e7;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 640px) {
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .col-span-2 {
+            grid-column: span 2;
+        }
+
+        @media (max-width: 640px) {
+            .col-span-2 {
+                grid-column: span 1;
+            }
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .detail-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #71717a;
+        }
+
+        .detail-value {
+            font-size: 0.9375rem;
+            color: #18181b;
+        }
+
+        /* Card Footer - Timeline */
+        .card-footer {
+            padding: 1.5rem;
+            background: #f9fafb;
+            border-top: 1px solid #e4e4e7;
+        }
+
+        .timeline {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            top: 12px;
+            left: 20%;
+            right: 20%;
+            height: 2px;
+            background: #e4e4e7;
+        }
+
+        .timeline-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+
+        .timeline-marker {
+            width: 24px;
+            height: 24px;
+            background: white;
+            border: 2px solid #e4e4e7;
+            border-radius: 50%;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-item.completed .timeline-marker {
+            background: #10b981;
+            border-color: #10b981;
+        }
+
+        .timeline-item.completed .timeline-marker::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 6 Free';
+            font-weight: 900;
+            color: white;
+            font-size: 0.625rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+        }
+
+        .timeline-content {
+            text-align: center;
+        }
+
+        .timeline-title {
+            display: block;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            color: #18181b;
+        }
+
+        .timeline-date {
+            display: block;
+            font-size: 0.75rem;
+            color: #71717a;
+        }
+
+        .text-success { color: #10b981; }
+        .text-danger { color: #ef4444; }
+
+        @media (max-width: 480px) {
+            .timeline {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .timeline::before {
+                top: 0;
+                bottom: 0;
+                left: 11px;
+                right: auto;
+                width: 2px;
+                height: auto;
+            }
+
+            .timeline-item {
+                flex-direction: row;
+                gap: 1rem;
+            }
+
+            .timeline-content {
+                text-align: left;
+            }
+
+            .timeline-marker {
+                margin-bottom: 0;
+            }
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-family: inherit;
+            margin-top: 1rem;
+        }
+
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #059669;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid #d4d4d8;
+            color: #52525b;
+        }
+
+        .btn-outline:hover {
+            background: #f4f4f5;
+        }
+
+        /* Document Link */
+        .document-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            background: #eff6ff;
+            color: #2563eb;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .document-link:hover {
+            background: #dbeafe;
+        }
+
+        /* Actions */
+        .page-actions {
+            margin-top: 1.5rem;
+            display: flex;
+            gap: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="/" class="logo">
+                <div class="logo-icon">O</div>
+                OVN Store
+            </a>
+            <div class="nav-links">
+                <a href="/store/">Visit Store</a>
+                {% if user.is_authenticated %}
+                <a href="/account/">My Account</a>
+                <a href="/logout/">Sign Out</a>
+                {% else %}
+                <a href="/login/">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="page-header">
+            <h1>Application Status</h1>
+            <p>Track the status of your vendor application</p>
+        </div>
+
+        <div class="status-card">
+            <!-- Status Header -->
+            <div class="status-header status-{{ application.status }}">
+                <div class="status-icon">
+                    {% if application.status == 'pending' %}
+                    <i class="fas fa-hourglass-half"></i>
+                    {% elif application.status == 'approved' %}
+                    <i class="fas fa-check-circle"></i>
+                    {% elif application.status == 'rejected' %}
+                    <i class="fas fa-times-circle"></i>
+                    {% elif application.status == 'more_info' %}
+                    <i class="fas fa-exclamation-circle"></i>
+                    {% endif %}
+                </div>
+                <div class="status-info">
+                    <h2>{{ application.get_status_display }}</h2>
+                    <p>Application #{{ application.pk }}</p>
+                </div>
+            </div>
+
+            {% if application.status == 'rejected' and application.rejection_reason %}
+            <div class="notice-box rejection">
+                <h4><i class="fas fa-info-circle"></i> Reason for Rejection</h4>
+                <p>{{ application.rejection_reason }}</p>
+            </div>
+            {% endif %}
+
+            {% if application.status == 'more_info' and application.admin_notes %}
+            <div class="notice-box info">
+                <h4><i class="fas fa-question-circle"></i> Additional Information Needed</h4>
+                <p>{{ application.admin_notes }}</p>
+            </div>
+            {% endif %}
+
+            {% if application.status == 'approved' %}
+            <div class="notice-box approved">
+                <h4><i class="fas fa-party-horn"></i> Congratulations!</h4>
+                <p>Your application has been approved. You can now access your vendor dashboard.</p>
+                <a href="{% url 'vendor:dashboard' %}" class="btn btn-primary">
+                    <i class="fas fa-tachometer-alt"></i> Go to Vendor Dashboard
+                </a>
+            </div>
+            {% endif %}
+
+            <!-- Application Details -->
+            <div class="card-body">
+                <h3 class="section-title">Application Details</h3>
+                <div class="details-grid">
+                    <div class="detail-item">
+                        <span class="detail-label">Business Name</span>
+                        <span class="detail-value">{{ application.business_name }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Business Email</span>
+                        <span class="detail-value">{{ application.business_email }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Phone</span>
+                        <span class="detail-value">{{ application.phone }}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Category</span>
+                        <span class="detail-value">{{ application.get_category_display }}</span>
+                    </div>
+                    <div class="detail-item col-span-2">
+                        <span class="detail-label">Description</span>
+                        <span class="detail-value">{{ application.description }}</span>
+                    </div>
+                    <div class="detail-item col-span-2">
+                        <span class="detail-label">Address</span>
+                        <span class="detail-value">{{ application.address }}</span>
+                    </div>
+                    {% if application.business_document %}
+                    <div class="detail-item col-span-2">
+                        <span class="detail-label">Business Document</span>
+                        <a href="{{ application.business_document.url }}" target="_blank" class="document-link">
+                            <i class="fas fa-file-alt"></i> View Document
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Timeline -->
+            <div class="card-footer">
+                <div class="timeline">
+                    <div class="timeline-item {% if application.submitted_at %}completed{% endif %}">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <span class="timeline-title">Submitted</span>
+                            <span class="timeline-date">{{ application.submitted_at|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+                    <div class="timeline-item {% if application.reviewed_at %}completed{% endif %}">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <span class="timeline-title">Under Review</span>
+                            {% if application.reviewed_at %}
+                            <span class="timeline-date">{{ application.reviewed_at|date:"M d, Y" }}</span>
+                            {% else %}
+                            <span class="timeline-date">Pending</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="timeline-item {% if application.status == 'approved' %}completed{% endif %}">
+                        <div class="timeline-marker"></div>
+                        <div class="timeline-content">
+                            <span class="timeline-title">Decision</span>
+                            {% if application.status == 'approved' %}
+                            <span class="timeline-date text-success">Approved</span>
+                            {% elif application.status == 'rejected' %}
+                            <span class="timeline-date text-danger">Rejected</span>
+                            {% else %}
+                            <span class="timeline-date">Awaiting</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-actions">
+            <a href="/" class="btn btn-outline">
+                <i class="fas fa-home"></i> Back to Home
+            </a>
+        </div>
+    </main>
+</body>
+</html>

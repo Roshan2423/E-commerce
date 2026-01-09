@@ -1,0 +1,315 @@
+{% extends 'vendor/professional/base.html' %}
+{% load static %}
+
+{% block title %}Profile Settings{% endblock %}
+
+{% block breadcrumb %}Profile{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Profile Settings</h1>
+        <p class="page-subtitle">Manage your business profile and logo</p>
+    </div>
+</div>
+
+<div class="profile-layout">
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- Logo Section -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-image"></i> Business Logo
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="logo-section">
+                    <div class="current-logo">
+                        {% if business.logo %}
+                        <img src="{{ business.logo.url }}" alt="{{ business.business_name }}" id="logo-preview-img">
+                        {% else %}
+                        <div class="logo-placeholder" id="logo-placeholder">
+                            <i class="fas fa-building"></i>
+                            <span>No logo</span>
+                        </div>
+                        <img src="" alt="Preview" id="logo-preview-img" style="display: none;">
+                        {% endif %}
+                    </div>
+                    <div class="logo-upload-section">
+                        <div class="logo-info">
+                            <h4>Upload Logo</h4>
+                            <p>Your logo will be displayed on your store dashboard. Recommended size: 200x200px</p>
+                            <p style="color: var(--primary); font-size: 13px;">
+                                <i class="fas fa-info-circle"></i>
+                                If you don't have a logo, your business name will be displayed instead.
+                                If you provide both, both will be shown.
+                            </p>
+                        </div>
+                        <div class="logo-actions">
+                            <label class="btn btn-outline upload-btn">
+                                <i class="fas fa-upload"></i> Choose File
+                                <input type="file" name="logo" id="logo-input" accept="image/*" style="display: none;">
+                            </label>
+                            {% if business.logo %}
+                            <label class="btn btn-outline btn-danger">
+                                <i class="fas fa-trash"></i> Remove
+                                <input type="checkbox" name="remove_logo" value="1" id="remove-logo" style="display: none;">
+                            </label>
+                            {% endif %}
+                        </div>
+                        <span class="file-name" id="file-name-display"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Business Info Section -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">
+                    <i class="fas fa-store"></i> Business Information
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">Business Name *</label>
+                        <input type="text" name="business_name" class="form-control"
+                               value="{{ business.business_name }}" required>
+                        <span class="form-hint">This will be displayed on your dashboard</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" value="{{ business.email }}" disabled>
+                        <span class="form-hint">Contact support to change email</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" name="phone" class="form-control"
+                               value="{{ business.phone }}" placeholder="+977-XXXXXXXXXX">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Address</label>
+                        <input type="text" name="address" class="form-control"
+                               value="{{ business.address }}" placeholder="Business address">
+                    </div>
+
+                    <div class="form-group col-span-2">
+                        <label class="form-label">Description</label>
+                        <textarea name="description" class="form-control" rows="3"
+                                  placeholder="Brief description of your business">{{ business.description }}</textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .profile-layout {
+        max-width: 800px;
+    }
+
+    .logo-section {
+        display: flex;
+        gap: 32px;
+        align-items: flex-start;
+    }
+
+    .current-logo {
+        flex-shrink: 0;
+    }
+
+    .current-logo img {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 2px solid var(--border);
+    }
+
+    .logo-placeholder {
+        width: 150px;
+        height: 150px;
+        border-radius: 12px;
+        border: 2px dashed var(--border);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        gap: 8px;
+    }
+
+    .logo-placeholder i {
+        font-size: 36px;
+    }
+
+    .logo-upload-section {
+        flex: 1;
+    }
+
+    .logo-info h4 {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+
+    .logo-info p {
+        font-size: 14px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+
+    .logo-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .upload-btn {
+        cursor: pointer;
+    }
+
+    .btn-danger {
+        color: #ef4444 !important;
+        border-color: #ef4444 !important;
+    }
+
+    .btn-danger:hover {
+        background: #fef2f2 !important;
+    }
+
+    .file-name {
+        display: block;
+        margin-top: 8px;
+        font-size: 13px;
+        color: var(--primary);
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .col-span-2 {
+        grid-column: span 2;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        font-size: 14px;
+    }
+
+    .form-control {
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .form-control:disabled {
+        background: var(--bg-light);
+        cursor: not-allowed;
+    }
+
+    .form-hint {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    .card-footer {
+        padding: 16px 24px;
+        border-top: 1px solid var(--border);
+        background: var(--bg-light);
+    }
+
+    @media (max-width: 600px) {
+        .logo-section {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .col-span-2 {
+            grid-column: span 1;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const logoInput = document.getElementById('logo-input');
+    const logoPreviewImg = document.getElementById('logo-preview-img');
+    const logoPlaceholder = document.getElementById('logo-placeholder');
+    const fileNameDisplay = document.getElementById('file-name-display');
+    const removeLogo = document.getElementById('remove-logo');
+
+    logoInput.addEventListener('change', function() {
+        if (this.files && this.files[0]) {
+            const file = this.files[0];
+            fileNameDisplay.textContent = file.name;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                logoPreviewImg.src = e.target.result;
+                logoPreviewImg.style.display = 'block';
+                if (logoPlaceholder) {
+                    logoPlaceholder.style.display = 'none';
+                }
+            };
+            reader.readAsDataURL(file);
+
+            // Uncheck remove logo if selecting a new file
+            if (removeLogo) {
+                removeLogo.checked = false;
+            }
+        }
+    });
+
+    // Handle remove logo checkbox
+    if (removeLogo) {
+        removeLogo.parentElement.addEventListener('click', function(e) {
+            if (e.target !== removeLogo) {
+                removeLogo.checked = !removeLogo.checked;
+                if (removeLogo.checked) {
+                    logoPreviewImg.style.opacity = '0.3';
+                    fileNameDisplay.textContent = 'Logo will be removed on save';
+                } else {
+                    logoPreviewImg.style.opacity = '1';
+                    fileNameDisplay.textContent = '';
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

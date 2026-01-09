@@ -1,0 +1,477 @@
+{% extends 'account/base.html' %}
+
+{% block title %}Order #{{ order.get_order_number }}{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'customer_dashboard:overview' %}" class="cf-breadcrumb-item">
+    <i class="fas fa-home"></i>
+</a>
+<span class="cf-breadcrumb-separator">/</span>
+<a href="{% url 'customer_dashboard:orders' %}" class="cf-breadcrumb-item">Orders</a>
+<span class="cf-breadcrumb-separator">/</span>
+<span class="cf-breadcrumb-item active">#{{ order.get_order_number }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="cf-page-header">
+    <div class="cf-page-header-content">
+        <div class="cf-order-header">
+            <h1 class="cf-page-title">Order #{{ order.get_order_number }}</h1>
+            <span class="cf-badge cf-badge-lg cf-badge-{% if order.status == 'delivered' %}success{% elif order.status == 'cancelled' or order.status == 'returned' %}danger{% elif order.status == 'shipped' %}info{% else %}warning{% endif %}">
+                {{ order.get_status_display }}
+            </span>
+        </div>
+        <p class="cf-page-subtitle">Placed on {{ order.created_at|date:"F d, Y" }} at {{ order.created_at|time:"g:i A" }}</p>
+    </div>
+    <div class="cf-page-actions">
+        <a href="{% url 'customer_dashboard:orders' %}" class="cf-btn cf-btn-outline">
+            <i class="fas fa-arrow-left"></i> Back to Orders
+        </a>
+    </div>
+</div>
+
+<!-- Order Progress -->
+<div class="cf-card cf-mb-4">
+    <div class="cf-card-body">
+        <div class="cf-order-progress">
+            <div class="cf-progress-step {% if order.status in 'processing,confirmed,packed,shipped,delivered' %}completed{% endif %}">
+                <div class="cf-progress-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <span>Order Placed</span>
+            </div>
+            <div class="cf-progress-line {% if order.status in 'confirmed,packed,shipped,delivered' %}completed{% endif %}"></div>
+            <div class="cf-progress-step {% if order.status in 'confirmed,packed,shipped,delivered' %}completed{% endif %}">
+                <div class="cf-progress-icon">
+                    <i class="fas fa-check"></i>
+                </div>
+                <span>Confirmed</span>
+            </div>
+            <div class="cf-progress-line {% if order.status in 'packed,shipped,delivered' %}completed{% endif %}"></div>
+            <div class="cf-progress-step {% if order.status in 'packed,shipped,delivered' %}completed{% endif %}">
+                <div class="cf-progress-icon">
+                    <i class="fas fa-box"></i>
+                </div>
+                <span>Packed</span>
+            </div>
+            <div class="cf-progress-line {% if order.status in 'shipped,delivered' %}completed{% endif %}"></div>
+            <div class="cf-progress-step {% if order.status in 'shipped,delivered' %}completed{% endif %}">
+                <div class="cf-progress-icon">
+                    <i class="fas fa-truck"></i>
+                </div>
+                <span>Shipped</span>
+            </div>
+            <div class="cf-progress-line {% if order.status == 'delivered' %}completed{% endif %}"></div>
+            <div class="cf-progress-step {% if order.status == 'delivered' %}completed{% endif %}">
+                <div class="cf-progress-icon">
+                    <i class="fas fa-home"></i>
+                </div>
+                <span>Delivered</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="cf-grid cf-grid-3">
+    <!-- Order Items -->
+    <div class="cf-card cf-col-span-2">
+        <div class="cf-card-header">
+            <h3 class="cf-card-title">Order Items</h3>
+        </div>
+        <div class="cf-card-body cf-p-0">
+            <div class="cf-order-items">
+                {% for item in order.items.all %}
+                <div class="cf-order-item">
+                    <div class="cf-item-image">
+                        {% if item.product.images.first %}
+                        <img src="{{ item.product.images.first.image.url }}" alt="{{ item.product_name }}">
+                        {% else %}
+                        <div class="cf-item-placeholder">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="cf-item-details">
+                        <h4 class="cf-item-name">{{ item.product_name }}</h4>
+                        <p class="cf-item-meta">
+                            SKU: {{ item.product_sku }}
+                            {% if item.variant %}
+                            <span class="cf-item-variant">{{ item.variant.name }}</span>
+                            {% endif %}
+                        </p>
+                        <p class="cf-item-qty">Qty: {{ item.quantity }}</p>
+                    </div>
+                    <div class="cf-item-price">
+                        <span class="cf-price-total">Rs. {{ item.total_price }}</span>
+                        <span class="cf-price-unit">Rs. {{ item.unit_price }} each</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Summary -->
+    <div class="cf-card">
+        <div class="cf-card-header">
+            <h3 class="cf-card-title">Order Summary</h3>
+        </div>
+        <div class="cf-card-body">
+            <div class="cf-summary-list">
+                <div class="cf-summary-row">
+                    <span>Subtotal</span>
+                    <span>Rs. {{ order.subtotal }}</span>
+                </div>
+                {% if order.discount_amount > 0 %}
+                <div class="cf-summary-row cf-text-success">
+                    <span>Discount</span>
+                    <span>-Rs. {{ order.discount_amount }}</span>
+                </div>
+                {% endif %}
+                <div class="cf-summary-row">
+                    <span>Shipping</span>
+                    <span>{% if order.shipping_cost > 0 %}Rs. {{ order.shipping_cost }}{% else %}Free{% endif %}</span>
+                </div>
+                <div class="cf-summary-row">
+                    <span>Tax</span>
+                    <span>Rs. {{ order.tax_amount }}</span>
+                </div>
+                <div class="cf-summary-divider"></div>
+                <div class="cf-summary-row cf-summary-total">
+                    <span>Total</span>
+                    <span>Rs. {{ order.total_amount }}</span>
+                </div>
+            </div>
+
+            <div class="cf-payment-info">
+                <div class="cf-info-label">Payment Status</div>
+                <span class="cf-badge cf-badge-{% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'failed' %}danger{% else %}warning{% endif %}">
+                    {{ order.get_payment_status_display }}
+                </span>
+                {% if order.payment_method %}
+                <div class="cf-info-label cf-mt-3">Payment Method</div>
+                <div class="cf-info-value">{{ order.payment_method }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Shipping & Tracking -->
+<div class="cf-grid cf-grid-2 cf-mt-4">
+    <div class="cf-card">
+        <div class="cf-card-header">
+            <h3 class="cf-card-title">Shipping Address</h3>
+        </div>
+        <div class="cf-card-body">
+            <div class="cf-address-box">
+                {{ order.shipping_address|linebreaksbr }}
+            </div>
+        </div>
+    </div>
+
+    <div class="cf-card">
+        <div class="cf-card-header">
+            <h3 class="cf-card-title">Tracking Information</h3>
+        </div>
+        <div class="cf-card-body">
+            {% if order.tracking_number %}
+            <div class="cf-tracking-info">
+                <div class="cf-info-label">Tracking Number</div>
+                <div class="cf-tracking-number">{{ order.tracking_number }}</div>
+                {% if order.shipping_method %}
+                <div class="cf-info-label cf-mt-3">Shipping Method</div>
+                <div class="cf-info-value">{{ order.shipping_method }}</div>
+                {% endif %}
+            </div>
+            {% else %}
+            <div class="cf-tracking-pending">
+                <i class="fas fa-truck"></i>
+                <p>Tracking information will be available once your order ships.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.cf-mb-4 {
+    margin-bottom: 1rem;
+}
+
+.cf-mt-3 {
+    margin-top: 0.75rem;
+}
+
+.cf-mt-4 {
+    margin-top: 1rem;
+}
+
+.cf-p-0 {
+    padding: 0 !important;
+}
+
+.cf-order-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.cf-badge-lg {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.cf-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.cf-grid-3 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 1024px) {
+    .cf-grid-2, .cf-grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cf-col-span-2 {
+    grid-column: span 1;
+}
+
+/* Order Progress */
+.cf-order-progress {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 0;
+}
+
+.cf-progress-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.cf-progress-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--cf-gray-100);
+    color: var(--cf-text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--cf-transition);
+}
+
+.cf-progress-step.completed .cf-progress-icon {
+    background: var(--cf-success);
+    color: white;
+}
+
+.cf-progress-step span {
+    font-size: 0.75rem;
+    color: var(--cf-text-secondary);
+    text-align: center;
+}
+
+.cf-progress-line {
+    flex: 1;
+    height: 2px;
+    background: var(--cf-gray-200);
+    margin: 0 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.cf-progress-line.completed {
+    background: var(--cf-success);
+}
+
+/* Order Items */
+.cf-order-items {
+    display: flex;
+    flex-direction: column;
+}
+
+.cf-order-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid var(--cf-border);
+}
+
+.cf-order-item:last-child {
+    border-bottom: none;
+}
+
+.cf-item-image {
+    width: 80px;
+    height: 80px;
+    border-radius: var(--cf-radius);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.cf-item-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cf-item-placeholder {
+    width: 100%;
+    height: 100%;
+    background: var(--cf-gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cf-text-muted);
+}
+
+.cf-item-details {
+    flex: 1;
+}
+
+.cf-item-name {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.cf-item-meta {
+    font-size: 0.8125rem;
+    color: var(--cf-text-secondary);
+}
+
+.cf-item-variant {
+    display: inline-block;
+    background: var(--cf-gray-100);
+    padding: 0.125rem 0.5rem;
+    border-radius: var(--cf-radius-sm);
+    margin-left: 0.5rem;
+}
+
+.cf-item-qty {
+    font-size: 0.875rem;
+    color: var(--cf-text-secondary);
+    margin-top: 0.25rem;
+}
+
+.cf-item-price {
+    text-align: right;
+}
+
+.cf-price-total {
+    display: block;
+    font-weight: 600;
+    font-size: 0.9375rem;
+}
+
+.cf-price-unit {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--cf-text-secondary);
+}
+
+/* Summary */
+.cf-summary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.cf-summary-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+}
+
+.cf-summary-divider {
+    height: 1px;
+    background: var(--cf-border);
+    margin: 0.5rem 0;
+}
+
+.cf-summary-total {
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+.cf-text-success {
+    color: var(--cf-success);
+}
+
+.cf-payment-info {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--cf-border);
+}
+
+.cf-info-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--cf-text-muted);
+    margin-bottom: 0.25rem;
+}
+
+.cf-info-value {
+    font-size: 0.875rem;
+}
+
+/* Address & Tracking */
+.cf-address-box {
+    font-size: 0.875rem;
+    line-height: 1.6;
+    color: var(--cf-text-secondary);
+}
+
+.cf-tracking-number {
+    font-family: var(--cf-font-mono);
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--cf-blue);
+    margin-top: 0.25rem;
+}
+
+.cf-tracking-pending {
+    text-align: center;
+    padding: 2rem;
+    color: var(--cf-text-secondary);
+}
+
+.cf-tracking-pending i {
+    font-size: 2rem;
+    margin-bottom: 0.75rem;
+    color: var(--cf-text-muted);
+}
+
+.cf-tracking-pending p {
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .cf-order-progress {
+        overflow-x: auto;
+        padding-bottom: 1rem;
+    }
+
+    .cf-order-item {
+        flex-direction: column;
+    }
+
+    .cf-item-price {
+        text-align: left;
+        margin-top: 0.5rem;
+    }
+}
+</style>
+{% endblock %}

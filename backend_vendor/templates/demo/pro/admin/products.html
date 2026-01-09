@@ -1,0 +1,214 @@
+{% extends 'demo/pro/admin/base.html' %}
+{% load static %}
+
+{% block title %}Products{% endblock %}
+
+{% block breadcrumb %}Products{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Products</h1>
+        <p class="page-subtitle">Manage your product inventory</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+        <button class="btn btn-primary demo-disabled" title="Demo only">
+            <i class="fas fa-plus"></i> Add Product
+        </button>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="stat-card">
+        <div class="stat-icon primary">
+            <i class="fas fa-box"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">{{ total_products|default:"32" }}</div>
+            <div class="stat-label">Total Products</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon success">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">{{ active_products|default:"28" }}</div>
+            <div class="stat-label">Active Products</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon danger">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">{{ low_stock|default:"5" }}</div>
+            <div class="stat-label">Low Stock</div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-box"></i> All Products</h3>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <input type="text" class="form-control" placeholder="Search products..." style="width: 200px;" disabled>
+            <select class="form-control" style="width: 150px;" disabled>
+                <option>All Categories</option>
+            </select>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 48px; height: 48px; border-radius: 8px; overflow: hidden; background: var(--bg-light);">
+                                {% if product.get_main_image %}
+                                <img src="{{ product.get_main_image }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-secondary);"><i class="fas fa-image"></i></div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div style="font-weight: 500;">{{ product.name|truncatechars:30 }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">SKU: {{ product.sku|default:"N/A" }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ product.category.name|default:"General" }}</td>
+                    <td>
+                        {% if product.compare_price %}
+                        <span style="text-decoration: line-through; color: var(--text-secondary); font-size: 0.8125rem;">Rs. {{ product.price|floatformat:0 }}</span><br>
+                        <strong style="color: var(--success);">Rs. {{ product.compare_price|floatformat:0 }}</strong>
+                        {% else %}
+                        <strong>Rs. {{ product.price|floatformat:0 }}</strong>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="color: {% if product.stock_quantity < 10 %}var(--danger){% elif product.stock_quantity < 20 %}var(--warning){% else %}var(--success){% endif %};">
+                            {{ product.stock_quantity|default:0 }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if product.is_active %}
+                        <span class="badge badge-success">Active</span>
+                        {% else %}
+                        <span class="badge badge-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-sm btn-outline demo-disabled"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline demo-disabled"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <!-- Demo products -->
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 48px; height: 48px; border-radius: 8px; background: var(--bg-light); display: flex; align-items: center; justify-content: center; color: var(--text-secondary);"><i class="fas fa-image"></i></div>
+                            <div>
+                                <div style="font-weight: 500;">Premium Wireless Headphones</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">SKU: WH-001</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>Electronics</td>
+                    <td><strong>Rs. 4,999</strong></td>
+                    <td><span style="color: var(--warning);">8</span></td>
+                    <td><span class="badge badge-success">Active</span></td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-sm btn-outline demo-disabled"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline demo-disabled"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 48px; height: 48px; border-radius: 8px; background: var(--bg-light); display: flex; align-items: center; justify-content: center; color: var(--text-secondary);"><i class="fas fa-image"></i></div>
+                            <div>
+                                <div style="font-weight: 500;">Cotton Summer Dress</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">SKU: CD-001</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>Fashion</td>
+                    <td><strong>Rs. 2,499</strong></td>
+                    <td><span style="color: var(--success);">25</span></td>
+                    <td><span class="badge badge-success">Active</span></td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-sm btn-outline demo-disabled"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline demo-disabled"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 48px; height: 48px; border-radius: 8px; background: var(--bg-light); display: flex; align-items: center; justify-content: center; color: var(--text-secondary);"><i class="fas fa-image"></i></div>
+                            <div>
+                                <div style="font-weight: 500;">Smart Watch Pro</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">SKU: SW-001</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>Electronics</td>
+                    <td><strong>Rs. 8,999</strong></td>
+                    <td><span style="color: var(--danger);">3</span></td>
+                    <td><span class="badge badge-success">Active</span></td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-sm btn-outline demo-disabled"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline demo-disabled"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 48px; height: 48px; border-radius: 8px; background: var(--bg-light); display: flex; align-items: center; justify-content: center; color: var(--text-secondary);"><i class="fas fa-image"></i></div>
+                            <div>
+                                <div style="font-weight: 500;">Leather Wallet</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">SKU: LW-001</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>Fashion</td>
+                    <td><strong>Rs. 1,299</strong></td>
+                    <td><span style="color: var(--success);">42</span></td>
+                    <td><span class="badge badge-secondary">Inactive</span></td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-sm btn-outline demo-disabled"><i class="fas fa-edit"></i></button>
+                            <button class="btn btn-sm btn-outline demo-disabled"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

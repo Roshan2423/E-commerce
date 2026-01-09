@@ -1,0 +1,67 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Delete Review - E-Commerce Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <a href="{% url 'products:reviews' %}" class="btn btn-secondary" style="padding: 10px 16px;">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="page-title">Delete Review</h1>
+    </div>
+</div>
+
+<div class="data-table" style="max-width: 600px;">
+    <div class="table-header">
+        <h3 class="table-title">Confirm Deletion</h3>
+    </div>
+    <div style="padding: 24px;">
+        <div style="text-align: center; padding: 20px 0;">
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+                <i class="fas fa-exclamation-triangle" style="font-size: 32px; color: #dc2626;"></i>
+            </div>
+            <h2 style="color: #1f2937; margin-bottom: 12px;">Are you sure?</h2>
+            <p style="color: #64748b; font-size: 15px; margin-bottom: 24px;">
+                You are about to delete the following review. This action cannot be undone.
+            </p>
+        </div>
+
+        <!-- Review Summary -->
+        <div style="background: #f8fafc; border-radius: 8px; padding: 16px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
+            <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                <div style="width: 50px; height: 50px; border-radius: 8px; overflow: hidden; background: #e2e8f0; flex-shrink: 0;">
+                    {% if review.product.get_main_image %}
+                    <img src="{{ review.product.get_main_image }}" alt="{{ review.product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-image" style="color: #94a3b8;"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div>
+                    <div style="font-weight: 600; color: #1f2937;">{{ review.product.name|truncatechars:40 }}</div>
+                    <div style="font-size: 13px; color: #64748b;">By {{ review.user.get_full_name|default:review.user.username }}</div>
+                </div>
+            </div>
+            <div style="display: flex; gap: 4px; margin-bottom: 8px;">
+                {% for i in "12345" %}
+                <i class="fas fa-star" style="color: {% if forloop.counter <= review.rating %}#fbbf24{% else %}#e5e7eb{% endif %}; font-size: 14px;"></i>
+                {% endfor %}
+            </div>
+            <div style="font-size: 14px; color: #374151;">{{ review.comment|truncatechars:150 }}</div>
+        </div>
+
+        <form method="POST" style="display: flex; gap: 12px; justify-content: center;">
+            {% csrf_token %}
+            <a href="{% url 'products:reviews' %}" class="btn btn-secondary" style="padding: 12px 24px;">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+            <button type="submit" class="btn btn-danger" style="padding: 12px 24px;">
+                <i class="fas fa-trash"></i> Delete Review
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1904,12 +1904,22 @@ class ECommerceApp {
     }
 
     renderAboutPage() {
+        // Get dynamic content from VENDOR_CONFIG with fallbacks
+        const storeName = this.getStoreName();
+        const aboutTitle = (window.VENDOR_CONFIG && window.VENDOR_CONFIG.aboutTitle) || `About ${storeName}`;
+        const aboutTagline = (window.VENDOR_CONFIG && window.VENDOR_CONFIG.aboutTagline) || 'Your Trusted Shopping Destination in Nepal';
+        const aboutStory = (window.VENDOR_CONFIG && window.VENDOR_CONFIG.aboutStory) ||
+            `${storeName} was founded with a simple mission: to bring quality products to customers across Nepal with exceptional service and competitive prices. What started as a small venture has grown into a trusted e-commerce platform serving thousands of happy customers nationwide.`;
+        const aboutMission = (window.VENDOR_CONFIG && window.VENDOR_CONFIG.aboutMission) ||
+            'We are committed to providing our customers with the best online shopping experience. Our mission is to offer a wide range of quality products at affordable prices, backed by excellent customer service and fast delivery across Nepal.';
+        const aboutVision = (window.VENDOR_CONFIG && window.VENDOR_CONFIG.aboutVision) || '';
+
         return `
             <div class="about-page">
                 <div class="about-hero">
                     <div class="about-hero-content">
-                        <h1 class="about-title">About OVN Store</h1>
-                        <p class="about-tagline">Your Trusted Shopping Destination in Nepal</p>
+                        <h1 class="about-title">${aboutTitle}</h1>
+                        <p class="about-tagline">${aboutTagline}</p>
                     </div>
                     <div class="about-hero-bg"></div>
                 </div>
@@ -1923,7 +1933,7 @@ class ECommerceApp {
                                 </svg>
                             </div>
                             <h2>Our Story</h2>
-                            <p>OVN Store was founded with a simple mission: to bring quality products to customers across Nepal with exceptional service and competitive prices. What started as a small venture has grown into a trusted e-commerce platform serving thousands of happy customers nationwide.</p>
+                            <p>${aboutStory}</p>
                         </section>
 
                         <section class="about-section">
@@ -1933,8 +1943,20 @@ class ECommerceApp {
                                 </svg>
                             </div>
                             <h2>Our Mission</h2>
-                            <p>We are committed to providing our customers with the best online shopping experience. Our mission is to offer a wide range of quality products at affordable prices, backed by excellent customer service and fast delivery across Nepal.</p>
+                            <p>${aboutMission}</p>
                         </section>
+
+                        ${aboutVision ? `
+                        <section class="about-section">
+                            <div class="about-section-icon">
+                                <svg width="48" height="48" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                                </svg>
+                            </div>
+                            <h2>Our Vision</h2>
+                            <p>${aboutVision}</p>
+                        </section>
+                        ` : ''}
 
                         <div class="about-features">
                             <div class="about-feature-card">
@@ -2014,6 +2036,15 @@ class ECommerceApp {
     }
 
     renderContactPage() {
+        // Get dynamic content from VENDOR_CONFIG with fallbacks
+        const contactAddress = (window.VENDOR_CONFIG && window.VENDOR_CONFIG.contactAddress) || this.getStoreAddress();
+        const contactCity = (window.VENDOR_CONFIG && window.VENDOR_CONFIG.contactCity) || 'Nepal';
+        const contactPhone = (window.VENDOR_CONFIG && window.VENDOR_CONFIG.contactPhone) || this.getStorePhone();
+        const contactEmail = (window.VENDOR_CONFIG && window.VENDOR_CONFIG.contactEmail) || this.getStoreEmail();
+        const contactHours = (window.VENDOR_CONFIG && window.VENDOR_CONFIG.contactHours) || 'Sun - Fri: 10 AM - 6 PM';
+        const contactHoursNote = (window.VENDOR_CONFIG && window.VENDOR_CONFIG.contactHoursNote) || 'Saturday: Closed';
+        const mapQuery = encodeURIComponent(`${contactAddress}, ${contactCity}`);
+
         return `
             <div class="contact-page">
                 <div class="contact-hero">
@@ -2034,8 +2065,8 @@ class ECommerceApp {
                                     </svg>
                                 </div>
                                 <h3>Our Location</h3>
-                                <p class="contact-detail">Basundhara, Kathmandu</p>
-                                <p class="contact-subdetail">Nepal</p>
+                                <p class="contact-detail">${contactAddress}</p>
+                                <p class="contact-subdetail">${contactCity}</p>
                             </div>
 
                             <div class="contact-card">
@@ -2045,8 +2076,8 @@ class ECommerceApp {
                                     </svg>
                                 </div>
                                 <h3>Phone Number</h3>
-                                <p class="contact-detail">9824236055</p>
-                                <p class="contact-subdetail">Available 10 AM - 6 PM</p>
+                                <p class="contact-detail">${contactPhone}</p>
+                                <p class="contact-subdetail">Available during business hours</p>
                             </div>
 
                             <div class="contact-card">
@@ -2056,7 +2087,7 @@ class ECommerceApp {
                                     </svg>
                                 </div>
                                 <h3>Email Address</h3>
-                                <p class="contact-detail">support@ovnstore.com</p>
+                                <p class="contact-detail">${contactEmail}</p>
                                 <p class="contact-subdetail">We reply within 24 hours</p>
                             </div>
 
@@ -2067,8 +2098,8 @@ class ECommerceApp {
                                     </svg>
                                 </div>
                                 <h3>Business Hours</h3>
-                                <p class="contact-detail">Sun - Fri: 10 AM - 6 PM</p>
-                                <p class="contact-subdetail">Saturday: Closed</p>
+                                <p class="contact-detail">${contactHours}</p>
+                                <p class="contact-subdetail">${contactHoursNote}</p>
                             </div>
                         </div>
 
@@ -2129,9 +2160,9 @@ class ECommerceApp {
                                     <svg width="64" height="64" fill="#667eea" viewBox="0 0 24 24">
                                         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
                                     </svg>
-                                    <h3>Basundhara, Kathmandu</h3>
+                                    <h3>${contactAddress}</h3>
                                     <p>Visit our store for a personalized shopping experience</p>
-                                    <a href="https://maps.google.com/?q=Basundhara,Kathmandu,Nepal" target="_blank" class="map-link">
+                                    <a href="https://maps.google.com/?q=${mapQuery}" target="_blank" class="map-link">
                                         <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24">
                                             <path d="M19 19H5V5h7V3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2v-7h-2v7zM14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
                                         </svg>

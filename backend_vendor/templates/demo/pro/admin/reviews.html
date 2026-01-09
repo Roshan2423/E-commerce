@@ -1,0 +1,243 @@
+{% extends 'demo/pro/admin/base.html' %}
+
+{% block title %}Reviews{% endblock %}
+
+{% block breadcrumb %}Reviews{% endblock %}
+
+{% block extra_css %}
+<style>
+    .review-item {
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+    }
+    .review-item:last-child { border-bottom: none; }
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+    }
+    .review-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .review-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: white;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    }
+    .review-info {
+        display: flex;
+        flex-direction: column;
+    }
+    .review-author {
+        font-weight: 500;
+    }
+    .review-date {
+        font-size: 12px;
+        color: var(--text-muted);
+    }
+    .review-product {
+        font-size: 12px;
+        color: var(--primary-color);
+    }
+    .review-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .review-content {
+        color: var(--text-secondary);
+        font-size: 13px;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+    .review-actions { display: flex; gap: 8px; }
+    .review-btn {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        border: none;
+        cursor: not-allowed;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .review-btn.approve { background: #d1fae5; color: #059669; }
+    .review-btn.reject { background: #fee2e2; color: #dc2626; }
+    .review-btn.reply { background: var(--bg-tertiary); color: var(--text-secondary); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Reviews</h1>
+        <p class="page-subtitle">Manage customer reviews and feedback</p>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon warning">
+            <i class="fas fa-star"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">{{ total_reviews|default:"47" }}</div>
+            <div class="stat-label">Total Reviews</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon success">
+            <i class="fas fa-star-half-alt"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">{{ avg_rating|default:"4.5" }}</div>
+            <div class="stat-label">Average Rating</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon info">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">{{ pending_reviews|default:"3" }}</div>
+            <div class="stat-label">Pending Approval</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">All Reviews</h3>
+        <select class="form-control" style="width: 140px;" disabled>
+            <option>All Reviews</option>
+            <option>Pending</option>
+            <option>Approved</option>
+        </select>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% for review in reviews %}
+        <div class="review-item">
+            <div class="review-header">
+                <div class="review-meta">
+                    <div class="review-avatar">
+                        {{ review.user.first_name|slice:":1"|upper|default:"U" }}
+                    </div>
+                    <div class="review-info">
+                        <div class="review-author">{{ review.user.get_full_name|default:"Anonymous" }}</div>
+                        <div class="review-date">{{ review.created_at|date:"M d, Y" }}</div>
+                        <div class="review-product">on {{ review.product.name|truncatewords:5 }}</div>
+                    </div>
+                </div>
+                <div class="review-status">
+                    <div class="stars">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= review.rating %}
+                            <i class="fas fa-star star-filled"></i>
+                            {% else %}
+                            <i class="fas fa-star star-empty"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% if review.status == 'approved' %}
+                    <span class="badge badge-success">Approved</span>
+                    {% else %}
+                    <span class="badge badge-warning">Pending</span>
+                    {% endif %}
+                </div>
+            </div>
+            <p class="review-content">{{ review.comment }}</p>
+            <div class="review-actions">
+                {% if review.status == 'pending' %}
+                <button class="review-btn approve demo-disabled"><i class="fas fa-check"></i> Approve</button>
+                <button class="review-btn reject demo-disabled"><i class="fas fa-times"></i> Reject</button>
+                {% endif %}
+                <button class="review-btn reply demo-disabled"><i class="fas fa-reply"></i> Reply</button>
+            </div>
+        </div>
+        {% empty %}
+        <!-- Sample reviews -->
+        <div class="review-item">
+            <div class="review-header">
+                <div class="review-meta">
+                    <div class="review-avatar">R</div>
+                    <div class="review-info">
+                        <div class="review-author">Ram Sharma</div>
+                        <div class="review-date">Jan 8, 2026</div>
+                        <div class="review-product">on Premium Wireless Headphones</div>
+                    </div>
+                </div>
+                <div class="review-status">
+                    <div class="stars">
+                        <i class="fas fa-star star-filled"></i><i class="fas fa-star star-filled"></i><i class="fas fa-star star-filled"></i><i class="fas fa-star star-filled"></i><i class="fas fa-star star-filled"></i>
+                    </div>
+                    <span class="badge badge-success">Approved</span>
+                </div>
+            </div>
+            <p class="review-content">Excellent product! The sound quality is amazing and the battery life is impressive. Highly recommend to anyone looking for quality headphones.</p>
+            <div class="review-actions">
+                <button class="review-btn reply demo-disabled"><i class="fas fa-reply"></i> Reply</button>
+            </div>
+        </div>
+        <div class="review-item">
+            <div class="review-header">
+                <div class="review-meta">
+                    <div class="review-avatar" style="background: linear-gradient(135deg, #ec4899, #f472b6);">S</div>
+                    <div class="review-info">
+                        <div class="review-author">Sita Gurung</div>
+                        <div class="review-date">Jan 7, 2026</div>
+                        <div class="review-product">on Cotton Summer Dress</div>
+                    </div>
+                </div>
+                <div class="review-status">
+                    <div class="stars">
+                        <i class="fas fa-star star-filled"></i><i class="fas fa-star star-filled"></i><i class="fas fa-star star-filled"></i><i class="fas fa-star star-filled"></i><i class="fas fa-star star-empty"></i>
+                    </div>
+                    <span class="badge badge-warning">Pending</span>
+                </div>
+            </div>
+            <p class="review-content">Beautiful dress! The fabric is soft and comfortable. Fits perfectly. Only giving 4 stars because delivery took a bit longer than expected.</p>
+            <div class="review-actions">
+                <button class="review-btn approve demo-disabled"><i class="fas fa-check"></i> Approve</button>
+                <button class="review-btn reject demo-disabled"><i class="fas fa-times"></i> Reject</button>
+                <button class="review-btn reply demo-disabled"><i class="fas fa-reply"></i> Reply</button>
+            </div>
+        </div>
+        <div class="review-item">
+            <div class="review-header">
+                <div class="review-meta">
+                    <div class="review-avatar" style="background: linear-gradient(135deg, #10b981, #34d399);">H</div>
+                    <div class="review-info">
+                        <div class="review-author">Hari Thapa</div>
+                        <div class="review-date">Jan 6, 2026</div>
+                        <div class="review-product">on Smart Watch Pro</div>
+                    </div>
+                </div>
+                <div class="review-status">
+                    <div class="stars">
+                        <i class="fas fa-star star-filled"></i><i class="fas fa-star star-filled"></i><i class="fas fa-star star-filled"></i><i class="fas fa-star star-filled"></i><i class="fas fa-star star-filled"></i>
+                    </div>
+                    <span class="badge badge-success">Approved</span>
+                </div>
+            </div>
+            <p class="review-content">Best smart watch I've ever used! Great features and excellent customer service. Will definitely buy more products from this store.</p>
+            <div class="review-actions">
+                <button class="review-btn reply demo-disabled"><i class="fas fa-reply"></i> Reply</button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,27 @@
+YOUR TRIAL EXPIRES SOON!
+========================
+
+{{ days_remaining }} days remaining
+
+Hi {{ business.business_name }}!
+
+Your {{ plan_name }} free trial is ending soon! To continue enjoying all the features
+and keep growing your business, upgrade to a paid subscription before your trial expires.
+
+TRIAL ENDS ON: {{ trial_end_date|date:"F j, Y" }}
+
+Don't lose access to your products, orders, and customers. Upgrade now to continue your journey!
+
+Upgrade here: {{ upgrade_url }}
+
+WHAT YOU'LL KEEP WITH SUBSCRIPTION
+----------------------------------
+- All your products and catalog
+- Order history and customer data
+- Analytics and business insights
+- Priority customer support
+
+---
+Questions? Contact us at support@ovnstore.com
+
+(c) 2024 OVN Store. All rights reserved.

@@ -1,0 +1,133 @@
+{% extends 'dashboard/cloudflare_base.html' %}
+{% load static %}
+
+{% block logo_url %}{% url 'customer_dashboard:overview' %}{% endblock %}
+{% block logo_icon %}O{% endblock %}
+{% block logo_text %}My Account{% endblock %}
+
+{% block breadcrumb_home_url %}{% url 'customer_dashboard:overview' %}{% endblock %}
+
+{% block settings_url %}{% url 'customer_dashboard:settings' %}{% endblock %}
+
+{% block sidebar_nav %}
+<div class="cf-nav-section">
+    <div class="cf-nav-section-title">Dashboard</div>
+    <a href="{% url 'customer_dashboard:overview' %}" class="cf-nav-item {% if request.resolver_match.url_name == 'overview' %}active{% endif %}">
+        <i class="fas fa-home cf-nav-icon"></i>
+        <span class="cf-nav-text">Overview</span>
+    </a>
+</div>
+
+<div class="cf-nav-section">
+    <div class="cf-nav-section-title">Shopping</div>
+    <a href="{% url 'customer_dashboard:orders' %}" class="cf-nav-item {% if 'order' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-shopping-bag cf-nav-icon"></i>
+        <span class="cf-nav-text">My Orders</span>
+    </a>
+    <a href="{% url 'customer_dashboard:reviews' %}" class="cf-nav-item {% if request.resolver_match.url_name == 'reviews' %}active{% endif %}">
+        <i class="fas fa-star cf-nav-icon"></i>
+        <span class="cf-nav-text">My Reviews</span>
+    </a>
+</div>
+
+<div class="cf-nav-section">
+    <div class="cf-nav-section-title">Account</div>
+    <a href="{% url 'customer_dashboard:addresses' %}" class="cf-nav-item {% if 'address' in request.resolver_match.url_name %}active{% endif %}">
+        <i class="fas fa-map-marker-alt cf-nav-icon"></i>
+        <span class="cf-nav-text">Addresses</span>
+    </a>
+    <a href="{% url 'customer_dashboard:profile' %}" class="cf-nav-item {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+        <i class="fas fa-user cf-nav-icon"></i>
+        <span class="cf-nav-text">Profile</span>
+    </a>
+    <a href="{% url 'customer_dashboard:settings' %}" class="cf-nav-item {% if request.resolver_match.url_name == 'settings' %}active{% endif %}">
+        <i class="fas fa-cog cf-nav-icon"></i>
+        <span class="cf-nav-text">Settings</span>
+    </a>
+</div>
+
+<div class="cf-nav-section">
+    <div class="cf-nav-section-title">Actions</div>
+    <a href="{% url 'home' %}" class="cf-nav-item">
+        <i class="fas fa-store cf-nav-icon"></i>
+        <span class="cf-nav-text">Continue Shopping</span>
+    </a>
+    {% if not user.vendor %}
+    <a href="{% url 'vendor:apply' %}" class="cf-nav-item">
+        <i class="fas fa-briefcase cf-nav-icon"></i>
+        <span class="cf-nav-text">Become a Vendor</span>
+    </a>
+    {% else %}
+    <a href="{% url 'vendor:dashboard' %}" class="cf-nav-item">
+        <i class="fas fa-tachometer-alt cf-nav-icon"></i>
+        <span class="cf-nav-text">Vendor Dashboard</span>
+    </a>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block cmd_quick_actions %}
+<button class="cf-cmd-item" data-href="{% url 'customer_dashboard:overview' %}">
+    <i class="fas fa-home"></i>
+    <span>Go to Dashboard</span>
+    <kbd>G D</kbd>
+</button>
+<button class="cf-cmd-item" data-href="{% url 'customer_dashboard:orders' %}">
+    <i class="fas fa-shopping-bag"></i>
+    <span>View Orders</span>
+    <kbd>G O</kbd>
+</button>
+{% endblock %}
+
+{% block cmd_navigation %}
+<button class="cf-cmd-item" data-href="{% url 'customer_dashboard:orders' %}">
+    <i class="fas fa-shopping-bag"></i>
+    <span>Orders</span>
+</button>
+<button class="cf-cmd-item" data-href="{% url 'customer_dashboard:addresses' %}">
+    <i class="fas fa-map-marker-alt"></i>
+    <span>Addresses</span>
+</button>
+<button class="cf-cmd-item" data-href="{% url 'customer_dashboard:reviews' %}">
+    <i class="fas fa-star"></i>
+    <span>Reviews</span>
+</button>
+<button class="cf-cmd-item" data-href="{% url 'customer_dashboard:profile' %}">
+    <i class="fas fa-user"></i>
+    <span>Profile</span>
+</button>
+<button class="cf-cmd-item" data-href="{% url 'customer_dashboard:settings' %}">
+    <i class="fas fa-cog"></i>
+    <span>Settings</span>
+</button>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+    // Handle command palette navigation
+    document.querySelectorAll('.cf-cmd-item[data-href]').forEach(item => {
+        item.addEventListener('click', () => {
+            window.location.href = item.dataset.href;
+        });
+    });
+
+    // Keyboard shortcuts
+    let lastKey = '';
+    document.addEventListener('keydown', (e) => {
+        if (document.activeElement.tagName === 'INPUT' || document.activeElement.tagName === 'TEXTAREA') return;
+
+        if (lastKey === 'g') {
+            if (e.key === 'd') window.location.href = "{% url 'customer_dashboard:overview' %}";
+            if (e.key === 'o') window.location.href = "{% url 'customer_dashboard:orders' %}";
+            if (e.key === 'a') window.location.href = "{% url 'customer_dashboard:addresses' %}";
+            if (e.key === 'r') window.location.href = "{% url 'customer_dashboard:reviews' %}";
+            if (e.key === 's') window.location.href = "{% url 'customer_dashboard:settings' %}";
+            lastKey = '';
+        } else {
+            lastKey = e.key;
+            setTimeout(() => lastKey = '', 500);
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,967 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} - ProStore Demo</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        /* Demo Banner */
+        .demo-banner {
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            color: white;
+            padding: 0.75rem;
+            text-align: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .demo-banner a {
+            color: white;
+            text-decoration: underline;
+            margin-left: 0.5rem;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0.75rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .navbar-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .back-link {
+            color: #7c3aed;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .nav-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #64748b;
+            background: #f1f5f9;
+            text-decoration: none;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .nav-icon:hover {
+            background: #7c3aed;
+            color: white;
+        }
+
+        .nav-icon .badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: #ec4899;
+            color: white;
+            font-size: 0.625rem;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
+            max-width: 1200px;
+            margin: 1rem auto;
+            padding: 0 2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .breadcrumb a {
+            color: #7c3aed;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            text-decoration: underline;
+        }
+
+        /* Product Container */
+        .product-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 2rem 3rem;
+        }
+
+        .product-main {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 3rem;
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        /* Product Gallery */
+        .product-gallery {
+            padding: 2rem;
+        }
+
+        .main-image {
+            aspect-ratio: 1;
+            background: #f1f5f9;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .main-image img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .main-image .no-image {
+            font-size: 5rem;
+            color: #cbd5e1;
+        }
+
+        .thumbnail-grid {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .thumbnail:hover,
+        .thumbnail.active {
+            border-color: #7c3aed;
+        }
+
+        .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .thumbnail .no-image {
+            font-size: 1.5rem;
+            color: #cbd5e1;
+        }
+
+        /* Product Info */
+        .product-info {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-category {
+            font-size: 0.75rem;
+            color: #7c3aed;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.75rem;
+            line-height: 1.3;
+        }
+
+        .product-rating {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .stars {
+            display: flex;
+            gap: 0.125rem;
+        }
+
+        .stars i {
+            color: #f59e0b;
+            font-size: 0.875rem;
+        }
+
+        .stars i.empty {
+            color: #e2e8f0;
+        }
+
+        .rating-text {
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .product-price {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .current-price {
+            font-size: 2rem;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        .original-price {
+            font-size: 1.25rem;
+            color: #94a3b8;
+            text-decoration: line-through;
+        }
+
+        .discount-badge {
+            background: #fee2e2;
+            color: #dc2626;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.375rem 0.75rem;
+            border-radius: 6px;
+        }
+
+        .product-description {
+            color: #64748b;
+            font-size: 0.9375rem;
+            margin-bottom: 1.5rem;
+            flex: 1;
+        }
+
+        .product-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 10px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-size: 0.875rem;
+        }
+
+        .meta-item i {
+            color: #7c3aed;
+            width: 20px;
+        }
+
+        .meta-item span {
+            color: #64748b;
+        }
+
+        .meta-item strong {
+            color: #1e293b;
+        }
+
+        .stock-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .stock-status.in-stock {
+            color: #10b981;
+        }
+
+        .stock-status.out-of-stock {
+            color: #ef4444;
+        }
+
+        /* Quantity Selector */
+        .quantity-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .quantity-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .quantity-selector {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .qty-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            border: none;
+            color: #64748b;
+            cursor: not-allowed;
+            font-size: 1rem;
+        }
+
+        .qty-input {
+            width: 60px;
+            height: 40px;
+            border: none;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: not-allowed;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .btn-cart {
+            background: white;
+            border: 2px solid #7c3aed;
+            color: #7c3aed;
+        }
+
+        .btn-buy {
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            color: white;
+        }
+
+        .btn-wishlist {
+            flex: 0;
+            width: 50px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+        }
+
+        /* Reviews Section */
+        .reviews-section {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .reviews-card {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            padding: 2rem;
+        }
+
+        .reviews-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .reviews-header h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .write-review-btn {
+            padding: 0.5rem 1rem;
+            background: #7c3aed;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .review-item {
+            padding: 1.25rem 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .review-item:last-child {
+            border-bottom: none;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.75rem;
+        }
+
+        .reviewer-info {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .reviewer-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .reviewer-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .review-date {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        .review-rating {
+            display: flex;
+            gap: 0.125rem;
+        }
+
+        .review-rating i {
+            color: #f59e0b;
+            font-size: 0.75rem;
+        }
+
+        .review-content {
+            color: #64748b;
+            font-size: 0.9375rem;
+        }
+
+        .no-reviews {
+            text-align: center;
+            padding: 2rem;
+            color: #64748b;
+        }
+
+        /* Related Products */
+        .related-section {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .related-header {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.25rem;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            transition: all 0.2s;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-card .product-image {
+            aspect-ratio: 1;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .product-card .product-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .product-card .card-info {
+            padding: 1rem;
+        }
+
+        .product-card .card-category {
+            font-size: 0.625rem;
+            color: #7c3aed;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .product-card .card-name {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .product-card .card-price {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1e293b;
+            color: #64748b;
+            padding: 2rem;
+            margin-top: 3rem;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .product-main {
+                grid-template-columns: 1fr;
+            }
+
+            .related-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn-wishlist {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Banner -->
+    <div class="demo-banner">
+        <i class="fas fa-star"></i> Professional Demo - Full product experience
+        <a href="/">Start Free Trial</a>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="{% url 'demo:pro_user_home' %}" class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+                <span class="logo-text">ProStore</span>
+            </a>
+
+            <div class="nav-right">
+                <a href="{% url 'demo:pro_user_home' %}" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Products
+                </a>
+                <a href="{% url 'demo:pro_user_cart' %}" class="nav-icon" title="Cart">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="badge">3</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="{% url 'demo:pro_user_home' %}">Home</a>
+        <i class="fas fa-chevron-right" style="font-size: 0.625rem;"></i>
+        {% if product.category %}
+        <a href="{% url 'demo:pro_user_home' %}">{{ product.category.name }}</a>
+        <i class="fas fa-chevron-right" style="font-size: 0.625rem;"></i>
+        {% endif %}
+        <span>{{ product.name|truncatewords:5 }}</span>
+    </div>
+
+    <!-- Product Detail -->
+    <div class="product-container">
+        <div class="product-main">
+            <!-- Gallery -->
+            <div class="product-gallery">
+                <div class="main-image">
+                    {% if product.get_main_image %}
+                    <img src="{{ product.get_main_image }}" alt="{{ product.name }}">
+                    {% else %}
+                    <i class="fas fa-image no-image"></i>
+                    {% endif %}
+                </div>
+                {% if images %}
+                <div class="thumbnail-grid">
+                    {% for image in images %}
+                    <div class="thumbnail {% if forloop.first %}active{% endif %}">
+                        <img src="{{ image.image.url }}" alt="{{ product.name }}">
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="thumbnail-grid">
+                    <div class="thumbnail active">
+                        <i class="fas fa-image no-image"></i>
+                    </div>
+                    <div class="thumbnail">
+                        <i class="fas fa-image no-image"></i>
+                    </div>
+                    <div class="thumbnail">
+                        <i class="fas fa-image no-image"></i>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Info -->
+            <div class="product-info">
+                {% if product.category %}
+                <div class="product-category">{{ product.category.name }}</div>
+                {% endif %}
+
+                <h1 class="product-title">{{ product.name }}</h1>
+
+                <div class="product-rating">
+                    <div class="stars">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= avg_rating|default:4 %}
+                            <i class="fas fa-star"></i>
+                            {% else %}
+                            <i class="fas fa-star empty"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <span class="rating-text">{{ avg_rating|floatformat:1|default:"4.0" }} ({{ review_count|default:"12" }} reviews)</span>
+                </div>
+
+                <div class="product-price">
+                    <span class="current-price">Rs. {{ product.price|floatformat:0 }}</span>
+                    {% if product.compare_price %}
+                    <span class="original-price">Rs. {{ product.compare_price|floatformat:0 }}</span>
+                    <span class="discount-badge">-{% widthratio product.price product.compare_price 100 as discount %}{{ 100|add:"-"|add:discount }}% OFF</span>
+                    {% endif %}
+                </div>
+
+                <p class="product-description">
+                    {{ product.description|default:"This premium product offers exceptional quality and value. Perfect for everyday use with durable construction and modern design. Experience the difference with our carefully selected materials and attention to detail."|truncatewords:50 }}
+                </p>
+
+                <div class="product-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-box"></i>
+                        <span>SKU:</span>
+                        <strong>{{ product.sku|default:"PRO-001" }}</strong>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-tag"></i>
+                        <span>Category:</span>
+                        <strong>{{ product.category.name|default:"General" }}</strong>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-warehouse"></i>
+                        <span>Availability:</span>
+                        {% if product.stock > 0 %}
+                        <span class="stock-status in-stock"><i class="fas fa-check-circle"></i> In Stock ({{ product.stock }} available)</span>
+                        {% else %}
+                        <span class="stock-status out-of-stock"><i class="fas fa-times-circle"></i> Out of Stock</span>
+                        {% endif %}
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-truck"></i>
+                        <span>Delivery:</span>
+                        <strong>2-4 business days</strong>
+                    </div>
+                </div>
+
+                <div class="quantity-section">
+                    <div class="quantity-label">Quantity</div>
+                    <div class="quantity-selector">
+                        <button class="qty-btn" title="Demo only">-</button>
+                        <input type="text" class="qty-input" value="1" readonly>
+                        <button class="qty-btn" title="Demo only">+</button>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-cart" title="Demo only">
+                        <i class="fas fa-shopping-cart"></i>
+                        Add to Cart
+                    </button>
+                    <button class="btn btn-buy" title="Demo only">
+                        <i class="fas fa-bolt"></i>
+                        Buy Now
+                    </button>
+                    <button class="btn btn-wishlist" title="Demo only">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div class="reviews-section">
+        <div class="reviews-card">
+            <div class="reviews-header">
+                <h2>Customer Reviews ({{ reviews|length|default:"12" }})</h2>
+                <button class="write-review-btn" title="Demo only">
+                    <i class="fas fa-pen"></i> Write Review
+                </button>
+            </div>
+
+            {% if reviews %}
+                {% for review in reviews %}
+                <div class="review-item">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">{{ review.user.first_name|slice:":1"|upper|default:"U" }}</div>
+                            <div>
+                                <div class="reviewer-name">{{ review.user.get_full_name|default:"Anonymous User" }}</div>
+                                <div class="review-date">{{ review.created_at|date:"M d, Y" }}</div>
+                            </div>
+                        </div>
+                        <div class="review-rating">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= review.rating %}
+                                <i class="fas fa-star"></i>
+                                {% else %}
+                                <i class="far fa-star" style="color: #e2e8f0;"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <p class="review-content">{{ review.comment }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <!-- Sample Reviews -->
+                <div class="review-item">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">R</div>
+                            <div>
+                                <div class="reviewer-name">Ram Sharma</div>
+                                <div class="review-date">Jan 3, 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                    </div>
+                    <p class="review-content">Excellent product! Quality is amazing and delivery was fast. Highly recommend to everyone looking for quality products.</p>
+                </div>
+                <div class="review-item">
+                    <div class="review-header">
+                        <div class="reviewer-info">
+                            <div class="reviewer-avatar">S</div>
+                            <div>
+                                <div class="reviewer-name">Sita Gurung</div>
+                                <div class="review-date">Jan 1, 2024</div>
+                            </div>
+                        </div>
+                        <div class="review-rating">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="far fa-star" style="color: #e2e8f0;"></i>
+                        </div>
+                    </div>
+                    <p class="review-content">Good value for money. The product met my expectations. Would buy again.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Related Products -->
+    {% if related_products %}
+    <div class="related-section">
+        <h2 class="related-header">Related Products</h2>
+        <div class="related-grid">
+            {% for product in related_products %}
+            <a href="{% url 'demo:pro_user_product' product.id %}" class="product-card">
+                <div class="product-image">
+                    {% if product.get_main_image %}
+                    <img src="{{ product.get_main_image }}" alt="{{ product.name }}">
+                    {% else %}
+                    <i class="fas fa-image no-image" style="font-size: 2rem; color: #cbd5e1;"></i>
+                    {% endif %}
+                </div>
+                <div class="card-info">
+                    {% if product.category %}
+                    <div class="card-category">{{ product.category.name }}</div>
+                    {% endif %}
+                    <div class="card-name">{{ product.name }}</div>
+                    <div class="card-price">Rs. {{ product.price|floatformat:0 }}</div>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Footer -->
+    <footer class="footer">
+        &copy; 2024 ProStore. All rights reserved. | Professional Demo
+    </footer>
+
+    <!-- Demo mode - auth disabled -->
+    <script>
+        window.IS_DEMO_MODE = true;
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('a, button, span');
+            if (target) {
+                const text = target.textContent.toLowerCase();
+                const href = target.getAttribute('href') || '';
+                if (text.includes('login') || text.includes('sign in') || text.includes('register') || text.includes('sign up') ||
+                    href.includes('/login') || href.includes('/register') || href.includes('/accounts/google')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alert('Authentication is disabled in demo mode. This is just a preview!');
+                    return false;
+                }
+            }
+        }, true);
+    </script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+{% load static %}
+<!-- Minimal Header: Hamburger menu with slide-out navigation -->
+<header class="header header-minimal" id="siteHeader">
+    <div class="header-main">
+        <div class="container">
+            <div class="header-main-content">
+                <!-- Hamburger Menu (Left) -->
+                <button class="hamburger-btn" id="hamburgerBtn" aria-label="Open menu">
+                    <span class="hamburger-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </span>
+                    <span class="hamburger-text">Menu</span>
+                </button>
+
+                <!-- Logo (Center) -->
+                <div class="header-logo">
+                    <a href="/v/{{ vendor.slug }}/">
+                        {% if vendor.logo %}
+                        <img src="{{ vendor.logo.url }}" alt="{{ vendor.business_name }}" class="logo-img">
+                        {% else %}
+                        <span class="logo-text">{{ vendor.business_name }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+
+                <!-- Header Actions (Right - Minimal) -->
+                <div class="header-actions">
+                    <button class="header-action-btn search-toggle" aria-label="Search" id="searchToggle">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <a href="/v/{{ vendor.slug }}/cart/" class="header-action-btn cart-btn" aria-label="Cart">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span class="cart-count" id="cartCount">0</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Fullscreen Slide-out Navigation -->
+<div class="minimal-nav-overlay" id="minimalNavOverlay"></div>
+<nav class="minimal-nav" id="minimalNav">
+    <div class="minimal-nav-header">
+        <button class="minimal-nav-close" id="minimalNavClose">
+            <i class="fas fa-times"></i>
+            <span>Close</span>
+        </button>
+    </div>
+
+    <div class="minimal-nav-content">
+        <ul class="minimal-nav-list">
+            <li class="minimal-nav-item">
+                <a href="/v/{{ vendor.slug }}/" class="minimal-nav-link">
+                    <span class="nav-number">01</span>
+                    <span class="nav-text">Home</span>
+                </a>
+            </li>
+            <li class="minimal-nav-item">
+                <a href="/v/{{ vendor.slug }}/products/" class="minimal-nav-link">
+                    <span class="nav-number">02</span>
+                    <span class="nav-text">Shop</span>
+                </a>
+            </li>
+            {% for category in categories|slice:":4" %}
+            <li class="minimal-nav-item">
+                <a href="/v/{{ vendor.slug }}/products/?category={{ category.slug }}" class="minimal-nav-link">
+                    <span class="nav-number">0{{ forloop.counter|add:2 }}</span>
+                    <span class="nav-text">{{ category.name }}</span>
+                </a>
+            </li>
+            {% endfor %}
+            <li class="minimal-nav-item">
+                <a href="/v/{{ vendor.slug }}/contact/" class="minimal-nav-link">
+                    <span class="nav-number">0{{ categories|slice:":4"|length|add:3 }}</span>
+                    <span class="nav-text">Contact</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="minimal-nav-footer">
+            <div class="minimal-nav-social">
+                {% if storefront.facebook_url %}
+                <a href="{{ storefront.facebook_url }}" target="_blank" rel="noopener">Facebook</a>
+                {% endif %}
+                {% if storefront.instagram_url %}
+                <a href="{{ storefront.instagram_url }}" target="_blank" rel="noopener">Instagram</a>
+                {% endif %}
+                {% if storefront.twitter_url %}
+                <a href="{{ storefront.twitter_url }}" target="_blank" rel="noopener">Twitter</a>
+                {% endif %}
+                {% if storefront.tiktok_url %}
+                <a href="{{ storefront.tiktok_url }}" target="_blank" rel="noopener">TikTok</a>
+                {% endif %}
+            </div>
+            <div class="minimal-nav-contact">
+                {% if vendor.email %}
+                <a href="mailto:{{ vendor.email }}">{{ vendor.email }}</a>
+                {% endif %}
+                {% if vendor.phone %}
+                <a href="tel:{{ vendor.phone }}">{{ vendor.phone }}</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>
+
+<!-- Fullscreen Search -->
+<div class="minimal-search" id="minimalSearch">
+    <div class="minimal-search-content">
+        <form action="/v/{{ vendor.slug }}/products/" method="GET" class="minimal-search-form">
+            <input type="search" name="q" placeholder="Type to search..." class="minimal-search-input" id="minimalSearchInput" autocomplete="off">
+            <div class="minimal-search-hint">Press Enter to search</div>
+        </form>
+        <button class="minimal-search-close" id="minimalSearchClose">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>

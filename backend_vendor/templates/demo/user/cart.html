@@ -1,0 +1,690 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - Demo Store</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        /* Demo Banner */
+        .demo-banner {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 0.75rem;
+            text-align: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .demo-banner a {
+            color: white;
+            text-decoration: underline;
+            margin-left: 0.5rem;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo-placeholder {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #94a3b8;
+        }
+
+        .logo-placeholder i {
+            color: #64748b;
+            font-size: 1rem;
+        }
+
+        .logo-text {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-center a {
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.9375rem;
+            font-weight: 500;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .btn-demo {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        .btn-outline-demo {
+            background: transparent;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+        }
+
+        .btn-primary-demo {
+            background: #6366f1;
+            border: 1px solid #6366f1;
+            color: white;
+        }
+
+        .cart-icon {
+            position: relative;
+            color: #6366f1;
+            font-size: 1.25rem;
+        }
+
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #6366f1;
+            color: white;
+            font-size: 0.625rem;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+
+        /* Cart Layout */
+        .cart-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2rem;
+        }
+
+        /* Cart Items */
+        .cart-items {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .cart-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            font-weight: 600;
+            color: #64748b;
+            font-size: 0.875rem;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .cart-item {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .item-image {
+            width: 80px;
+            height: 80px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .item-image .no-image {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #cbd5e1;
+            font-size: 1.5rem;
+        }
+
+        .item-details h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            color: #1e293b;
+        }
+
+        .item-details p {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .item-price {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .quantity-control {
+            display: flex;
+            align-items: center;
+            gap: 0;
+        }
+
+        .qty-btn {
+            width: 32px;
+            height: 32px;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: not-allowed;
+            font-size: 0.875rem;
+            color: #64748b;
+        }
+
+        .qty-btn:first-child {
+            border-radius: 6px 0 0 6px;
+        }
+
+        .qty-btn:last-child {
+            border-radius: 0 6px 6px 0;
+        }
+
+        .qty-value {
+            width: 40px;
+            height: 32px;
+            border: 1px solid #e2e8f0;
+            border-left: none;
+            border-right: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .item-total {
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .remove-btn {
+            width: 36px;
+            height: 36px;
+            background: #fef2f2;
+            border: none;
+            border-radius: 8px;
+            color: #ef4444;
+            cursor: not-allowed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Order Summary */
+        .order-summary {
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 1.5rem;
+            position: sticky;
+            top: 100px;
+            height: fit-content;
+        }
+
+        .summary-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            font-size: 0.9375rem;
+        }
+
+        .summary-row.total {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+            font-size: 1.125rem;
+            font-weight: 700;
+        }
+
+        .summary-label {
+            color: #64748b;
+        }
+
+        .summary-value {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .promo-section {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .promo-input {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .promo-input input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+
+        .promo-input button {
+            padding: 0.75rem 1rem;
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: not-allowed;
+            color: #64748b;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 1.5rem;
+            cursor: not-allowed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            position: relative;
+        }
+
+        .checkout-btn::after {
+            content: 'Demo Only';
+            position: absolute;
+            bottom: -24px;
+            font-size: 0.75rem;
+            color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .secure-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+            color: #64748b;
+            font-size: 0.75rem;
+        }
+
+        .secure-badge i {
+            color: #10b981;
+        }
+
+        /* Continue Shopping */
+        .continue-shopping {
+            margin-top: 1.5rem;
+            text-align: center;
+        }
+
+        .continue-shopping a {
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1e293b;
+            color: white;
+            padding: 2rem;
+            margin-top: 4rem;
+            text-align: center;
+        }
+
+        .footer p {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .cart-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .order-summary {
+                position: relative;
+                top: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-center {
+                display: none;
+            }
+
+            .cart-header {
+                display: none;
+            }
+
+            .cart-item {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .item-info {
+                grid-column: 1;
+            }
+
+            .item-actions {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Banner -->
+    <div class="demo-banner">
+        <i class="fas fa-eye"></i> You're viewing a demo storefront. This is how your store will look!
+        <a href="/">Start Free Trial</a>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="{% url 'demo:user_home' %}" class="logo">
+                <div class="logo-placeholder">
+                    <i class="fas fa-store"></i>
+                </div>
+                <span class="logo-text">Your Logo Here</span>
+            </a>
+
+            <div class="nav-center">
+                <a href="{% url 'demo:user_home' %}">Home</a>
+                <a href="{% url 'demo:user_home' %}">Products</a>
+                <a href="{% url 'demo:user_home' %}">Categories</a>
+                <a href="{% url 'demo:user_home' %}">About</a>
+            </div>
+
+            <div class="nav-right">
+                <span class="cart-icon">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span class="cart-badge">3</span>
+                </span>
+                <span class="btn-demo btn-outline-demo">Login</span>
+                <span class="btn-demo btn-primary-demo">Register</span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <h1 class="page-title">Shopping Cart</h1>
+
+        <div class="cart-layout">
+            <!-- Cart Items -->
+            <div class="cart-items">
+                <div class="cart-header">
+                    <span>Product</span>
+                    <span>Price</span>
+                    <span>Quantity</span>
+                    <span>Total</span>
+                    <span></span>
+                </div>
+
+                {% if cart_items %}
+                {% for item in cart_items %}
+                <div class="cart-item">
+                    <div class="item-info">
+                        <div class="item-image">
+                            {% if item.get_main_image %}
+                            <img src="{{ item.get_main_image }}" alt="{{ item.name }}">
+                            {% else %}
+                            <div class="no-image"><i class="fas fa-image"></i></div>
+                            {% endif %}
+                        </div>
+                        <div class="item-details">
+                            <h3>{{ item.name }}</h3>
+                            <p>{% if item.category %}{{ item.category.name }}{% endif %}</p>
+                        </div>
+                    </div>
+                    <div class="item-price">Rs. {{ item.price }}</div>
+                    <div class="quantity-control">
+                        <button class="qty-btn" title="Demo only">-</button>
+                        <div class="qty-value">1</div>
+                        <button class="qty-btn" title="Demo only">+</button>
+                    </div>
+                    <div class="item-total">Rs. {{ item.price }}</div>
+                    <button class="remove-btn" title="Demo only">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                {% endfor %}
+                {% else %}
+                <!-- Sample cart items when no products exist -->
+                <div class="cart-item">
+                    <div class="item-info">
+                        <div class="item-image">
+                            <div class="no-image"><i class="fas fa-image"></i></div>
+                        </div>
+                        <div class="item-details">
+                            <h3>Sample Product 1</h3>
+                            <p>Category</p>
+                        </div>
+                    </div>
+                    <div class="item-price">Rs. 1,999</div>
+                    <div class="quantity-control">
+                        <button class="qty-btn">-</button>
+                        <div class="qty-value">2</div>
+                        <button class="qty-btn">+</button>
+                    </div>
+                    <div class="item-total">Rs. 3,998</div>
+                    <button class="remove-btn"><i class="fas fa-trash"></i></button>
+                </div>
+                <div class="cart-item">
+                    <div class="item-info">
+                        <div class="item-image">
+                            <div class="no-image"><i class="fas fa-image"></i></div>
+                        </div>
+                        <div class="item-details">
+                            <h3>Sample Product 2</h3>
+                            <p>Category</p>
+                        </div>
+                    </div>
+                    <div class="item-price">Rs. 2,499</div>
+                    <div class="quantity-control">
+                        <button class="qty-btn">-</button>
+                        <div class="qty-value">1</div>
+                        <button class="qty-btn">+</button>
+                    </div>
+                    <div class="item-total">Rs. 2,499</div>
+                    <button class="remove-btn"><i class="fas fa-trash"></i></button>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <h2 class="summary-title">Order Summary</h2>
+
+                <div class="summary-row">
+                    <span class="summary-label">Subtotal</span>
+                    <span class="summary-value">Rs. 6,497</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Shipping</span>
+                    <span class="summary-value">Rs. 150</span>
+                </div>
+                <div class="summary-row">
+                    <span class="summary-label">Tax</span>
+                    <span class="summary-value">Rs. 845</span>
+                </div>
+                <div class="summary-row total">
+                    <span class="summary-label">Total</span>
+                    <span class="summary-value">Rs. 7,492</span>
+                </div>
+
+                <div class="promo-section">
+                    <div class="promo-input">
+                        <input type="text" placeholder="Promo code" disabled>
+                        <button title="Demo only">Apply</button>
+                    </div>
+                </div>
+
+                <button class="checkout-btn" title="This is a demo">
+                    <i class="fas fa-lock"></i>
+                    Proceed to Checkout
+                </button>
+
+                <div class="secure-badge">
+                    <i class="fas fa-shield-alt"></i>
+                    Secure checkout powered by Stripe
+                </div>
+
+                <div class="continue-shopping">
+                    <a href="{% url 'demo:user_home' %}">
+                        <i class="fas fa-arrow-left"></i>
+                        Continue Shopping
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2024 Your Store Name. All rights reserved. | Demo Preview</p>
+    </footer>
+
+    <!-- Demo mode - auth disabled -->
+    <script>
+        window.IS_DEMO_MODE = true;
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('a, button, span');
+            if (target) {
+                const text = target.textContent.toLowerCase();
+                const href = target.getAttribute('href') || '';
+                if (text.includes('login') || text.includes('sign in') || text.includes('register') || text.includes('sign up') ||
+                    href.includes('/login') || href.includes('/register') || href.includes('/accounts/google')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alert('Authentication is disabled in demo mode. This is just a preview!');
+                    return false;
+                }
+            }
+        }, true);
+    </script>
+</body>
+</html>

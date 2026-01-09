@@ -1,0 +1,302 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard{% endblock %} - OVN Store</title>
+
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Cloudflare Dashboard CSS -->
+    <link rel="stylesheet" href="{% static 'css/cloudflare_dashboard.css' %}">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="cf-dashboard" id="dashboard">
+        <!-- Sidebar -->
+        <aside class="cf-sidebar" id="sidebar">
+            <div class="cf-sidebar-header">
+                <a href="{% block logo_url %}/{% endblock %}" class="cf-sidebar-logo">
+                    <div class="cf-sidebar-logo-icon">
+                        {% block logo_icon %}O{% endblock %}
+                    </div>
+                    <span class="cf-sidebar-logo-text">{% block logo_text %}OVN Store{% endblock %}</span>
+                </a>
+            </div>
+
+            <nav class="cf-sidebar-nav">
+                {% block sidebar_nav %}
+                <!-- Navigation sections go here -->
+                {% endblock %}
+            </nav>
+
+            <div class="cf-sidebar-footer">
+                {% block sidebar_footer %}
+                <div class="cf-nav-item" id="toggle-sidebar">
+                    <i class="fas fa-chevron-left cf-nav-icon"></i>
+                    <span class="cf-nav-text">Collapse</span>
+                </div>
+                {% endblock %}
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="cf-main">
+            <!-- Top Header -->
+            <header class="cf-header">
+                <div class="cf-header-left">
+                    <button class="cf-mobile-toggle" id="mobile-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+
+                    <!-- Breadcrumbs -->
+                    <nav class="cf-breadcrumb">
+                        {% block breadcrumb %}
+                        <a href="{% block breadcrumb_home_url %}/{% endblock %}" class="cf-breadcrumb-item">
+                            <i class="fas fa-home"></i>
+                        </a>
+                        <span class="cf-breadcrumb-separator">/</span>
+                        <span class="cf-breadcrumb-item active">Dashboard</span>
+                        {% endblock %}
+                    </nav>
+                </div>
+
+                <div class="cf-header-right">
+                    <!-- Command Palette Trigger -->
+                    <button class="cf-cmd-trigger" id="cmd-trigger">
+                        <i class="fas fa-search"></i>
+                        <span>Search...</span>
+                        <kbd>Ctrl+K</kbd>
+                    </button>
+
+                    <!-- Notifications -->
+                    <button class="cf-header-btn" id="notifications-btn">
+                        <i class="fas fa-bell"></i>
+                        {% block notification_badge %}{% endblock %}
+                    </button>
+
+                    <!-- User Menu -->
+                    <div class="cf-user-menu" id="user-menu">
+                        <button class="cf-user-trigger">
+                            <div class="cf-avatar">
+                                {% block user_avatar %}
+                                {{ user.first_name|default:user.email|slice:":1"|upper }}
+                                {% endblock %}
+                            </div>
+                            <span class="cf-user-name">{% block user_name %}{{ user.first_name|default:user.email }}{% endblock %}</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="cf-dropdown" id="user-dropdown">
+                            {% block user_dropdown %}
+                            <a href="{% url 'home' %}" class="cf-dropdown-item">
+                                <i class="fas fa-store"></i>
+                                <span>Visit Store</span>
+                            </a>
+                            <a href="{% block settings_url %}#{% endblock %}" class="cf-dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                <span>Settings</span>
+                            </a>
+                            <div class="cf-dropdown-divider"></div>
+                            <a href="{% url 'accounts:logout' %}" class="cf-dropdown-item text-danger">
+                                <i class="fas fa-sign-out-alt"></i>
+                                <span>Sign Out</span>
+                            </a>
+                            {% endblock %}
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="cf-content">
+                {% if messages %}
+                <div class="cf-messages">
+                    {% for message in messages %}
+                    <div class="cf-alert cf-alert-{{ message.tags|default:'info' }}">
+                        <i class="fas fa-{% if message.tags == 'success' %}check-circle{% elif message.tags == 'error' %}exclamation-circle{% elif message.tags == 'warning' %}exclamation-triangle{% else %}info-circle{% endif %}"></i>
+                        <span>{{ message }}</span>
+                        <button class="cf-alert-close">&times;</button>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+
+        <!-- Command Palette Modal -->
+        <div class="cf-cmd-palette" id="cmd-palette">
+            <div class="cf-cmd-backdrop"></div>
+            <div class="cf-cmd-modal">
+                <div class="cf-cmd-input-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" class="cf-cmd-input" id="cmd-input" placeholder="Search or type a command...">
+                    <kbd>ESC</kbd>
+                </div>
+                <div class="cf-cmd-results" id="cmd-results">
+                    <div class="cf-cmd-group">
+                        <div class="cf-cmd-group-title">Quick Actions</div>
+                        {% block cmd_quick_actions %}
+                        <button class="cf-cmd-item" data-action="home">
+                            <i class="fas fa-home"></i>
+                            <span>Go to Dashboard</span>
+                            <kbd>G D</kbd>
+                        </button>
+                        {% endblock %}
+                    </div>
+                    <div class="cf-cmd-group">
+                        <div class="cf-cmd-group-title">Navigation</div>
+                        {% block cmd_navigation %}{% endblock %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Container -->
+        <div class="cf-toast-container" id="toast-container"></div>
+    </div>
+
+    <script>
+        // Sidebar Toggle
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('toggle-sidebar');
+        const mobileToggle = document.getElementById('mobile-toggle');
+
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', () => {
+                sidebar.classList.toggle('collapsed');
+                localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+            });
+        }
+
+        if (mobileToggle) {
+            mobileToggle.addEventListener('click', () => {
+                sidebar.classList.toggle('mobile-open');
+            });
+        }
+
+        // Restore sidebar state
+        if (localStorage.getItem('sidebar-collapsed') === 'true') {
+            sidebar.classList.add('collapsed');
+        }
+
+        // User Menu Dropdown
+        const userMenu = document.getElementById('user-menu');
+        const userDropdown = document.getElementById('user-dropdown');
+
+        if (userMenu) {
+            userMenu.querySelector('.cf-user-trigger').addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('show');
+            });
+
+            document.addEventListener('click', () => {
+                userDropdown.classList.remove('show');
+            });
+        }
+
+        // Command Palette
+        const cmdPalette = document.getElementById('cmd-palette');
+        const cmdTrigger = document.getElementById('cmd-trigger');
+        const cmdInput = document.getElementById('cmd-input');
+
+        function openCommandPalette() {
+            cmdPalette.classList.add('open');
+            setTimeout(() => cmdInput.focus(), 100);
+        }
+
+        function closeCommandPalette() {
+            cmdPalette.classList.remove('open');
+            cmdInput.value = '';
+        }
+
+        if (cmdTrigger) {
+            cmdTrigger.addEventListener('click', openCommandPalette);
+        }
+
+        if (cmdPalette) {
+            cmdPalette.querySelector('.cf-cmd-backdrop').addEventListener('click', closeCommandPalette);
+        }
+
+        // Keyboard Shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl+K or Cmd+K - Open command palette
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                openCommandPalette();
+            }
+
+            // Escape - Close command palette
+            if (e.key === 'Escape' && cmdPalette.classList.contains('open')) {
+                closeCommandPalette();
+            }
+        });
+
+        // Alert Close Buttons
+        document.querySelectorAll('.cf-alert-close').forEach(btn => {
+            btn.addEventListener('click', () => {
+                btn.parentElement.remove();
+            });
+        });
+
+        // Toast Function
+        window.showToast = function(message, type = 'info', duration = 3000) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `cf-toast cf-toast-${type}`;
+
+            const icons = {
+                success: 'check-circle',
+                error: 'exclamation-circle',
+                warning: 'exclamation-triangle',
+                info: 'info-circle'
+            };
+
+            toast.innerHTML = `
+                <i class="fas fa-${icons[type] || icons.info}"></i>
+                <span>${message}</span>
+                <button class="cf-toast-close">&times;</button>
+            `;
+
+            container.appendChild(toast);
+
+            // Trigger animation
+            setTimeout(() => toast.classList.add('show'), 10);
+
+            // Auto remove
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, duration);
+
+            // Close button
+            toast.querySelector('.cf-toast-close').addEventListener('click', () => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            });
+        };
+
+        // Confirm Dialog Function
+        window.confirmAction = function(message) {
+            return new Promise((resolve) => {
+                if (confirm(message)) {
+                    resolve(true);
+                } else {
+                    resolve(false);
+                }
+            });
+        };
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

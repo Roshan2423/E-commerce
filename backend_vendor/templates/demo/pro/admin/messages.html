@@ -1,0 +1,232 @@
+{% extends 'demo/pro/admin/base.html' %}
+
+{% block title %}Messages{% endblock %}
+
+{% block breadcrumb %}Messages{% endblock %}
+
+{% block extra_css %}
+<style>
+    .message-item {
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--border);
+        cursor: not-allowed;
+        transition: background 0.2s;
+    }
+    .message-item:hover { background: #faf5ff; }
+    .message-item.unread {
+        background: var(--bg-secondary);
+        border-left: 3px solid var(--blue);
+    }
+    .message-item:last-child { border-bottom: none; }
+    .message-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 8px;
+    }
+    .message-subject {
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 6px;
+        font-size: 14px;
+    }
+    .message-preview {
+        color: var(--text-secondary);
+        font-size: 13px;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        line-height: 1.5;
+    }
+    .message-actions { display: flex; gap: 8px; margin-top: 12px; }
+    .msg-btn {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        border: none;
+        cursor: not-allowed;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .msg-btn.reply { background: var(--blue); color: white; }
+    .msg-btn.mark-read { background: var(--bg-tertiary); color: var(--text-secondary); }
+    .msg-btn.delete { background: #fee2e2; color: #dc2626; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Messages</h1>
+        <p class="page-subtitle">Customer inquiries and contact messages</p>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon primary">
+            <i class="fas fa-envelope"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">{{ total_messages|default:"24" }}</div>
+            <div class="stat-label">Total Messages</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon warning">
+            <i class="fas fa-envelope-open"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">{{ unread_messages|default:"5" }}</div>
+            <div class="stat-label">Unread Messages</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon success">
+            <i class="fas fa-check-double"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">19</div>
+            <div class="stat-label">Responded</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">All Messages</h3>
+        <select class="form-control" style="width: 140px;" disabled>
+            <option>All Messages</option>
+            <option>Unread</option>
+            <option>Read</option>
+        </select>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% for message in messages %}
+        <div class="message-item {% if message.status == 'new' %}unread{% endif %}">
+            <div class="message-header">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="avatar" style="width: 44px; height: 44px;">
+                        {{ message.name|slice:":1"|upper }}
+                    </div>
+                    <div>
+                        <div style="font-weight: 500;">{{ message.name }}</div>
+                        <div class="text-muted" style="font-size: 12px;">{{ message.email }}</div>
+                    </div>
+                </div>
+                <div class="text-muted" style="font-size: 12px;">{{ message.created_at|date:"M d, Y H:i" }}</div>
+            </div>
+            <div class="message-subject">{{ message.subject|default:"General Inquiry" }}</div>
+            <p class="message-preview">{{ message.message }}</p>
+            <div class="message-actions">
+                <button class="msg-btn reply demo-disabled"><i class="fas fa-reply"></i> Reply</button>
+                {% if message.status == 'new' %}
+                <button class="msg-btn mark-read demo-disabled"><i class="fas fa-check"></i> Mark Read</button>
+                {% endif %}
+                <button class="msg-btn delete demo-disabled"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+        {% empty %}
+        <!-- Sample messages -->
+        <div class="message-item unread">
+            <div class="message-header">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="avatar" style="width: 44px; height: 44px;">R</div>
+                    <div>
+                        <div style="font-weight: 500;">Ram Sharma</div>
+                        <div class="text-muted" style="font-size: 12px;">ram@example.com</div>
+                    </div>
+                </div>
+                <div class="text-muted" style="font-size: 12px;">Jan 8, 2026 10:30</div>
+            </div>
+            <div class="message-subject">Product Inquiry - Wireless Headphones</div>
+            <p class="message-preview">Hi, I'm interested in the Premium Wireless Headphones. Can you please provide more information about the battery life and if it supports noise cancellation? Also, is there any ongoing discount?</p>
+            <div class="message-actions">
+                <button class="msg-btn reply demo-disabled"><i class="fas fa-reply"></i> Reply</button>
+                <button class="msg-btn mark-read demo-disabled"><i class="fas fa-check"></i> Mark Read</button>
+                <button class="msg-btn delete demo-disabled"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+        <div class="message-item unread">
+            <div class="message-header">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="avatar" style="width: 44px; height: 44px; background: linear-gradient(135deg, #ec4899, #f472b6);">S</div>
+                    <div>
+                        <div style="font-weight: 500;">Sita Gurung</div>
+                        <div class="text-muted" style="font-size: 12px;">sita@example.com</div>
+                    </div>
+                </div>
+                <div class="text-muted" style="font-size: 12px;">Jan 8, 2026 09:15</div>
+            </div>
+            <div class="message-subject">Return Request - Order #1002</div>
+            <p class="message-preview">Hello, I received my order yesterday but the size doesn't fit well. I would like to request a return and exchange for a larger size. Please let me know the process.</p>
+            <div class="message-actions">
+                <button class="msg-btn reply demo-disabled"><i class="fas fa-reply"></i> Reply</button>
+                <button class="msg-btn mark-read demo-disabled"><i class="fas fa-check"></i> Mark Read</button>
+                <button class="msg-btn delete demo-disabled"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+        <div class="message-item">
+            <div class="message-header">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="avatar" style="width: 44px; height: 44px; background: linear-gradient(135deg, #3b82f6, #60a5fa);">H</div>
+                    <div>
+                        <div style="font-weight: 500;">Hari Thapa</div>
+                        <div class="text-muted" style="font-size: 12px;">hari@example.com</div>
+                    </div>
+                </div>
+                <div class="text-muted" style="font-size: 12px;">Jan 7, 2026 16:45</div>
+            </div>
+            <div class="message-subject">Bulk Order Inquiry</div>
+            <p class="message-preview">Hi team, I'm interested in placing a bulk order for corporate gifts. Do you offer any bulk discounts? I'm looking for around 50 units of the Smart Watch Pro. Please share the pricing details.</p>
+            <div class="message-actions">
+                <button class="msg-btn reply demo-disabled"><i class="fas fa-reply"></i> Reply</button>
+                <button class="msg-btn delete demo-disabled"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+        <div class="message-item">
+            <div class="message-header">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="avatar" style="width: 44px; height: 44px; background: linear-gradient(135deg, #10b981, #34d399);">M</div>
+                    <div>
+                        <div style="font-weight: 500;">Maya Rai</div>
+                        <div class="text-muted" style="font-size: 12px;">maya@example.com</div>
+                    </div>
+                </div>
+                <div class="text-muted" style="font-size: 12px;">Jan 7, 2026 11:20</div>
+            </div>
+            <div class="message-subject">Delivery Status - Order #998</div>
+            <p class="message-preview">Good morning! I placed an order 3 days ago but haven't received any tracking information yet. Could you please check the status of my order? My order number is #998.</p>
+            <div class="message-actions">
+                <button class="msg-btn reply demo-disabled"><i class="fas fa-reply"></i> Reply</button>
+                <button class="msg-btn delete demo-disabled"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+        <div class="message-item">
+            <div class="message-header">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div class="avatar" style="width: 44px; height: 44px; background: linear-gradient(135deg, #f59e0b, #fbbf24);">K</div>
+                    <div>
+                        <div style="font-weight: 500;">Krishna Basnet</div>
+                        <div class="text-muted" style="font-size: 12px;">krishna@example.com</div>
+                    </div>
+                </div>
+                <div class="text-muted" style="font-size: 12px;">Jan 6, 2026 14:00</div>
+            </div>
+            <div class="message-subject">Thank You!</div>
+            <p class="message-preview">Just wanted to say thank you for the excellent service! The product arrived on time and the quality exceeded my expectations. Will definitely order again. Keep up the great work!</p>
+            <div class="message-actions">
+                <button class="msg-btn reply demo-disabled"><i class="fas fa-reply"></i> Reply</button>
+                <button class="msg-btn delete demo-disabled"><i class="fas fa-trash"></i></button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

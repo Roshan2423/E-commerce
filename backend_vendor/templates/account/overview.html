@@ -1,0 +1,391 @@
+{% extends 'account/base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'customer_dashboard:overview' %}" class="cf-breadcrumb-item">
+    <i class="fas fa-home"></i>
+</a>
+<span class="cf-breadcrumb-separator">/</span>
+<span class="cf-breadcrumb-item active">Dashboard</span>
+{% endblock %}
+
+{% block content %}
+<div class="cf-page-header">
+    <div class="cf-page-header-content">
+        <h1 class="cf-page-title">Welcome back, {{ user.first_name|default:user.username }}!</h1>
+        <p class="cf-page-subtitle">Here's an overview of your account activity</p>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="cf-stats-grid">
+    <div class="cf-stat-card">
+        <div class="cf-stat-icon cf-stat-icon-blue">
+            <i class="fas fa-shopping-bag"></i>
+        </div>
+        <div class="cf-stat-content">
+            <span class="cf-stat-value">{{ total_orders }}</span>
+            <span class="cf-stat-label">Total Orders</span>
+        </div>
+    </div>
+
+    <div class="cf-stat-card">
+        <div class="cf-stat-icon cf-stat-icon-orange">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="cf-stat-content">
+            <span class="cf-stat-value">{{ pending_orders }}</span>
+            <span class="cf-stat-label">Pending</span>
+        </div>
+    </div>
+
+    <div class="cf-stat-card">
+        <div class="cf-stat-icon cf-stat-icon-purple">
+            <i class="fas fa-truck"></i>
+        </div>
+        <div class="cf-stat-content">
+            <span class="cf-stat-value">{{ shipped_orders }}</span>
+            <span class="cf-stat-label">In Transit</span>
+        </div>
+    </div>
+
+    <div class="cf-stat-card">
+        <div class="cf-stat-icon cf-stat-icon-green">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="cf-stat-content">
+            <span class="cf-stat-value">{{ delivered_orders }}</span>
+            <span class="cf-stat-label">Delivered</span>
+        </div>
+    </div>
+</div>
+
+<div class="cf-grid cf-grid-2">
+    <!-- Recent Orders -->
+    <div class="cf-card">
+        <div class="cf-card-header">
+            <h3 class="cf-card-title">Recent Orders</h3>
+            <a href="{% url 'customer_dashboard:orders' %}" class="cf-btn cf-btn-text">
+                View All <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="cf-card-body cf-p-0">
+            {% if recent_orders %}
+            <div class="cf-table-responsive">
+                <table class="cf-table">
+                    <thead>
+                        <tr>
+                            <th>Order</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in recent_orders %}
+                        <tr class="cf-clickable" onclick="window.location='{% url 'customer_dashboard:order_detail' order.order_id %}'">
+                            <td>
+                                <span class="cf-text-mono">#{{ order.get_order_number }}</span>
+                            </td>
+                            <td>{{ order.created_at|date:"M d, Y" }}</td>
+                            <td>
+                                <span class="cf-badge cf-badge-{% if order.status == 'delivered' %}success{% elif order.status == 'cancelled' %}danger{% elif order.status == 'shipped' %}info{% else %}warning{% endif %}">
+                                    {{ order.get_status_display }}
+                                </span>
+                            </td>
+                            <td>Rs. {{ order.total_amount }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="cf-empty-state">
+                <i class="fas fa-shopping-bag"></i>
+                <p>No orders yet</p>
+                <a href="{% url 'home' %}" class="cf-btn cf-btn-primary">Start Shopping</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="cf-card">
+        <div class="cf-card-header">
+            <h3 class="cf-card-title">Quick Actions</h3>
+        </div>
+        <div class="cf-card-body">
+            <div class="cf-action-list">
+                <a href="{% url 'customer_dashboard:orders' %}" class="cf-action-item">
+                    <div class="cf-action-icon">
+                        <i class="fas fa-shopping-bag"></i>
+                    </div>
+                    <div class="cf-action-content">
+                        <span class="cf-action-title">Track Orders</span>
+                        <span class="cf-action-desc">Check status of your orders</span>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+
+                <a href="{% url 'customer_dashboard:addresses' %}" class="cf-action-item">
+                    <div class="cf-action-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="cf-action-content">
+                        <span class="cf-action-title">Manage Addresses</span>
+                        <span class="cf-action-desc">{{ address_count }} saved addresses</span>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+
+                <a href="{% url 'customer_dashboard:reviews' %}" class="cf-action-item">
+                    <div class="cf-action-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="cf-action-content">
+                        <span class="cf-action-title">My Reviews</span>
+                        <span class="cf-action-desc">{{ review_count }} reviews written</span>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+
+                <a href="{% url 'customer_dashboard:profile' %}" class="cf-action-item">
+                    <div class="cf-action-icon">
+                        <i class="fas fa-user-edit"></i>
+                    </div>
+                    <div class="cf-action-content">
+                        <span class="cf-action-title">Edit Profile</span>
+                        <span class="cf-action-desc">Update your information</span>
+                    </div>
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Account Summary -->
+<div class="cf-card cf-mt-4">
+    <div class="cf-card-header">
+        <h3 class="cf-card-title">Account Summary</h3>
+    </div>
+    <div class="cf-card-body">
+        <div class="cf-summary-grid">
+            <div class="cf-summary-item">
+                <span class="cf-summary-label">Member Since</span>
+                <span class="cf-summary-value">{{ user.date_joined|date:"F Y" }}</span>
+            </div>
+            <div class="cf-summary-item">
+                <span class="cf-summary-label">Total Spent</span>
+                <span class="cf-summary-value cf-text-success">Rs. {{ total_spent|floatformat:2 }}</span>
+            </div>
+            <div class="cf-summary-item">
+                <span class="cf-summary-label">Email</span>
+                <span class="cf-summary-value">{{ user.email }}</span>
+            </div>
+            <div class="cf-summary-item">
+                <span class="cf-summary-label">Phone</span>
+                <span class="cf-summary-value">{{ user.phone_number|default:"Not set" }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.cf-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+    .cf-stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .cf-stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cf-stat-card {
+    background: var(--cf-bg);
+    border: 1px solid var(--cf-border);
+    border-radius: var(--cf-radius-md);
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.cf-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--cf-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.cf-stat-icon-blue { background: var(--cf-blue-light); color: var(--cf-blue); }
+.cf-stat-icon-orange { background: var(--cf-primary-light); color: var(--cf-primary); }
+.cf-stat-icon-purple { background: #f3e8ff; color: #9333ea; }
+.cf-stat-icon-green { background: var(--cf-success-light); color: var(--cf-success); }
+
+.cf-stat-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.cf-stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--cf-text);
+}
+
+.cf-stat-label {
+    font-size: 0.875rem;
+    color: var(--cf-text-secondary);
+}
+
+.cf-grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+    .cf-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cf-action-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.cf-action-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: var(--cf-radius);
+    text-decoration: none;
+    color: var(--cf-text);
+    transition: background var(--cf-transition-fast);
+}
+
+.cf-action-item:hover {
+    background: var(--cf-bg-secondary);
+}
+
+.cf-action-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--cf-blue-light);
+    color: var(--cf-blue);
+    border-radius: var(--cf-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cf-action-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.cf-action-title {
+    font-weight: 500;
+}
+
+.cf-action-desc {
+    font-size: 0.8125rem;
+    color: var(--cf-text-secondary);
+}
+
+.cf-action-item > .fa-chevron-right {
+    color: var(--cf-text-muted);
+}
+
+.cf-summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .cf-summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+.cf-summary-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.cf-summary-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--cf-text-muted);
+}
+
+.cf-summary-value {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--cf-text);
+}
+
+.cf-empty-state {
+    padding: 3rem;
+    text-align: center;
+    color: var(--cf-text-secondary);
+}
+
+.cf-empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: var(--cf-text-muted);
+}
+
+.cf-empty-state p {
+    margin-bottom: 1rem;
+}
+
+.cf-clickable {
+    cursor: pointer;
+}
+
+.cf-clickable:hover {
+    background: var(--cf-surface-hover);
+}
+
+.cf-mt-4 {
+    margin-top: 1.5rem;
+}
+
+.cf-p-0 {
+    padding: 0 !important;
+}
+
+.cf-text-mono {
+    font-family: var(--cf-font-mono);
+    font-size: 0.875rem;
+}
+
+.cf-text-success {
+    color: var(--cf-success);
+}
+</style>
+{% endblock %}

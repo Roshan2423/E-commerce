@@ -1,0 +1,276 @@
+{% extends 'vendor/professional/base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Edit{% else %}Add{% endif %} Category{% endblock %}
+
+{% block breadcrumb %}{% if object %}Edit{% else %}Add{% endif %} Category{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{% if object %}Edit Category{% else %}Add New Category{% endif %}</h1>
+        <p class="page-subtitle">{% if object %}Update category details{% else %}Create a new category for your products{% endif %}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'vendor:categories' %}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Back to Categories
+        </a>
+    </div>
+</div>
+
+<div class="card" style="max-width: 600px;">
+    <div class="card-header">
+        <h3 class="card-title">
+            <i class="fas fa-folder"></i> Category Details
+        </h3>
+    </div>
+    <div class="card-body">
+        <form method="post" id="categoryForm">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label">Category Name *</label>
+                <input type="text" name="name" class="form-control"
+                       value="{{ form.name.value|default:'' }}" required
+                       placeholder="e.g., Electronics, Clothing, Home & Garden">
+                {% if form.name.errors %}
+                <div class="form-error">{{ form.name.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Category Icon *</label>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">
+                    Click to select an icon for this category <span style="color: #ef4444;">(Red = already in use)</span>
+                </p>
+
+                <!-- Hidden input for icon value -->
+                <input type="hidden" name="icon" id="selectedIcon" value="{{ form.icon.value|default:'fa-shopping-basket' }}">
+
+                <!-- Icon Grid -->
+                <div class="icon-picker-grid">
+                    <div class="icon-option {% if form.icon.value == 'fa-laptop' %}selected{% endif %} {% if 'fa-laptop' in used_icons %}used{% endif %}" data-icon="fa-laptop">
+                        <i class="fas fa-laptop"></i>
+                        <span>Electronics</span>
+                    </div>
+                    <div class="icon-option {% if form.icon.value == 'fa-tshirt' %}selected{% endif %} {% if 'fa-tshirt' in used_icons %}used{% endif %}" data-icon="fa-tshirt">
+                        <i class="fas fa-tshirt"></i>
+                        <span>Fashion</span>
+                    </div>
+                    <div class="icon-option {% if form.icon.value == 'fa-home' %}selected{% endif %} {% if 'fa-home' in used_icons %}used{% endif %}" data-icon="fa-home">
+                        <i class="fas fa-home"></i>
+                        <span>Home</span>
+                    </div>
+                    <div class="icon-option {% if form.icon.value == 'fa-futbol' %}selected{% endif %} {% if 'fa-futbol' in used_icons %}used{% endif %}" data-icon="fa-futbol">
+                        <i class="fas fa-futbol"></i>
+                        <span>Sports</span>
+                    </div>
+                    <div class="icon-option {% if form.icon.value == 'fa-spa' %}selected{% endif %} {% if 'fa-spa' in used_icons %}used{% endif %}" data-icon="fa-spa">
+                        <i class="fas fa-spa"></i>
+                        <span>Beauty</span>
+                    </div>
+                    <div class="icon-option {% if form.icon.value == 'fa-book' %}selected{% endif %} {% if 'fa-book' in used_icons %}used{% endif %}" data-icon="fa-book">
+                        <i class="fas fa-book"></i>
+                        <span>Books</span>
+                    </div>
+                    <div class="icon-option {% if form.icon.value == 'fa-gamepad' %}selected{% endif %} {% if 'fa-gamepad' in used_icons %}used{% endif %}" data-icon="fa-gamepad">
+                        <i class="fas fa-gamepad"></i>
+                        <span>Toys & Games</span>
+                    </div>
+                    <div class="icon-option {% if form.icon.value == 'fa-shopping-basket' or not form.icon.value %}selected{% endif %} {% if 'fa-shopping-basket' in used_icons %}used{% endif %}" data-icon="fa-shopping-basket">
+                        <i class="fas fa-shopping-basket"></i>
+                        <span>Grocery</span>
+                    </div>
+                    <div class="icon-option {% if form.icon.value == 'fa-heartbeat' %}selected{% endif %} {% if 'fa-heartbeat' in used_icons %}used{% endif %}" data-icon="fa-heartbeat">
+                        <i class="fas fa-heartbeat"></i>
+                        <span>Health</span>
+                    </div>
+                    <div class="icon-option {% if form.icon.value == 'fa-gem' %}selected{% endif %} {% if 'fa-gem' in used_icons %}used{% endif %}" data-icon="fa-gem">
+                        <i class="fas fa-gem"></i>
+                        <span>Jewelry</span>
+                    </div>
+                    <div class="icon-option {% if form.icon.value == 'fa-car' %}selected{% endif %} {% if 'fa-car' in used_icons %}used{% endif %}" data-icon="fa-car">
+                        <i class="fas fa-car"></i>
+                        <span>Automotive</span>
+                    </div>
+                    <div class="icon-option {% if form.icon.value == 'fa-baby' %}selected{% endif %} {% if 'fa-baby' in used_icons %}used{% endif %}" data-icon="fa-baby">
+                        <i class="fas fa-baby"></i>
+                        <span>Baby & Kids</span>
+                    </div>
+                    <div class="icon-option {% if form.icon.value == 'fa-paw' %}selected{% endif %} {% if 'fa-paw' in used_icons %}used{% endif %}" data-icon="fa-paw">
+                        <i class="fas fa-paw"></i>
+                        <span>Pet Supplies</span>
+                    </div>
+                    <div class="icon-option {% if form.icon.value == 'fa-briefcase' %}selected{% endif %} {% if 'fa-briefcase' in used_icons %}used{% endif %}" data-icon="fa-briefcase">
+                        <i class="fas fa-briefcase"></i>
+                        <span>Office</span>
+                    </div>
+                    <div class="icon-option {% if form.icon.value == 'fa-music' %}selected{% endif %} {% if 'fa-music' in used_icons %}used{% endif %}" data-icon="fa-music">
+                        <i class="fas fa-music"></i>
+                        <span>Music</span>
+                    </div>
+                </div>
+                {% if form.icon.errors %}
+                <div class="form-error">{{ form.icon.errors.0 }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-check">
+                    <input type="checkbox" name="is_active" class="form-check-input"
+                           {% if form.is_active.value or not object %}checked{% endif %}>
+                    <span class="form-check-label">Active</span>
+                </label>
+                <p style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">
+                    Inactive categories won't be shown in the store
+                </p>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 24px;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i> {% if object %}Update{% else %}Create{% endif %} Category
+                </button>
+                <a href="{% url 'vendor:categories' %}" class="btn btn-outline">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .form-group {
+        margin-bottom: 20px;
+    }
+    .form-label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+    .form-control {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+    }
+    .form-check-input {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    .form-error {
+        color: #ef4444;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+
+    /* Icon Picker Styles */
+    .icon-picker-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 12px;
+    }
+    .icon-option {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 16px 8px;
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background: #fff;
+        position: relative;
+    }
+    .icon-option:hover:not(.used) {
+        border-color: var(--primary);
+        background: rgba(99, 102, 241, 0.05);
+    }
+    .icon-option.selected {
+        border-color: var(--primary);
+        background: rgba(99, 102, 241, 0.1);
+    }
+    .icon-option.selected i {
+        color: var(--primary);
+    }
+    .icon-option i {
+        font-size: 24px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+        transition: color 0.2s;
+    }
+    .icon-option span {
+        font-size: 11px;
+        color: var(--text-secondary);
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    /* Used icon styles */
+    .icon-option.used {
+        border-color: #ef4444;
+        background: rgba(239, 68, 68, 0.05);
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+    .icon-option.used i {
+        color: #ef4444;
+    }
+    .icon-option.used span {
+        color: #ef4444;
+    }
+    .icon-option.used::after {
+        content: 'In Use';
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        font-size: 8px;
+        background: #ef4444;
+        color: white;
+        padding: 2px 4px;
+        border-radius: 4px;
+        font-weight: 600;
+    }
+
+    @media (max-width: 600px) {
+        .icon-picker-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const iconOptions = document.querySelectorAll('.icon-option');
+    const selectedIconInput = document.getElementById('selectedIcon');
+
+    iconOptions.forEach(option => {
+        option.addEventListener('click', function() {
+            // Don't allow selecting used icons
+            if (this.classList.contains('used')) {
+                return;
+            }
+            // Remove selected class from all
+            iconOptions.forEach(opt => opt.classList.remove('selected'));
+            // Add selected class to clicked
+            this.classList.add('selected');
+            // Update hidden input
+            selectedIconInput.value = this.dataset.icon;
+        });
+    });
+});
+</script>
+{% endblock %}

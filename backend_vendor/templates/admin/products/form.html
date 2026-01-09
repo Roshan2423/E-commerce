@@ -1,0 +1,775 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Edit Product{% else %}Add Product{% endif %} - E-Commerce Admin{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/product_form.css' %}">
+<style>
+/* Alert styles */
+.alert {
+    border-radius: 8px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+    border: 1px solid;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.alert-error {
+    background: #fef2f2;
+    border-color: #fecaca;
+    color: #dc2626;
+}
+
+.alert-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+}
+
+.alert-content h4 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.alert-content ul {
+    margin: 8px 0 0 0;
+    padding-left: 20px;
+}
+
+.alert-content li {
+    margin-bottom: 4px;
+}
+
+/* Badge styling */
+.badge {
+    background: #e5e7eb;
+    color: #6b7280;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    margin-left: 8px;
+    font-weight: 500;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="product-form-container">
+    <div class="page-header">
+        <h1 class="page-title">
+            {% if object %}
+                <i class="fas fa-edit"></i>
+                Edit Product
+            {% else %}
+                <i class="fas fa-plus"></i>
+                Add New Product
+            {% endif %}
+        </h1>
+    </div>
+
+
+    <!-- Display form errors -->
+    {% if form.errors %}
+        <div class="alert alert-error fade-in">
+            <div class="alert-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <div>
+                    <h4>Please correct the following errors:</h4>
+                    {% if form.non_field_errors %}
+                        {% for error in form.non_field_errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    {% endif %}
+                    <ul>
+                        {% for field, errors in form.errors.items %}
+                            {% if field != '__all__' %}
+                                <li><strong>{{ field|capfirst }}:</strong> {{ errors|join:", " }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Main Form -->
+    <form method="post" enctype="multipart/form-data" class="product-form">
+        {% csrf_token %}
+        
+        <!-- Single Panel with All Sections -->
+        <div class="single-panel-form" style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 32px;">
+            <div class="form-section fade-in">
+                <h3 class="section-title">
+                    <i class="fas fa-tag"></i>
+                    Product Details
+                </h3>
+                
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label class="form-label required">Product Name</label>
+                        <input type="text" class="form-control {% if form.name.errors %}error{% endif %}" 
+                               name="name" value="{{ form.name.value|default:'' }}" 
+                               placeholder="Enter a descriptive product name" required>
+                        {% if form.name.errors %}
+                            <div class="form-error">
+                                <i class="fas fa-exclamation-circle"></i>
+                                {{ form.name.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                        <div class="form-helper">
+                            <i class="fas fa-lightbulb"></i>
+                            Use clear, searchable product names
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">SKU (Stock Keeping Unit)</label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" name="sku" id="sku-input"
+                                   value="{{ form.sku.value|default:'' }}" 
+                                   placeholder="Auto-generated if blank">
+                            <button type="button" id="generate-sku-btn" class="btn btn-outline">
+                                <i class="fas fa-magic"></i> Generate
+                            </button>
+                        </div>
+                        <div class="form-helper">
+                            <i class="fas fa-info-circle"></i>
+                            Unique identifier for inventory tracking
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">Category</label>
+                    <select class="form-control {% if form.category.errors %}error{% endif %}" name="category" required>
+                        <option value="">Choose a category...</option>
+                        {% for category in form.category.field.queryset %}
+                            <option value="{{ category.id }}" {% if form.category.value == category.id %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                    {% if form.category.errors %}
+                        <div class="form-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            {{ form.category.errors|join:", " }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Product Description</label>
+                    <textarea class="form-control {% if form.description.errors %}error{% endif %}" 
+                              name="description" rows="5" 
+                              placeholder="Detailed description of the product features, benefits, and specifications">{{ form.description.value|default:'' }}</textarea>
+                    {% if form.description.errors %}
+                        <div class="form-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            {{ form.description.errors|join:", " }}
+                        </div>
+                    {% endif %}
+                    <div class="form-helper">
+                        <i class="fas fa-info-circle"></i>
+                        Include key features, materials, size, and usage instructions
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Short Description</label>
+                    <textarea class="form-control" name="short_description" rows="3" 
+                              placeholder="Brief summary for product listings and previews">{{ form.short_description.value|default:'' }}</textarea>
+                    <div class="form-helper">
+                        <i class="fas fa-info-circle"></i>
+                        Appears in product cards and search results
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing Section -->
+            <div class="form-section fade-in">
+                <h3 class="section-title">
+                    <i class="fas fa-rupee-sign"></i>
+                    Pricing Information
+                </h3>
+
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label class="form-label required">Price</label>
+                        <div class="price-input-group">
+                            <span class="currency-symbol">Rs</span>
+                            <input type="number" class="form-control {% if form.price.errors %}error{% endif %}"
+                                   name="price" step="0.01" value="{{ form.price.value|default:'' }}"
+                                   placeholder="0.00" required>
+                        </div>
+                        {% if form.price.errors %}
+                            <div class="form-error">
+                                <i class="fas fa-exclamation-circle"></i>
+                                {{ form.price.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                        <div class="form-helper">
+                            <i class="fas fa-info-circle"></i>
+                            Current price customers will pay
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Special Price</label>
+                        <div class="price-input-group">
+                            <span class="currency-symbol">Rs</span>
+                            <input type="number" class="form-control" name="compare_price" step="0.01"
+                                   value="{{ form.compare_price.value|default:'' }}" placeholder="0.00">
+                        </div>
+                        <div class="form-helper">
+                            <i class="fas fa-info-circle"></i>
+                            Discounted price (leave empty if no discount)
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Cost Price</label>
+                    <div class="price-input-group">
+                        <span class="currency-symbol">Rs</span>
+                        <input type="number" class="form-control" name="cost_price" step="0.01"
+                               value="{{ form.cost_price.value|default:'' }}" placeholder="0.00">
+                    </div>
+                    <div class="form-helper">
+                        <i class="fas fa-info-circle"></i>
+                        Your cost for this product (used for profit calculations)
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Section -->
+            <div class="form-section fade-in">
+                <h3 class="section-title">
+                    <i class="fas fa-boxes"></i>
+                    Inventory Management
+                </h3>
+                
+                <div class="form-group-row">
+                    <div class="form-group">
+                        <label class="form-label">Stock Quantity</label>
+                        <input type="number" class="form-control {% if form.stock_quantity.errors %}error{% endif %}" 
+                               name="stock_quantity" value="{{ form.stock_quantity.value|default:'' }}" 
+                               placeholder="0" min="0">
+                        {% if form.stock_quantity.errors %}
+                            <div class="form-error">
+                                <i class="fas fa-exclamation-circle"></i>
+                                {{ form.stock_quantity.errors|join:", " }}
+                            </div>
+                        {% endif %}
+                        <div class="form-helper">
+                            <i class="fas fa-info-circle"></i>
+                            Available units in stock
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Low Stock Alert</label>
+                        <input type="number" class="form-control" name="low_stock_threshold" 
+                               value="{{ form.low_stock_threshold.value|default:'10' }}" 
+                               placeholder="10" min="0">
+                        <div class="form-helper">
+                            <i class="fas fa-info-circle"></i>
+                            Get notified when stock falls below this number
+                        </div>
+                    </div>
+                </div>
+
+                <h3 class="section-title">
+                    <i class="fas fa-shipping-fast"></i>
+                    Shipping Information
+                </h3>
+                
+                <div class="form-group">
+                    <label class="form-label">Weight (kg)</label>
+                    <input type="number" class="form-control {% if form.weight.errors %}error{% endif %}" 
+                           name="weight" step="0.01" value="{{ form.weight.value|default:'' }}" 
+                           placeholder="0.00" min="0">
+                    {% if form.weight.errors %}
+                        <div class="form-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            {{ form.weight.errors|join:", " }}
+                        </div>
+                    {% endif %}
+                    <div class="form-helper">
+                        <i class="fas fa-info-circle"></i>
+                        Product weight in kilograms (max 2 decimal places)
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Dimensions (cm)</label>
+                    <div class="form-group-row">
+                        <div class="form-group">
+                            <label class="form-label">Length</label>
+                            <input type="number" class="form-control {% if form.length.errors %}error{% endif %}" 
+                                   name="length" step="0.01" value="{{ form.length.value|default:'' }}" 
+                                   placeholder="0.00" min="0">
+                            {% if form.length.errors %}
+                                <div class="form-error">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    {{ form.length.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Width</label>
+                            <input type="number" class="form-control {% if form.width.errors %}error{% endif %}" 
+                                   name="width" step="0.01" value="{{ form.width.value|default:'' }}" 
+                                   placeholder="0.00" min="0">
+                            {% if form.width.errors %}
+                                <div class="form-error">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    {{ form.width.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Height</label>
+                            <input type="number" class="form-control {% if form.height.errors %}error{% endif %}" 
+                                   name="height" step="0.01" value="{{ form.height.value|default:'' }}" 
+                                   placeholder="0.00" min="0">
+                            {% if form.height.errors %}
+                                <div class="form-error">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    {{ form.height.errors|join:", " }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="form-helper">
+                        <i class="fas fa-info-circle"></i>
+                        Product dimensions for shipping calculations
+                    </div>
+                </div>
+            </div>
+
+            <!-- Images Section -->
+            <div class="form-section fade-in">
+                <h3 class="section-title">
+                    <i class="fas fa-images"></i>
+                    Product Images
+                    <span id="image-count-badge" class="badge">0</span>
+                </h3>
+                
+                <div class="form-group">
+                    <div class="image-upload-container" id="image-upload-area">
+                        <div class="upload-prompt" id="upload-prompt">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <div class="upload-title">Drop images here or click to browse</div>
+                            <div class="upload-subtitle">Supports JPG, PNG, WEBP (Max 10MB each)</div>
+                        </div>
+                        <div class="image-grid" id="image-grid"></div>
+                        <input type="file" id="image-input" name="images" multiple accept="image/*" style="display: none;">
+                    </div>
+                    <div class="form-helper">
+                        <i class="fas fa-info-circle"></i>
+                        First image becomes the main product image • Drag to reorder • Click × to remove
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Section -->
+            <div class="form-section fade-in">
+                <h3 class="section-title">
+                    <i class="fas fa-toggle-on"></i>
+                    Product Status
+                </h3>
+                
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" name="is_active" id="is_active" 
+                               {% if form.is_active.value %}checked{% endif %}>
+                        <div class="checkbox-label">
+                            <div class="checkbox-title">Product Active</div>
+                            <div class="checkbox-desc">Make this product visible in your store</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" name="is_featured" id="is_featured" 
+                               {% if form.is_featured.value %}checked{% endif %}>
+                        <div class="checkbox-label">
+                            <div class="checkbox-title">Featured Product</div>
+                            <div class="checkbox-desc">Show this product on homepage and featured collections</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <h3 class="section-title">
+                    <i class="fas fa-search"></i>
+                    SEO Settings
+                </h3>
+                
+                <div class="form-group">
+                    <label class="form-label">Meta Title</label>
+                    <input type="text" class="form-control" name="meta_title"
+                           value="{{ form.meta_title.value|default:'' }}" 
+                           placeholder="SEO title for search engines">
+                    <div class="form-helper">
+                        <i class="fas fa-info-circle"></i>
+                        Appears in search engine results (50-60 characters recommended)
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Meta Description</label>
+                    <textarea class="form-control" name="meta_description" rows="4"
+                              placeholder="Brief description for search engines">{{ form.meta_description.value|default:'' }}</textarea>
+                    <div class="form-helper">
+                        <i class="fas fa-info-circle"></i>
+                        Summary for search results (150-160 characters recommended)
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <a href="/products/" class="btn btn-outline">
+                <i class="fas fa-times"></i>
+                Cancel
+            </a>
+            <button type="submit" class="btn btn-primary" id="submit-btn">
+                <i class="fas fa-save"></i>
+                {% if object %}Update Product{% else %}Create Product{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ============================================
+    // VARIABLE DECLARATIONS (must be at the top)
+    // ============================================
+    let draggedElement = null;
+    let newImageCounter = 0;
+
+    const imageUploadArea = document.getElementById('image-upload-area');
+    const imageInput = document.getElementById('image-input');
+    const uploadPrompt = document.getElementById('upload-prompt');
+    const imageGrid = document.getElementById('image-grid');
+    const imageCountBadge = document.getElementById('image-count-badge');
+
+    // ============================================
+    // FUNCTION DEFINITIONS (must be before use)
+    // ============================================
+
+    function updateImageCount() {
+        if (!imageGrid || !imageCountBadge) return;
+        const count = imageGrid.children.length;
+        imageCountBadge.textContent = count;
+        if (count === 0 && uploadPrompt) {
+            uploadPrompt.style.display = 'block';
+        }
+    }
+
+    function updateMainImageAfterReorder() {
+        if (!imageGrid) return;
+        const images = imageGrid.querySelectorAll('.image-preview');
+        images.forEach((img, index) => {
+            const mainBadge = img.querySelector('.main-image-badge');
+            const hiddenInput = img.querySelector('input[type="hidden"][name^="image_data_"]');
+            const isMain = (index === 0);
+            if (mainBadge) mainBadge.style.display = isMain ? 'block' : 'none';
+            if (hiddenInput) {
+                const data = JSON.parse(hiddenInput.value);
+                data.isMain = isMain;
+                hiddenInput.value = JSON.stringify(data);
+            }
+        });
+    }
+
+    // Global function for removing images
+    window.removeImage = function(button) {
+        console.log('removeImage called');
+        const imagePreview = button.closest('.image-preview');
+        if (!imagePreview) return;
+
+        const wasMainImage = imagePreview.querySelector('.main-image-badge')?.style.display === 'block';
+        const existingImageId = imagePreview.dataset.existingImageId;
+        console.log('Existing image ID:', existingImageId);
+
+        if (existingImageId) {
+            const deleteInput = document.createElement('input');
+            deleteInput.type = 'hidden';
+            deleteInput.name = `delete_image_${existingImageId}`;
+            deleteInput.value = 'true';
+            document.querySelector('.product-form').appendChild(deleteInput);
+            console.log('Added delete input:', deleteInput.name);
+        }
+
+        imagePreview.remove();
+        updateImageCount();
+
+        if (wasMainImage && imageGrid && imageGrid.children.length > 0) {
+            updateMainImageAfterReorder();
+        }
+    };
+
+    function addDragListeners(element) {
+        element.addEventListener('dragstart', handleDragStart);
+        element.addEventListener('dragover', handleDragOver);
+        element.addEventListener('dragenter', handleDragEnter);
+        element.addEventListener('dragleave', handleDragLeave);
+        element.addEventListener('drop', handleDrop);
+        element.addEventListener('dragend', handleDragEnd);
+    }
+
+    function handleDragStart(e) {
+        draggedElement = this;
+        this.style.opacity = '0.4';
+        e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragOver(e) {
+        if (e.preventDefault) e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        return false;
+    }
+
+    function handleDragEnter(e) {
+        if (this !== draggedElement) {
+            this.classList.add('drag-over');
+        }
+    }
+
+    function handleDragLeave(e) {
+        this.classList.remove('drag-over');
+    }
+
+    function handleDrop(e) {
+        if (e.stopPropagation) e.stopPropagation();
+        if (draggedElement !== this) {
+            const allImages = Array.from(imageGrid.querySelectorAll('.image-preview'));
+            const draggedIndex = allImages.indexOf(draggedElement);
+            const targetIndex = allImages.indexOf(this);
+            if (draggedIndex < targetIndex) {
+                this.parentNode.insertBefore(draggedElement, this.nextSibling);
+            } else {
+                this.parentNode.insertBefore(draggedElement, this);
+            }
+            updateMainImageAfterReorder();
+        }
+        return false;
+    }
+
+    function handleDragEnd(e) {
+        this.style.opacity = '1';
+        const allImages = imageGrid.querySelectorAll('.image-preview');
+        allImages.forEach(img => img.classList.remove('drag-over'));
+        draggedElement = null;
+    }
+
+    function displayExistingImage(url, isMain, imageId) {
+        if (uploadPrompt) uploadPrompt.style.display = 'none';
+
+        const imagePreview = document.createElement('div');
+        imagePreview.className = 'image-preview existing-image';
+        imagePreview.draggable = true;
+        imagePreview.dataset.existingImageId = imageId;
+        imagePreview.innerHTML = `
+            <img src="${url}" alt="Product image" draggable="false">
+            <div class="image-controls">
+                <button type="button" class="image-control-btn delete" onclick="window.removeImage(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="main-image-badge" style="display: ${isMain ? 'block' : 'none'}">
+                Main Image
+            </div>
+        `;
+
+        addDragListeners(imagePreview);
+        if (imageGrid) imageGrid.appendChild(imagePreview);
+        updateImageCount();
+    }
+
+    function addImagePreview(src, filename) {
+        console.log('addImagePreview called for:', filename);
+        if (uploadPrompt) uploadPrompt.style.display = 'none';
+
+        const totalImages = imageGrid ? imageGrid.children.length : 0;
+        const uniqueIndex = newImageCounter++;
+        const isMainImage = totalImages === 0;
+
+        const imagePreview = document.createElement('div');
+        imagePreview.className = 'image-preview new-image';
+        imagePreview.draggable = true;
+        imagePreview.dataset.imageIndex = uniqueIndex;
+        imagePreview.innerHTML = `
+            <img src="${src}" alt="${filename}" draggable="false">
+            <div class="image-controls">
+                <button type="button" class="image-control-btn delete" onclick="window.removeImage(this)">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="main-image-badge" style="display: ${isMainImage ? 'block' : 'none'}">
+                Main Image
+            </div>
+        `;
+
+        const hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = `image_data_${uniqueIndex}`;
+        hiddenInput.value = JSON.stringify({
+            src: src,
+            name: filename,
+            isMain: isMainImage
+        });
+        imagePreview.appendChild(hiddenInput);
+        console.log('Added hidden input:', hiddenInput.name, 'Data length:', hiddenInput.value.length);
+
+        addDragListeners(imagePreview);
+        if (imageGrid) imageGrid.appendChild(imagePreview);
+        updateImageCount();
+    }
+
+    function handleImageFiles(files) {
+        console.log('handleImageFiles called with', files.length, 'files');
+        Array.from(files).forEach(file => {
+            console.log('Processing file:', file.name, 'type:', file.type, 'size:', file.size);
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    console.log('FileReader loaded, data length:', e.target.result.length);
+                    addImagePreview(e.target.result, file.name);
+                };
+                reader.onerror = function(e) {
+                    console.error('FileReader error:', e);
+                };
+                reader.readAsDataURL(file);
+            } else {
+                console.log('Skipping non-image file:', file.type);
+            }
+        });
+    }
+
+    // ============================================
+    // LOAD EXISTING IMAGES (after functions defined)
+    // ============================================
+    {% if object and object.images.all %}
+        const existingImages = [
+            {% for image in object.images.all %}
+            {
+                url: "{{ image.image.url }}",
+                id: {{ image.id }},
+                isMain: {{ image.is_main|lower }}
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        existingImages.forEach((img, index) => {
+            displayExistingImage(img.url, img.isMain, img.id);
+        });
+    {% endif %}
+
+    // ============================================
+    // EVENT LISTENERS
+    // ============================================
+
+    // Image upload area events
+    if (imageUploadArea) {
+        imageUploadArea.addEventListener('click', function(e) {
+            if (!e.target.closest('.image-preview')) {
+                imageInput.click();
+            }
+        });
+
+        imageUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+
+        imageUploadArea.addEventListener('dragleave', function(e) {
+            this.classList.remove('dragover');
+        });
+
+        imageUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            handleImageFiles(files);
+        });
+    }
+
+    if (imageInput) {
+        imageInput.addEventListener('change', function(e) {
+            console.log('Image input changed, files:', this.files.length);
+            handleImageFiles(this.files);
+            this.value = ''; // Reset so same file can be selected again
+        });
+    }
+
+    // SKU generation functionality
+    const generateSkuBtn = document.getElementById('generate-sku-btn');
+    const skuInput = document.getElementById('sku-input');
+    const nameInput = document.querySelector('input[name="name"]');
+    
+    if (generateSkuBtn) {
+        generateSkuBtn.addEventListener('click', function() {
+            const productName = nameInput.value.trim();
+            if (productName) {
+                const sku = productName
+                    .toUpperCase()
+                    .replace(/[^A-Z0-9\s]/g, '')
+                    .replace(/\s+/g, '-')
+                    .substring(0, 15) + '-' + Date.now().toString().slice(-4);
+                skuInput.value = sku;
+            } else {
+                alert('Please enter a product name first');
+                nameInput.focus();
+            }
+        });
+    }
+
+    // Form validation enhancement
+    const form = document.querySelector('.product-form');
+    const submitBtn = document.getElementById('submit-btn');
+    
+    if (form && submitBtn) {
+        form.addEventListener('submit', function(e) {
+            // Debug: Log all form data being submitted
+            const formData = new FormData(form);
+            console.log('=== Form Submission Debug ===');
+            console.log('Image data fields:');
+            for (let [key, value] of formData.entries()) {
+                if (key.startsWith('image_data_') || key.startsWith('delete_image_')) {
+                    console.log(`  ${key}: ${value.substring(0, 100)}...`);
+                }
+            }
+            console.log('Total form fields:', [...formData.keys()].length);
+
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+        });
+    }
+    
+    // Input focus enhancement
+    const formControls = document.querySelectorAll('.form-control');
+    formControls.forEach(input => {
+        input.addEventListener('focus', function() {
+            this.parentElement.classList.add('focused');
+        });
+        
+        input.addEventListener('blur', function() {
+            this.parentElement.classList.remove('focused');
+        });
+    });
+});
+</script>
+{% endblock %}

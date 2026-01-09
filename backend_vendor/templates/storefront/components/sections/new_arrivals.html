@@ -1,0 +1,236 @@
+{% load static %}
+<!-- New Arrivals Section -->
+<section class="section section-new-arrivals" id="newArrivalsSection">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-header-content">
+                <span class="section-badge">Just In</span>
+                <h2 class="section-title">New Arrivals</h2>
+                <p class="section-subtitle">Be the first to discover our latest products</p>
+            </div>
+            <a href="/v/{{ vendor.slug }}/products/?sort=newest" class="view-all-link">
+                View All <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="new-arrivals-slider">
+            <div class="arrivals-track" id="arrivalsTrack">
+                {% for product in new_arrivals %}
+                <div class="arrival-card">
+                    <div class="arrival-image">
+                        <a href="/v/{{ vendor.slug }}/products/{{ product.slug }}/">
+                            {% if product.primary_image %}
+                            <img src="{{ product.primary_image.url }}" alt="{{ product.name }}">
+                            {% else %}
+                            <div class="arrival-placeholder">
+                                <i class="fas fa-box"></i>
+                            </div>
+                            {% endif %}
+                        </a>
+                        <span class="arrival-badge">New</span>
+                    </div>
+                    <div class="arrival-content">
+                        <h3 class="arrival-name">
+                            <a href="/v/{{ vendor.slug }}/products/{{ product.slug }}/">{{ product.name|truncatechars:40 }}</a>
+                        </h3>
+                        <div class="arrival-price">
+                            {% if product.sale_price %}
+                            <span class="price-sale">${{ product.sale_price }}</span>
+                            <span class="price-regular">${{ product.price }}</span>
+                            {% else %}
+                            <span class="price-regular">${{ product.price }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-message">
+                    <p>No new arrivals yet.</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Navigation -->
+            <button class="arrivals-nav arrivals-prev" id="arrivalsPrev">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="arrivals-nav arrivals-next" id="arrivalsNext">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+    </div>
+</section>
+
+<style>
+    .section-new-arrivals {
+        padding: 5rem 0;
+        background: linear-gradient(135deg, {{ storefront.primary_color|default:'#667eea' }}10 0%, {{ storefront.secondary_color|default:'#764ba2' }}10 100%);
+    }
+
+    .section-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        background: {{ storefront.accent_color|default:'#10b981' }};
+        color: #ffffff;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-radius: 20px;
+        margin-bottom: 0.5rem;
+    }
+
+    .new-arrivals-slider {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .arrivals-track {
+        display: flex;
+        gap: 1.5rem;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding: 0.5rem 0;
+    }
+
+    .arrivals-track::-webkit-scrollbar {
+        display: none;
+    }
+
+    .arrival-card {
+        flex: 0 0 280px;
+        background: #ffffff;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .arrival-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.12);
+    }
+
+    .arrival-image {
+        position: relative;
+        aspect-ratio: 1;
+        overflow: hidden;
+    }
+
+    .arrival-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+
+    .arrival-card:hover .arrival-image img {
+        transform: scale(1.08);
+    }
+
+    .arrival-placeholder {
+        width: 100%;
+        height: 100%;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: #cbd5e1;
+    }
+
+    .arrival-badge {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        padding: 0.375rem 1rem;
+        background: {{ storefront.accent_color|default:'#10b981' }};
+        color: #ffffff;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 20px;
+        text-transform: uppercase;
+    }
+
+    .arrival-content {
+        padding: 1.25rem;
+    }
+
+    .arrival-name {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        line-height: 1.4;
+    }
+
+    .arrival-name a {
+        color: #1a202c;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .arrival-name a:hover {
+        color: {{ storefront.primary_color|default:'#667eea' }};
+    }
+
+    .arrival-price {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .arrival-price .price-sale {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: {{ storefront.accent_color|default:'#10b981' }};
+    }
+
+    .arrival-price .price-regular {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #1a202c;
+    }
+
+    .arrival-price .price-sale + .price-regular {
+        font-size: 0.875rem;
+        color: #94a3b8;
+        text-decoration: line-through;
+    }
+
+    .arrivals-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 44px;
+        height: 44px;
+        border: none;
+        border-radius: 50%;
+        background: #ffffff;
+        color: #1a202c;
+        font-size: 1rem;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        z-index: 10;
+    }
+
+    .arrivals-nav:hover {
+        background: {{ storefront.primary_color|default:'#667eea' }};
+        color: #ffffff;
+    }
+
+    .arrivals-prev { left: 0; }
+    .arrivals-next { right: 0; }
+
+    @media (max-width: 768px) {
+        .arrival-card {
+            flex: 0 0 240px;
+        }
+
+        .arrivals-nav {
+            display: none;
+        }
+    }
+</style>

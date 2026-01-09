@@ -1,0 +1,175 @@
+{% extends 'vendor/base.html' %}
+{% load static %}
+
+{% block title %}Customers - {{ vendor_business.business_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <h1 class="page-title">Customers</h1>
+        <p class="page-subtitle">View customers who have purchased from your store</p>
+    </div>
+</div>
+
+<!-- Customers Table -->
+<div class="customers-table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Email</th>
+                <th>Orders</th>
+                <th>Total Spent</th>
+                <th>Last Order</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in customers %}
+            <tr>
+                <td>
+                    <div class="customer-cell">
+                        <div class="customer-avatar">{{ customer.first_name.0|default:customer.email.0|upper }}</div>
+                        <span class="customer-name">{{ customer.get_full_name|default:customer.email }}</span>
+                    </div>
+                </td>
+                <td>{{ customer.email }}</td>
+                <td>{{ customer.order_count }}</td>
+                <td><strong>Rs. {{ customer.total_spent|floatformat:0 }}</strong></td>
+                <td>{{ customer.last_order_date|date:"M d, Y" }}</td>
+                <td>
+                    <a href="{% url 'vendor:customer_detail' customer.pk %}" class="btn btn-sm btn-outline">
+                        <i class="fas fa-eye"></i>
+                        View
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6">
+                    <div class="empty-state">
+                        <i class="fas fa-users"></i>
+                        <p>No customers yet</p>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if customers.has_other_pages %}
+<div class="pagination">
+    {% if customers.has_previous %}
+    <a href="?page={{ customers.previous_page_number }}" class="page-btn">
+        <i class="fas fa-chevron-left"></i>
+    </a>
+    {% endif %}
+
+    {% for num in customers.paginator.page_range %}
+        {% if customers.number == num %}
+        <span class="page-btn active">{{ num }}</span>
+        {% elif num > customers.number|add:'-3' and num < customers.number|add:'3' %}
+        <a href="?page={{ num }}" class="page-btn">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if customers.has_next %}
+    <a href="?page={{ customers.next_page_number }}" class="page-btn">
+        <i class="fas fa-chevron-right"></i>
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+<style>
+    .customers-table-container {
+        background: var(--card-bg);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th {
+        text-align: left;
+        padding: 1rem 1.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .data-table td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .data-table tbody tr:hover {
+        background: var(--bg);
+    }
+
+    .customer-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .customer-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+    }
+
+    .customer-name {
+        font-weight: 500;
+        color: var(--text);
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .page-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text);
+        text-decoration: none;
+    }
+
+    .page-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+</style>
+{% endblock %}

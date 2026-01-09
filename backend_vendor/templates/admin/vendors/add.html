@@ -1,0 +1,188 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Add Business - OVN Store{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <h1 class="page-title">Add New Business</h1>
+        <p class="page-subtitle">Register a new vendor business</p>
+    </div>
+    <div class="header-actions">
+        <a href="{% url 'vendor_admin:list' %}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to List</span>
+        </a>
+    </div>
+</div>
+
+<div class="info-banner">
+    <i class="fas fa-info-circle"></i>
+    <div>
+        <strong>How it works:</strong>
+        <p>When you add a business email here, the next time a user logs in with that email (via Google or regular login), they will automatically be linked to this business and redirected to their vendor dashboard.</p>
+    </div>
+</div>
+
+<form method="post" class="add-business-form">
+    {% csrf_token %}
+
+    <div class="form-card">
+        <div class="form-section">
+            <h3 class="section-title">Business Information</h3>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="email">Business Email *</label>
+                    <input type="email" id="email" name="email" required placeholder="business@example.com">
+                    <small>This email will be used to link the vendor account</small>
+                </div>
+                <div class="form-group">
+                    <label for="business_name">Business Name *</label>
+                    <input type="text" id="business_name" name="business_name" required placeholder="My Amazing Store">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="3" placeholder="Brief description of the business..."></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="text" id="phone" name="phone" placeholder="+977-XXXXXXXXXX">
+                </div>
+                <div class="form-group">
+                    <label for="commission_rate">Commission Rate (%)</label>
+                    <input type="number" id="commission_rate" name="commission_rate" value="10" min="0" max="100" step="0.01">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="address">Address</label>
+                <textarea id="address" name="address" rows="2" placeholder="Business address..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="approved">Approved (Ready to use)</option>
+                    <option value="pending">Pending (Needs approval)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-plus"></i>
+            <span>Add Business</span>
+        </button>
+    </div>
+</form>
+
+<style>
+    .info-banner {
+        display: flex;
+        gap: 1rem;
+        padding: 1.25rem 1.5rem;
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1));
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .info-banner i {
+        font-size: 1.5rem;
+        color: var(--primary);
+    }
+
+    .info-banner strong {
+        display: block;
+        margin-bottom: 0.25rem;
+        color: var(--text);
+    }
+
+    .info-banner p {
+        margin: 0;
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .form-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        overflow: hidden;
+    }
+
+    .form-section {
+        padding: 1.5rem;
+    }
+
+    .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--bg);
+        color: var(--text);
+        font-size: 0.875rem;
+    }
+
+    .form-group small {
+        display: block;
+        margin-top: 0.25rem;
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+    }
+
+    .form-actions {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .btn-lg {
+        padding: 1rem 2rem;
+        font-size: 1rem;
+    }
+</style>
+{% endblock %}

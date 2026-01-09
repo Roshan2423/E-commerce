@@ -1,0 +1,340 @@
+{% extends 'demo/admin/base.html' %}
+
+{% block title %}Orders{% endblock %}
+{% block breadcrumb %}All Orders{% endblock %}
+
+{% block extra_css %}
+<style>
+    .order-stats-row {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .order-stat-item {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        border: 1px solid #e2e8f0;
+        display: inline-flex !important;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .order-stat-item .icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+    }
+
+    .order-stat-item .icon.purple { background: #ede9fe; color: #7c3aed; }
+    .order-stat-item .icon.yellow { background: #fef3c7; color: #d97706; }
+    .order-stat-item .icon.blue { background: #dbeafe; color: #2563eb; }
+    .order-stat-item .icon.green { background: #d1fae5; color: #059669; }
+
+    .order-stat-item .value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+
+    .order-stat-item .label {
+        font-size: 0.8125rem;
+        color: #64748b;
+    }
+
+    .filter-bar {
+        display: flex;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
+    }
+
+    .filter-bar .form-control {
+        width: auto;
+    }
+
+    .order-id {
+        color: var(--primary);
+        font-weight: 600;
+    }
+
+    .customer-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .customer-name {
+        font-weight: 500;
+    }
+
+    .customer-email {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .order-amount {
+        font-weight: 700;
+    }
+
+    .status-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .status-dropdown .badge {
+        cursor: not-allowed;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: var(--text-secondary);
+    }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h1 class="page-title">Orders</h1>
+        <p class="page-subtitle">Manage and track customer orders</p>
+    </div>
+    <button class="btn btn-primary" title="Demo only" style="cursor: not-allowed;">
+        <i class="fas fa-plus"></i>
+        Create Order
+    </button>
+</div>
+
+<!-- Order Stats -->
+<div class="order-stats-row">
+    <div class="order-stat-item">
+        <div class="icon purple"><i class="fas fa-shopping-bag"></i></div>
+        <div class="value">{{ orders|length|default:"24" }}</div>
+        <div class="label">Total</div>
+    </div>
+    <div class="order-stat-item">
+        <div class="icon yellow"><i class="fas fa-clock"></i></div>
+        <div class="value">5</div>
+        <div class="label">Pending</div>
+    </div>
+    <div class="order-stat-item">
+        <div class="icon blue"><i class="fas fa-sync"></i></div>
+        <div class="value">8</div>
+        <div class="label">Processing</div>
+    </div>
+    <div class="order-stat-item">
+        <div class="icon green"><i class="fas fa-check-circle"></i></div>
+        <div class="value">11</div>
+        <div class="label">Completed</div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">All Orders</h3>
+        <div class="filter-bar">
+            <input type="text" class="form-control" placeholder="Search orders..." style="width: 200px;" disabled>
+            <select class="form-control" disabled>
+                <option>All Status</option>
+                <option>Pending</option>
+                <option>Processing</option>
+                <option>Shipped</option>
+                <option>Delivered</option>
+                <option>Cancelled</option>
+            </select>
+            <select class="form-control" disabled>
+                <option>All Payment</option>
+                <option>Paid</option>
+                <option>Unpaid</option>
+            </select>
+        </div>
+    </div>
+
+    {% if orders %}
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td><span class="order-id">#{{ order.id }}</span></td>
+                    <td>
+                        <div class="customer-info">
+                            <span class="customer-name">{{ order.customer_name|default:"Guest User" }}</span>
+                            <span class="customer-email">{{ order.email|default:"guest@example.com" }}</span>
+                        </div>
+                    </td>
+                    <td>{{ order.created_at|date:"M d, Y H:i" }}</td>
+                    <td><span class="order-amount">Rs. {{ order.total_amount|floatformat:0 }}</span></td>
+                    <td>
+                        {% if order.payment_status == 'paid' %}
+                        <span class="badge badge-success">Paid</span>
+                        {% else %}
+                        <span class="badge badge-warning">Unpaid</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="status-dropdown">
+                            {% if order.status == 'delivered' %}
+                            <span class="badge badge-success">Delivered</span>
+                            {% elif order.status == 'shipped' %}
+                            <span class="badge badge-info">Shipped</span>
+                            {% elif order.status == 'processing' %}
+                            <span class="badge badge-info">Processing</span>
+                            {% elif order.status == 'pending' %}
+                            <span class="badge badge-warning">Pending</span>
+                            {% elif order.status == 'cancelled' %}
+                            <span class="badge badge-danger">Cancelled</span>
+                            {% else %}
+                            <span class="badge badge-secondary">{{ order.status|title }}</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <button class="btn btn-outline btn-sm" title="View Order (Demo)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <!-- Sample orders when no real orders exist -->
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Payment</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><span class="order-id">#1001</span></td>
+                    <td>
+                        <div class="customer-info">
+                            <span class="customer-name">Rajesh Shrestha</span>
+                            <span class="customer-email">rajesh@example.com</span>
+                        </div>
+                    </td>
+                    <td>Jan 8, 2026 14:30</td>
+                    <td><span class="order-amount">Rs. 4,500</span></td>
+                    <td><span class="badge badge-success">Paid</span></td>
+                    <td><span class="badge badge-success">Delivered</span></td>
+                    <td><button class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></button></td>
+                </tr>
+                <tr>
+                    <td><span class="order-id">#1002</span></td>
+                    <td>
+                        <div class="customer-info">
+                            <span class="customer-name">Sunita Tamang</span>
+                            <span class="customer-email">sunita@example.com</span>
+                        </div>
+                    </td>
+                    <td>Jan 8, 2026 12:15</td>
+                    <td><span class="order-amount">Rs. 2,999</span></td>
+                    <td><span class="badge badge-success">Paid</span></td>
+                    <td><span class="badge badge-info">Processing</span></td>
+                    <td><button class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></button></td>
+                </tr>
+                <tr>
+                    <td><span class="order-id">#1003</span></td>
+                    <td>
+                        <div class="customer-info">
+                            <span class="customer-name">Ram Sharma</span>
+                            <span class="customer-email">ram@example.com</span>
+                        </div>
+                    </td>
+                    <td>Jan 7, 2026 18:45</td>
+                    <td><span class="order-amount">Rs. 8,750</span></td>
+                    <td><span class="badge badge-warning">Unpaid</span></td>
+                    <td><span class="badge badge-warning">Pending</span></td>
+                    <td><button class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></button></td>
+                </tr>
+                <tr>
+                    <td><span class="order-id">#1004</span></td>
+                    <td>
+                        <div class="customer-info">
+                            <span class="customer-name">Sita Gurung</span>
+                            <span class="customer-email">sita@example.com</span>
+                        </div>
+                    </td>
+                    <td>Jan 7, 2026 10:20</td>
+                    <td><span class="order-amount">Rs. 1,200</span></td>
+                    <td><span class="badge badge-success">Paid</span></td>
+                    <td><span class="badge badge-info">Shipped</span></td>
+                    <td><button class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></button></td>
+                </tr>
+                <tr>
+                    <td><span class="order-id">#1005</span></td>
+                    <td>
+                        <div class="customer-info">
+                            <span class="customer-name">Hari Thapa</span>
+                            <span class="customer-email">hari@example.com</span>
+                        </div>
+                    </td>
+                    <td>Jan 6, 2026 16:00</td>
+                    <td><span class="order-amount">Rs. 6,300</span></td>
+                    <td><span class="badge badge-success">Paid</span></td>
+                    <td><span class="badge badge-success">Delivered</span></td>
+                    <td><button class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></button></td>
+                </tr>
+                <tr>
+                    <td><span class="order-id">#1006</span></td>
+                    <td>
+                        <div class="customer-info">
+                            <span class="customer-name">Maya Rai</span>
+                            <span class="customer-email">maya@example.com</span>
+                        </div>
+                    </td>
+                    <td>Jan 6, 2026 09:30</td>
+                    <td><span class="order-amount">Rs. 3,450</span></td>
+                    <td><span class="badge badge-danger">Refunded</span></td>
+                    <td><span class="badge badge-danger">Cancelled</span></td>
+                    <td><button class="btn btn-outline btn-sm"><i class="fas fa-eye"></i></button></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

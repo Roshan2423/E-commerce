@@ -1,0 +1,170 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - E-Commerce Admin{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Dashboard Overview</h1>
+    <p class="page-subtitle">Welcome back! Here's what's happening with your store today.</p>
+</div>
+
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon primary">
+            <i class="fas fa-shopping-cart"></i>
+        </div>
+        <div class="stat-value">{{ total_orders }}</div>
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-change">
+            <i class="fas fa-info-circle"></i>
+            {% if total_orders > 0 %}{{ total_orders }} order{{ total_orders|pluralize }}{% else %}No orders yet{% endif %}
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon success">
+            <i class="fas fa-coins"></i>
+        </div>
+        <div class="stat-value">Rs {{ total_revenue|floatformat:0 }}</div>
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-change">
+            <i class="fas fa-info-circle"></i>
+            {% if total_revenue > 0 %}From completed orders{% else %}No revenue yet{% endif %}
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon warning">
+            <i class="fas fa-box"></i>
+        </div>
+        <div class="stat-value">{{ total_products }}</div>
+        <div class="stat-label">Total Products</div>
+        <div class="stat-change">
+            <i class="fas fa-info-circle"></i>
+            {% if total_products > 0 %}{{ total_products }} product{{ total_products|pluralize }}{% else %}No products yet{% endif %}
+        </div>
+    </div>
+    
+    <div class="stat-card">
+        <div class="stat-icon danger">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-value">{{ total_customers }}</div>
+        <div class="stat-label">Total Customers</div>
+        <div class="stat-change">
+            <i class="fas fa-info-circle"></i>
+            {% if total_customers > 0 %}{{ total_customers }} customer{{ total_customers|pluralize }}{% else %}No customers yet{% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px; margin-bottom: 32px;">
+    <!-- Sales Chart -->
+    <div class="data-table">
+        <div class="table-header">
+            <h3 class="table-title">Sales Overview</h3>
+        </div>
+        <div style="padding: 32px; height: 400px;">
+            <canvas id="salesChart"></canvas>
+        </div>
+    </div>
+    
+    <!-- Order Status Chart -->
+    <div class="data-table">
+        <div class="table-header">
+            <h3 class="table-title">Order Status</h3>
+        </div>
+        <div style="padding: 32px; height: 400px; display: flex; align-items: center; justify-content: center;">
+            <canvas id="ordersChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders and Low Stock -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px;">
+    <!-- Recent Orders -->
+    <div class="data-table">
+        <div class="table-header">
+            <h3 class="table-title">Recent Orders</h3>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders|default_if_none:"" %}
+                    <tr>
+                        <td>
+                            <strong>#{{ order.get_order_number }}</strong>
+                        </td>
+                        <td>{% if order.user %}{{ order.user.get_full_name|default:order.user.email }}{% else %}{{ order.guest_email|default:"Guest" }}{% endif %}</td>
+                        <td>
+                            <span class="badge {% if order.status == 'delivered' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'cancelled' %}danger{% else %}primary{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </td>
+                        <td><strong>Rs {{ order.total_amount|floatformat:2 }}</strong></td>
+                        <td>{{ order.created_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px; color: #64748b;">
+                            <i class="fas fa-shopping-cart fa-2x" style="margin-bottom: 16px; opacity: 0.5;"></i>
+                            <br>
+                            No orders found. Orders will appear here when customers place them.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Low Stock Alert -->
+    <div class="data-table">
+        <div class="table-header">
+            <h3 class="table-title">Inventory Alert</h3>
+        </div>
+        <div style="padding: 24px;">
+            {% for product in low_stock_products|default_if_none:"" %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #f1f5f9;">
+                <div>
+                    <div style="font-weight: 600; color: #1e293b;">{{ product.name|truncatechars:25 }}</div>
+                    <div style="font-size: 12px; color: #64748b;">SKU: {{ product.sku }}</div>
+                </div>
+                <span class="badge danger">{{ product.stock_quantity }} left</span>
+            </div>
+            {% empty %}
+            <div style="text-align: center; padding: 40px;">
+                <i class="fas fa-check-circle fa-2x" style="color: #10b981; margin-bottom: 16px;"></i>
+                <p style="color: #64748b; margin: 0;">All products are well stocked!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Dashboard loaded
+    console.log('Admin dashboard initialized');
+});
+</script>
+{% endblock %}

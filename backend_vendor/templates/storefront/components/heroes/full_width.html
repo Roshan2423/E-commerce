@@ -1,0 +1,171 @@
+{% load static %}
+<!-- Full-Width Hero: Single full-width hero image with overlay -->
+<section class="hero hero-full-width" id="heroSection">
+    <div class="hero-background">
+        {% if storefront.hero_image %}
+        <img src="{{ storefront.hero_image.url }}" alt="{{ storefront.hero_title|default:'Hero Banner' }}" class="hero-bg-image">
+        {% else %}
+        <div class="hero-bg-placeholder"></div>
+        {% endif %}
+        <!-- Color Overlay -->
+        <div class="hero-overlay" style="background-color: {{ storefront.hero_overlay_color|default:'#000000' }}; opacity: {{ storefront.hero_overlay_opacity|default:30|divisibleby:100 }};"></div>
+    </div>
+
+    <div class="hero-content">
+        <div class="container">
+            <div class="hero-text">
+                {% if storefront.hero_title %}
+                <h1 class="hero-title">{{ storefront.hero_title }}</h1>
+                {% else %}
+                <h1 class="hero-title">Welcome to {{ vendor.business_name }}</h1>
+                {% endif %}
+
+                {% if storefront.hero_subtitle %}
+                <p class="hero-subtitle">{{ storefront.hero_subtitle }}</p>
+                {% else %}
+                <p class="hero-subtitle">Discover our amazing collection of products</p>
+                {% endif %}
+
+                {% if storefront.hero_cta_text %}
+                <div class="hero-cta">
+                    <a href="{{ storefront.hero_cta_link|default:'/v/'|add:vendor.slug|add:'/products/' }}" class="btn btn-primary btn-lg">
+                        {{ storefront.hero_cta_text }}
+                    </a>
+                </div>
+                {% else %}
+                <div class="hero-cta">
+                    <a href="/v/{{ vendor.slug }}/products/" class="btn btn-primary btn-lg">Shop Now</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Scroll Indicator -->
+    <div class="hero-scroll-indicator">
+        <span class="scroll-text">Scroll</span>
+        <span class="scroll-line"></span>
+    </div>
+</section>
+
+<style>
+    .hero-full-width {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .hero-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
+
+    .hero-bg-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .hero-bg-placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, {{ storefront.primary_color|default:'#667eea' }} 0%, {{ storefront.secondary_color|default:'#764ba2' }} 100%);
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        color: #ffffff;
+        padding: 2rem;
+    }
+
+    .hero-title {
+        font-size: clamp(2.5rem, 6vw, 5rem);
+        font-weight: 800;
+        margin-bottom: 1rem;
+        line-height: 1.1;
+        text-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    }
+
+    .hero-subtitle {
+        font-size: clamp(1rem, 2vw, 1.5rem);
+        margin-bottom: 2rem;
+        opacity: 0.9;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .hero-cta .btn {
+        padding: 1rem 2.5rem;
+        font-size: 1.1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-radius: 50px;
+        background: {{ storefront.accent_color|default:'#ffffff' }};
+        color: {{ storefront.primary_color|default:'#667eea' }};
+        border: none;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .hero-cta .btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .hero-scroll-indicator {
+        position: absolute;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: #ffffff;
+        opacity: 0.7;
+        animation: bounce 2s infinite;
+    }
+
+    .scroll-text {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        margin-bottom: 0.5rem;
+    }
+
+    .scroll-line {
+        width: 1px;
+        height: 40px;
+        background: linear-gradient(to bottom, #ffffff 0%, transparent 100%);
+    }
+
+    @keyframes bounce {
+        0%, 20%, 50%, 80%, 100% { transform: translateX(-50%) translateY(0); }
+        40% { transform: translateX(-50%) translateY(-10px); }
+        60% { transform: translateX(-50%) translateY(-5px); }
+    }
+
+    @media (max-width: 768px) {
+        .hero-full-width {
+            min-height: 80vh;
+        }
+    }
+</style>

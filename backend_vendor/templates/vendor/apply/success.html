@@ -1,0 +1,369 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Submitted - OVN Store</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f4f4f5;
+            color: #18181b;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e4e4e7;
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #18181b;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            color: white;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-links a {
+            color: #52525b;
+            text-decoration: none;
+            font-size: 0.875rem;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .nav-links a:hover {
+            color: #18181b;
+            background: #f4f4f5;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: calc(100vh - 73px);
+            padding: 2rem;
+        }
+
+        /* Success Card */
+        .success-card {
+            max-width: 550px;
+            width: 100%;
+            background: white;
+            border: 1px solid #e4e4e7;
+            border-radius: 16px;
+            padding: 3rem;
+            text-align: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .success-icon {
+            width: 80px;
+            height: 80px;
+            background: #ecfdf5;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+        }
+
+        .success-icon i {
+            font-size: 2.5rem;
+            color: #10b981;
+        }
+
+        .success-card h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin: 0 0 0.75rem;
+            color: #18181b;
+        }
+
+        .success-message {
+            color: #71717a;
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Application Summary */
+        .application-summary {
+            background: #f9fafb;
+            border: 1px solid #e4e4e7;
+            border-radius: 12px;
+            padding: 1.25rem;
+            margin-bottom: 2rem;
+            text-align: left;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #e4e4e7;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .summary-item:first-child {
+            padding-top: 0;
+        }
+
+        .summary-label {
+            font-size: 0.875rem;
+            color: #71717a;
+        }
+
+        .summary-value {
+            font-weight: 600;
+            color: #18181b;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.75rem;
+            background: #fef3c7;
+            color: #b45309;
+            border-radius: 9999px;
+            font-size: 0.8125rem;
+            font-weight: 500;
+        }
+
+        .status-badge i {
+            font-size: 0.75rem;
+        }
+
+        /* Next Steps */
+        .next-steps {
+            text-align: left;
+            margin-bottom: 2rem;
+            padding: 1.25rem;
+            background: #eff6ff;
+            border-radius: 12px;
+        }
+
+        .next-steps h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1e40af;
+        }
+
+        .next-steps ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .next-steps li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
+            font-size: 0.9375rem;
+            color: #3b82f6;
+        }
+
+        .next-steps li i {
+            color: #3b82f6;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Buttons */
+        .success-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-family: inherit;
+        }
+
+        .btn-outline {
+            background: white;
+            border: 1px solid #d4d4d8;
+            color: #52525b;
+        }
+
+        .btn-outline:hover {
+            background: #f4f4f5;
+            border-color: #a1a1aa;
+        }
+
+        .btn-primary {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #059669;
+        }
+
+        @media (max-width: 480px) {
+            .success-card {
+                padding: 2rem 1.5rem;
+            }
+            .success-actions {
+                flex-direction: column;
+            }
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="/" class="logo">
+                <div class="logo-icon">O</div>
+                OVN Store
+            </a>
+            <div class="nav-links">
+                <a href="/store/">Visit Store</a>
+                {% if user.is_authenticated %}
+                <a href="/account/">My Account</a>
+                <a href="/logout/">Sign Out</a>
+                {% else %}
+                <a href="/login/">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="success-card">
+            <div class="success-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <h1>Application Submitted!</h1>
+            <p class="success-message">
+                Thank you for applying to become a vendor. Your application has been received and is being reviewed by our team.
+            </p>
+
+            {% if application %}
+            <div class="application-summary">
+                <div class="summary-item">
+                    <span class="summary-label">Application ID</span>
+                    <span class="summary-value">#{{ application.pk }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Business Name</span>
+                    <span class="summary-value">{{ application.business_name }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Email</span>
+                    <span class="summary-value">{{ application.business_email }}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Status</span>
+                    <span class="status-badge">
+                        <i class="fas fa-clock"></i>
+                        {{ application.get_status_display }}
+                    </span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Submitted</span>
+                    <span class="summary-value">{{ application.submitted_at|date:"F d, Y" }}</span>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="next-steps">
+                <h3><i class="fas fa-info-circle"></i> What Happens Next?</h3>
+                <ul>
+                    <li><i class="fas fa-envelope"></i> You'll receive an email confirmation shortly</li>
+                    <li><i class="fas fa-search"></i> Our team will review your application (1-3 business days)</li>
+                    <li><i class="fas fa-bell"></i> You'll be notified once a decision is made</li>
+                </ul>
+            </div>
+
+            <div class="success-actions">
+                <a href="/" class="btn btn-outline">
+                    <i class="fas fa-home"></i> Back to Home
+                </a>
+                {% if application %}
+                <a href="{% url 'vendor:application_status' application.pk %}" class="btn btn-primary">
+                    <i class="fas fa-eye"></i> Check Status
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</body>
+</html>

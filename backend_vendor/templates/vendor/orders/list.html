@@ -1,0 +1,296 @@
+{% extends 'vendor/base.html' %}
+{% load static %}
+
+{% block title %}Orders - {{ vendor_business.business_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <h1 class="page-title">Orders</h1>
+        <p class="page-subtitle">Manage customer orders</p>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="filter-bar">
+    <div class="search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search by order ID or customer..." value="{{ request.GET.q }}">
+    </div>
+    <div class="filter-group">
+        <select id="statusFilter" class="filter-select">
+            <option value="">All Status</option>
+            <option value="processing" {% if request.GET.status == 'processing' %}selected{% endif %}>Processing</option>
+            <option value="confirmed" {% if request.GET.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+            <option value="shipped" {% if request.GET.status == 'shipped' %}selected{% endif %}>Shipped</option>
+            <option value="delivered" {% if request.GET.status == 'delivered' %}selected{% endif %}>Delivered</option>
+            <option value="cancelled" {% if request.GET.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+        </select>
+    </div>
+</div>
+
+<!-- Orders Table -->
+<div class="orders-table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Products</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in order_items %}
+            <tr>
+                <td>
+                    <a href="{% url 'vendor:order_detail' item.order.order_id %}" class="order-link">
+                        #{{ item.order.get_order_number }}
+                    </a>
+                </td>
+                <td>
+                    <div class="customer-info">
+                        <span class="customer-name">{{ item.order.user.get_full_name|default:item.order.guest_email }}</span>
+                        <span class="customer-email">{{ item.order.user.email|default:item.order.guest_email }}</span>
+                    </div>
+                </td>
+                <td>
+                    <div class="products-summary">
+                        <span class="product-name">{{ item.product_name }}</span>
+                        <span class="product-qty">x{{ item.quantity }}</span>
+                    </div>
+                </td>
+                <td>
+                    <span class="amount">Rs. {{ item.total_price }}</span>
+                </td>
+                <td>
+                    <span class="status-badge status-{{ item.order.status }}">
+                        {{ item.order.get_status_display }}
+                    </span>
+                </td>
+                <td>{{ item.created_at|date:"M d, Y" }}</td>
+                <td>
+                    <a href="{% url 'vendor:order_detail' item.order.order_id %}" class="btn btn-sm btn-outline">
+                        <i class="fas fa-eye"></i>
+                        View
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7">
+                    <div class="empty-state">
+                        <i class="fas fa-shopping-bag"></i>
+                        <p>No orders yet</p>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if order_items.has_other_pages %}
+<div class="pagination">
+    {% if order_items.has_previous %}
+    <a href="?page={{ order_items.previous_page_number }}" class="page-btn">
+        <i class="fas fa-chevron-left"></i>
+    </a>
+    {% endif %}
+
+    {% for num in order_items.paginator.page_range %}
+        {% if order_items.number == num %}
+        <span class="page-btn active">{{ num }}</span>
+        {% elif num > order_items.number|add:'-3' and num < order_items.number|add:'3' %}
+        <a href="?page={{ num }}" class="page-btn">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if order_items.has_next %}
+    <a href="?page={{ order_items.next_page_number }}" class="page-btn">
+        <i class="fas fa-chevron-right"></i>
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+<style>
+    .filter-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .search-box {
+        position: relative;
+        flex: 1;
+        max-width: 400px;
+    }
+
+    .search-box i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-secondary);
+    }
+
+    .search-box input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--card-bg);
+        color: var(--text);
+    }
+
+    .filter-select {
+        padding: 0.75rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--card-bg);
+        color: var(--text);
+        min-width: 150px;
+    }
+
+    .orders-table-container {
+        background: var(--card-bg);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th {
+        text-align: left;
+        padding: 1rem 1.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .data-table td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .data-table tbody tr:hover {
+        background: var(--bg);
+    }
+
+    .order-link {
+        font-weight: 600;
+        color: var(--primary);
+        text-decoration: none;
+    }
+
+    .customer-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .customer-name {
+        font-weight: 500;
+        color: var(--text);
+    }
+
+    .customer-email {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .products-summary {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .product-name {
+        color: var(--text);
+    }
+
+    .product-qty {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .amount {
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-processing { background: #fef3c7; color: #92400e; }
+    .status-confirmed { background: #dbeafe; color: #1e40af; }
+    .status-packed { background: #e0e7ff; color: #3730a3; }
+    .status-shipped { background: #e0e7ff; color: #3730a3; }
+    .status-delivered { background: #d1fae5; color: #065f46; }
+    .status-cancelled { background: #fee2e2; color: #991b1b; }
+    .status-returned { background: #fce7f3; color: #9d174d; }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .page-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text);
+        text-decoration: none;
+    }
+
+    .page-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+</style>
+
+<script>
+    document.getElementById('statusFilter').addEventListener('change', function() {
+        const status = this.value;
+        const params = new URLSearchParams(window.location.search);
+        if (status) {
+            params.set('status', status);
+        } else {
+            params.delete('status');
+        }
+        window.location.href = '?' + params.toString();
+    });
+</script>
+{% endblock %}

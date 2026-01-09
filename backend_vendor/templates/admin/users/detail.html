@@ -1,0 +1,236 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}{{ user_detail.get_full_name|default:user_detail.email }} - User Details{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">User Details</h1>
+    <p class="page-subtitle">Complete information for {{ user_detail.get_full_name|default:user_detail.email }}</p>
+    <div style="margin-top: 16px;">
+        <a href="/users/" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Users
+        </a>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px;">
+    <!-- Main User Information -->
+    <div class="data-table">
+        <div class="table-header">
+            <h3 class="table-title">User Information</h3>
+        </div>
+        <div style="padding: 24px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div>
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">Email Address</label>
+                    <div style="padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+                        {{ user_detail.email }}
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">Username</label>
+                    <div style="padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+                        {{ user_detail.username }}
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">First Name</label>
+                    <div style="padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+                        {{ user_detail.first_name|default:"Not provided" }}
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">Last Name</label>
+                    <div style="padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+                        {{ user_detail.last_name|default:"Not provided" }}
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">Phone Number</label>
+                    <div style="padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+                        {{ user_detail.phone_number|default:"Not provided" }}
+                    </div>
+                </div>
+                
+                <div>
+                    <label style="font-weight: 600; color: #374151; margin-bottom: 8px; display: block;">Date of Birth</label>
+                    <div style="padding: 12px; background: #f9fafb; border-radius: 6px; border: 1px solid #e5e7eb;">
+                        {{ user_detail.date_of_birth|date:"F d, Y"|default:"Not provided" }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Status Information -->
+    <div>
+        <div class="data-table" style="margin-bottom: 24px;">
+            <div class="table-header">
+                <h3 class="table-title">Account Status</h3>
+            </div>
+            <div style="padding: 24px;">
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; color: #374151;">Active Status:</span>
+                        <span class="badge {% if user_detail.is_active %}success{% else %}danger{% endif %}">
+                            {% if user_detail.is_active %}Active{% else %}Inactive{% endif %}
+                        </span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; color: #374151;">Verification:</span>
+                        <span class="badge {% if user_detail.is_verified %}success{% else %}warning{% endif %}">
+                            {% if user_detail.is_verified %}Verified{% else %}Unverified{% endif %}
+                        </span>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600; color: #374151;">Account Type:</span>
+                        {% if user_detail.is_superuser %}
+                            <span class="badge danger">Superuser</span>
+                        {% elif user_detail.is_staff %}
+                            <span class="badge warning">Staff</span>
+                        {% else %}
+                            <span class="badge info">Customer</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="data-table">
+            <div class="table-header">
+                <h3 class="table-title">Account Timeline</h3>
+            </div>
+            <div style="padding: 24px;">
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <div>
+                        <label style="font-weight: 600; color: #374151; margin-bottom: 4px; display: block;">Date Joined</label>
+                        <div style="color: #6b7280;">{{ user_detail.date_joined|date:"F d, Y H:i" }}</div>
+                    </div>
+                    
+                    <div>
+                        <label style="font-weight: 600; color: #374151; margin-bottom: 4px; display: block;">Last Login</label>
+                        <div style="color: #6b7280;">
+                            {% if user_detail.last_login %}
+                                {{ user_detail.last_login|date:"F d, Y H:i" }}
+                            {% else %}
+                                Never logged in
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label style="font-weight: 600; color: #374151; margin-bottom: 4px; display: block;">Last Updated</label>
+                        <div style="color: #6b7280;">{{ user_detail.updated_at|date:"F d, Y H:i" }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- User Addresses -->
+{% if user_addresses %}
+<div class="data-table" style="margin-top: 32px;">
+    <div class="table-header">
+        <h3 class="table-title">User Addresses ({{ user_addresses.count }})</h3>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Address</th>
+                    <th>City</th>
+                    <th>State</th>
+                    <th>Country</th>
+                    <th>Default</th>
+                    <th>Added</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for address in user_addresses %}
+                <tr>
+                    <td>
+                        <span class="badge info">{{ address.get_address_type_display }}</span>
+                    </td>
+                    <td>{{ address.street_address }}{% if address.apartment %}, {{ address.apartment }}{% endif %}</td>
+                    <td>{{ address.city }}</td>
+                    <td>{{ address.state }}</td>
+                    <td>{{ address.country }}</td>
+                    <td>
+                        {% if address.is_default %}
+                            <span class="badge success">Default</span>
+                        {% else %}
+                            <span class="badge secondary">-</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ address.created_at|date:"M d, Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<!-- User Orders -->
+{% if user_orders %}
+<div class="data-table" style="margin-top: 32px;">
+    <div class="table-header">
+        <h3 class="table-title">Recent Orders ({{ total_orders }} total)</h3>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th>Status</th>
+                    <th>Payment</th>
+                    <th>Total</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in user_orders %}
+                <tr>
+                    <td>
+                        <a href="/orders/{{ order.id }}/" style="font-weight: 600; color: #3b82f6;">
+                            #{{ order.get_order_number }}
+                        </a>
+                    </td>
+                    <td>
+                        <span class="badge {% if order.status == 'delivered' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'cancelled' %}danger{% else %}primary{% endif %}">
+                            {{ order.get_status_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge {% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'pending' %}warning{% else %}danger{% endif %}">
+                            {{ order.get_payment_status_display }}
+                        </span>
+                    </td>
+                    <td><strong>Rs {{ order.total_amount|floatformat:2 }}</strong></td>
+                    <td>{{ order.created_at|date:"M d, Y" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if total_orders > 10 %}
+    <div style="padding: 16px; text-align: center; border-top: 1px solid #e2e8f0;">
+        <a href="/orders/?user={{ user_detail.id }}" class="btn btn-primary">
+            View All {{ total_orders }} Orders
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endblock %}

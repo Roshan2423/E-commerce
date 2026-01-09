@@ -1,0 +1,8 @@
+/* Additional Notification Enhancements */
+/* Main notification styles are in styles.css */
+
+/* Loading Screen Enhancement */
+.loading-screen.hidden {
+    opacity: 0;
+    visibility: hidden;
+}

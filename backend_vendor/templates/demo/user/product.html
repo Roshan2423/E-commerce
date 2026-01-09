@@ -1,0 +1,318 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} - Demo Store</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        /* Demo Banner */
+        .demo-banner {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 0.75rem;
+            text-align: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .demo-banner a {
+            color: white;
+            text-decoration: underline;
+            margin-left: 0.5rem;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo-placeholder {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #94a3b8;
+        }
+
+        .logo-placeholder i {
+            color: #64748b;
+        }
+
+        .logo-text {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .back-link {
+            color: #6366f1;
+            text-decoration: none;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Product Detail */
+        .product-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 1.5rem;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid #e2e8f0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .product-image {
+            background: #f1f5f9;
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .product-image img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .product-image .no-image {
+            color: #cbd5e1;
+            font-size: 4rem;
+        }
+
+        .product-info {
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-category {
+            font-size: 0.75rem;
+            color: #6366f1;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .product-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1rem;
+            line-height: 1.3;
+        }
+
+        .product-price {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+        }
+
+        .product-description {
+            color: #64748b;
+            font-size: 0.9375rem;
+            margin-bottom: 2rem;
+            flex: 1;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: not-allowed;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn-cart {
+            background: white;
+            border: 2px solid #6366f1;
+            color: #6366f1;
+        }
+
+        .btn-buy {
+            background: #6366f1;
+            color: white;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1e293b;
+            color: #64748b;
+            padding: 2rem;
+            margin-top: 4rem;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .product-card {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Banner -->
+    <div class="demo-banner">
+        <i class="fas fa-eye"></i> Demo preview - This is how your store will look!
+        <a href="/">Start Free Trial</a>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="{% url 'demo:user_home' %}" class="logo">
+                <div class="logo-placeholder">
+                    <i class="fas fa-store"></i>
+                </div>
+                <span class="logo-text">Your Logo Here</span>
+            </a>
+
+            <div class="nav-right">
+                <a href="{% url 'demo:user_home' %}" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Products
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Product Detail -->
+    <div class="product-container">
+        <div class="product-card">
+            <div class="product-image">
+                {% if product.get_main_image %}
+                <img src="{{ product.get_main_image }}" alt="{{ product.name }}">
+                {% else %}
+                <i class="fas fa-image no-image"></i>
+                {% endif %}
+            </div>
+
+            <div class="product-info">
+                {% if product.category %}
+                <div class="product-category">{{ product.category.name }}</div>
+                {% endif %}
+
+                <h1 class="product-title">{{ product.name }}</h1>
+
+                <div class="product-price">Rs. {{ product.price }}</div>
+
+                <p class="product-description">
+                    {{ product.description|default:"No description available for this product."|truncatewords:50 }}
+                </p>
+
+                <div class="action-buttons">
+                    <button class="btn btn-cart" title="Demo only">
+                        <i class="fas fa-shopping-cart"></i>
+                        Add to Cart
+                    </button>
+                    <button class="btn btn-buy" title="Demo only">
+                        <i class="fas fa-bolt"></i>
+                        Buy Now
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        &copy; 2024 Your Store Name. All rights reserved. | Demo Preview
+    </footer>
+
+    <!-- Demo mode - auth disabled -->
+    <script>
+        window.IS_DEMO_MODE = true;
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('a, button, span');
+            if (target) {
+                const text = target.textContent.toLowerCase();
+                const href = target.getAttribute('href') || '';
+                if (text.includes('login') || text.includes('sign in') || text.includes('register') || text.includes('sign up') ||
+                    href.includes('/login') || href.includes('/register') || href.includes('/accounts/google')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alert('Authentication is disabled in demo mode. This is just a preview!');
+                    return false;
+                }
+            }
+        }, true);
+    </script>
+</body>
+</html>

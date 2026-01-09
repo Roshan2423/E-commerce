@@ -1,0 +1,335 @@
+{% extends 'vendor/professional/base.html' %}
+
+{% block title %}Analytics{% endblock %}
+
+{% block breadcrumb %}Analytics{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-placeholder {
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        height: 250px;
+        border-radius: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+    }
+    .chart-placeholder i { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
+    .chart-placeholder span { font-size: 13px; }
+    .metric-change {
+        font-size: 12px;
+        margin-top: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 4px;
+    }
+    .metric-change.up { color: var(--success); }
+    .metric-change.down { color: var(--danger); }
+    .category-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .category-item:last-child { border-bottom: none; }
+    .category-color { width: 12px; height: 12px; border-radius: 3px; }
+    .category-name { flex: 1; font-size: 13px; color: var(--text-primary); }
+    .category-value { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+    .top-product-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+    }
+    .top-product-item:last-child { border-bottom: none; }
+    .rank {
+        width: 28px;
+        height: 28px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+    }
+    .rank.gold { background: #fef3c7; color: #d97706; }
+    .rank.silver { background: #f1f5f9; color: var(--text-secondary); }
+    .rank.bronze { background: #fed7aa; color: #c2410c; }
+    .rank.default { background: #f1f5f9; color: var(--text-secondary); }
+    .page-actions {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+    .select-control {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: white;
+        cursor: pointer;
+    }
+    .view-all {
+        font-size: 0.8125rem;
+        color: var(--primary);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+    .view-all:hover {
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Analytics</h1>
+        <p class="page-subtitle">Track your store performance</p>
+    </div>
+    <div class="page-actions">
+        <select class="select-control" style="width: 140px;" id="dateRangeSelect">
+            <option value="7">Last 7 Days</option>
+            <option value="30">Last 30 Days</option>
+            <option value="90">Last 3 Months</option>
+        </select>
+        <button class="btn btn-outline" id="exportBtn">
+            <i class="fas fa-download"></i> Export
+        </button>
+    </div>
+</div>
+
+<!-- Key Metrics -->
+<div class="stats-grid">
+    <div class="stat-card" style="text-align: center;">
+        <div class="stat-icon primary" style="margin: 0 auto 1rem;">
+            <i class="fas fa-dollar-sign"></i>
+        </div>
+        <div class="stat-content" style="text-align: center;">
+            <div class="stat-value">Rs. {{ total_revenue|floatformat:0|default:"0" }}</div>
+            <div class="stat-label">Total Revenue</div>
+            {% if revenue_change %}
+            <div class="metric-change {% if revenue_change >= 0 %}up{% else %}down{% endif %}">
+                <i class="fas fa-arrow-{% if revenue_change >= 0 %}up{% else %}down{% endif %}"></i>
+                {{ revenue_change|floatformat:1 }}% vs last period
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="stat-card" style="text-align: center;">
+        <div class="stat-icon success" style="margin: 0 auto 1rem;">
+            <i class="fas fa-shopping-bag"></i>
+        </div>
+        <div class="stat-content" style="text-align: center;">
+            <div class="stat-value">{{ total_orders|default:"0" }}</div>
+            <div class="stat-label">Total Orders</div>
+            {% if orders_change %}
+            <div class="metric-change {% if orders_change >= 0 %}up{% else %}down{% endif %}">
+                <i class="fas fa-arrow-{% if orders_change >= 0 %}up{% else %}down{% endif %}"></i>
+                {{ orders_change|floatformat:1 }}% vs last period
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="stat-card" style="text-align: center;">
+        <div class="stat-icon warning" style="margin: 0 auto 1rem;">
+            <i class="fas fa-receipt"></i>
+        </div>
+        <div class="stat-content" style="text-align: center;">
+            <div class="stat-value">Rs. {{ avg_order_value|floatformat:0|default:"0" }}</div>
+            <div class="stat-label">Avg. Order Value</div>
+            {% if aov_change %}
+            <div class="metric-change {% if aov_change >= 0 %}up{% else %}down{% endif %}">
+                <i class="fas fa-arrow-{% if aov_change >= 0 %}up{% else %}down{% endif %}"></i>
+                {{ aov_change|floatformat:1 }}% vs last period
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="stat-card" style="text-align: center;">
+        <div class="stat-icon info" style="margin: 0 auto 1rem;">
+            <i class="fas fa-percentage"></i>
+        </div>
+        <div class="stat-content" style="text-align: center;">
+            <div class="stat-value">{{ conversion_rate|floatformat:1|default:"0.0" }}%</div>
+            <div class="stat-label">Conversion Rate</div>
+            {% if conversion_change %}
+            <div class="metric-change {% if conversion_change >= 0 %}up{% else %}down{% endif %}">
+                <i class="fas fa-arrow-{% if conversion_change >= 0 %}up{% else %}down{% endif %}"></i>
+                {{ conversion_change|floatformat:1 }}% vs last period
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="content-grid" style="margin-bottom: 1.5rem;">
+    <!-- Sales Chart -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-chart-line"></i> Sales Overview</h3>
+            <select class="select-control" style="width: 120px;" id="chartTypeSelect">
+                <option value="revenue">Revenue</option>
+                <option value="orders">Orders</option>
+            </select>
+        </div>
+        <div class="card-body">
+            <div class="chart-placeholder">
+                <i class="fas fa-chart-line"></i>
+                <span>Sales trend visualization</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Distribution -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-chart-pie"></i> Sales by Category</h3>
+        </div>
+        <div class="card-body">
+            <div class="chart-placeholder" style="height: 150px;">
+                <i class="fas fa-chart-pie"></i>
+                <span>Category distribution</span>
+            </div>
+            <div style="margin-top: 16px;">
+                {% for category in categories %}
+                <div class="category-item">
+                    <div class="category-color" style="background: {% cycle '#7c3aed' '#ec4899' '#3b82f6' '#10b981' '#f59e0b' %};"></div>
+                    <span class="category-name">{{ category.name }}</span>
+                    <span class="category-value">{{ category.product_count }} products</span>
+                </div>
+                {% empty %}
+                <div class="category-item">
+                    <div class="category-color" style="background: #7c3aed;"></div>
+                    <span class="category-name">No categories yet</span>
+                    <span class="category-value">0 products</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="content-grid">
+    <!-- Top Products -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-trophy"></i> Top Selling Products</h3>
+            <a href="{% url 'vendor:products' %}" class="view-all">View All <i class="fas fa-arrow-right"></i></a>
+        </div>
+        <div class="card-body">
+            {% for product in top_products|slice:":5" %}
+            <div class="top-product-item">
+                <div class="rank {% if forloop.counter == 1 %}gold{% elif forloop.counter == 2 %}silver{% elif forloop.counter == 3 %}bronze{% else %}default{% endif %}">{{ forloop.counter }}</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 500; font-size: 13px;">{{ product.name|truncatewords:5 }}</div>
+                    <div style="color: var(--text-secondary); font-size: 12px;">{{ product.category.name|default:"General" }}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-weight: 600; font-size: 13px;">Rs. {{ product.price|floatformat:0 }}</div>
+                    <div style="color: var(--text-secondary); font-size: 12px;">{{ product.order_count|default:0 }} sold</div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state" style="padding: 2rem; text-align: center;">
+                <i class="fas fa-inbox" style="font-size: 32px; color: var(--text-secondary); margin-bottom: 8px;"></i>
+                <p style="color: var(--text-secondary); margin: 0;">No products sold yet</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Traffic Sources -->
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title"><i class="fas fa-globe"></i> Traffic Sources</h3>
+        </div>
+        <div class="card-body">
+            <div class="chart-placeholder" style="height: 150px;">
+                <i class="fas fa-chart-bar"></i>
+                <span>Traffic distribution</span>
+            </div>
+            <div style="margin-top: 16px;">
+                {% for source in traffic_sources %}
+                <div class="category-item">
+                    <div class="category-color" style="background: {{ source.color }};"></div>
+                    <span class="category-name">{{ source.name }}</span>
+                    <span class="category-value">{{ source.percentage }}%</span>
+                </div>
+                {% empty %}
+                <div class="category-item">
+                    <div class="category-color" style="background: #3b82f6;"></div>
+                    <span class="category-name">Direct</span>
+                    <span class="category-value">--</span>
+                </div>
+                <div class="category-item">
+                    <div class="category-color" style="background: #10b981;"></div>
+                    <span class="category-name">Organic Search</span>
+                    <span class="category-value">--</span>
+                </div>
+                <div class="category-item">
+                    <div class="category-color" style="background: #ec4899;"></div>
+                    <span class="category-name">Social Media</span>
+                    <span class="category-value">--</span>
+                </div>
+                <div class="category-item">
+                    <div class="category-color" style="background: #f59e0b;"></div>
+                    <span class="category-name">Referral</span>
+                    <span class="category-value">--</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Date range selector
+    const dateRangeSelect = document.getElementById('dateRangeSelect');
+    if (dateRangeSelect) {
+        dateRangeSelect.addEventListener('change', function() {
+            const days = this.value;
+            const url = new URL(window.location.href);
+            url.searchParams.set('days', days);
+            window.location.href = url.toString();
+        });
+
+        // Set current value from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentDays = urlParams.get('days');
+        if (currentDays) {
+            dateRangeSelect.value = currentDays;
+        }
+    }
+
+    // Export button
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', function() {
+            const url = new URL(window.location.href);
+            url.searchParams.set('export', 'csv');
+            window.location.href = url.toString();
+        });
+    }
+
+    // Chart type selector
+    const chartTypeSelect = document.getElementById('chartTypeSelect');
+    if (chartTypeSelect) {
+        chartTypeSelect.addEventListener('change', function() {
+            // Future: Implement chart switching logic
+            console.log('Chart type changed to:', this.value);
+        });
+    }
+});
+</script>
+{% endblock %}
+{% endblock %}

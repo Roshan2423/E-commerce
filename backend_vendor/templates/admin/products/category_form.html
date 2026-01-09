@@ -1,0 +1,95 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}{% if object %}Edit Category{% else %}Add Category{% endif %} - E-Commerce Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">
+        {% if object %}
+            <i class="fas fa-edit"></i>
+            Edit Category
+        {% else %}
+            <i class="fas fa-plus"></i>
+            Add New Category
+        {% endif %}
+    </h1>
+    <p class="page-subtitle">Organize your products with categories</p>
+</div>
+
+<div class="data-table" style="max-width: 800px; margin: 0 auto;">
+    <div class="table-header">
+        <h3 class="table-title">Category Information</h3>
+    </div>
+    <div style="padding: 32px;">
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <div style="max-width: 500px; margin: 0 auto;">
+                <div class="form-group">
+                    <label class="form-label">Category Name *</label>
+                    <input type="text" class="form-control" name="name" 
+                           value="{{ form.name.value|default:'' }}" 
+                           placeholder="Enter category name" required>
+                    <small style="color: #64748b; font-size: 11px; margin-top: 4px; display: block;">
+                        <i class="fas fa-info-circle"></i> 
+                        This will be visible to customers
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; padding: 16px; border: 2px solid #e5e7eb; border-radius: 8px; transition: all 0.2s;">
+                        <input type="checkbox" name="is_active" 
+                               {% if form.is_active.value %}checked{% endif %}
+                               style="transform: scale(1.2);">
+                        <div>
+                            <span class="form-label" style="margin: 0; font-weight: 600;">Category Active</span>
+                            <div style="font-size: 12px; color: #64748b;">Visible in store and product forms</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+
+            <!-- Form Actions -->
+            <div style="display: flex; gap: 16px; justify-content: flex-end; margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+                <a href="{% url 'products:categories' %}" class="btn btn-outline">
+                    <i class="fas fa-arrow-left"></i>
+                    Back to Categories
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    {% if object %}Update Category{% else %}Create Category{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-focus on name field
+    const nameInput = document.querySelector('input[name="name"]');
+    if (nameInput && !nameInput.value) {
+        nameInput.focus();
+    }
+
+    // Form validation
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            const name = document.querySelector('input[name="name"]').value.trim();
+            if (!name) {
+                e.preventDefault();
+                alert('Please enter a category name.');
+                nameInput.focus();
+                return false;
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

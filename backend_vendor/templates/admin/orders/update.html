@@ -1,0 +1,588 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Edit Order #{{ order.get_order_number }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Edit Order #{{ order.get_order_number }}</h1>
+    <div style="margin-top: 12px;">
+        <a href="{% url 'orders:detail' order.order_id %}" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Order
+        </a>
+    </div>
+</div>
+
+<form method="POST" id="editOrderForm">
+    {% csrf_token %}
+
+    <div style="display: grid; grid-template-columns: 1fr 380px; gap: 24px; height: calc(100vh - 180px);">
+        <!-- Left Side - Form Fields -->
+        <div style="overflow-y: auto; padding-right: 10px;">
+            <!-- Customer Details -->
+            <div class="data-table" style="margin-bottom: 20px;">
+                <div class="table-header">
+                    <h3 class="table-title"><i class="fas fa-user"></i> Customer Details</h3>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label class="form-label">Customer Name *</label>
+                            <input type="text" name="customer_name" class="form-control" required placeholder="Enter full name" value="{{ customer_name }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Contact Number *</label>
+                            <input type="tel" name="contact_number" class="form-control" required placeholder="10 digit number"
+                                   pattern="[0-9]{10}" maxlength="10" value="{{ contact_number }}" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 10)">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label class="form-label">District / Location *</label>
+                            <select name="location" id="locationSelect" class="form-control" required>
+                                <option value="">-- Select Location --</option>
+                                {% for loc in delivery_locations %}
+                                <option value="{{ loc.district }} - {{ loc.location }}" data-rate="{{ loc.rate }}" {% if current_location == loc.district|add:" - "|add:loc.location %}selected{% endif %}>
+                                    {{ loc.district }} - {{ loc.location }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Landmark / Address Detail</label>
+                            <input type="text" name="landmark" class="form-control" placeholder="Street, Near..." value="{{ landmark }}">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products -->
+            <div class="data-table" style="margin-bottom: 20px;">
+                <div class="table-header">
+                    <h3 class="table-title"><i class="fas fa-box"></i> Products</h3>
+                </div>
+                <div style="padding: 20px;">
+                    <div id="addProductBtn" class="product-search-trigger">
+                        <i class="fas fa-search"></i>
+                        <span>Search products by name...</span>
+                    </div>
+                    <div id="orderItems" style="margin-top: 16px;">
+                        <!-- Pre-populated products will be added via JS -->
+                    </div>
+                    <p id="noProductsMsg" style="color: #64748b; font-size: 13px; text-align: center; padding: 20px 0; margin: 0; display: none;">
+                        No products added yet
+                    </p>
+                </div>
+            </div>
+
+            <!-- Order Status & Payment -->
+            <div class="data-table">
+                <div class="table-header">
+                    <h3 class="table-title"><i class="fas fa-credit-card"></i> Status & Payment</h3>
+                </div>
+                <div style="padding: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label class="form-label">Order Status *</label>
+                            <select name="status" class="form-control" required>
+                                <option value="processing" {% if order.status == 'processing' %}selected{% endif %}>Processing</option>
+                                <option value="confirmed" {% if order.status == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                                <option value="packed" {% if order.status == 'packed' %}selected{% endif %}>Packed</option>
+                                <option value="shipped" {% if order.status == 'shipped' %}selected{% endif %}>Shipped</option>
+                                <option value="delivered" {% if order.status == 'delivered' %}selected{% endif %}>Delivered</option>
+                                <option value="returned" {% if order.status == 'returned' %}selected{% endif %}>Returned</option>
+                                <option value="cancelled" {% if order.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Payment Status *</label>
+                            <select name="payment_status" class="form-control" required>
+                                <option value="paid" {% if order.payment_status == 'paid' %}selected{% endif %}>Paid</option>
+                                <option value="pending" {% if order.payment_status == 'pending' %}selected{% endif %}>Unpaid</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Payment Method *</label>
+                        <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;">
+                            <label class="payment-option">
+                                <input type="radio" name="payment_method" value="cod" {% if order.payment_method == 'cod' %}checked{% endif %}>
+                                <span><i class="fas fa-money-bill-wave"></i> COD</span>
+                            </label>
+                            <label class="payment-option">
+                                <input type="radio" name="payment_method" value="esewa" {% if order.payment_method == 'esewa' %}checked{% endif %}>
+                                <span><i class="fas fa-mobile-alt"></i> eSewa</span>
+                            </label>
+                            <label class="payment-option">
+                                <input type="radio" name="payment_method" value="khalti" {% if order.payment_method == 'khalti' %}checked{% endif %}>
+                                <span><i class="fas fa-wallet"></i> Khalti</span>
+                            </label>
+                            <label class="payment-option">
+                                <input type="radio" name="payment_method" value="imepay" {% if order.payment_method == 'imepay' %}checked{% endif %}>
+                                <span><i class="fas fa-mobile"></i> IME Pay</span>
+                            </label>
+                            <label class="payment-option">
+                                <input type="radio" name="payment_method" value="bank" {% if order.payment_method == 'bank' %}checked{% endif %}>
+                                <span><i class="fas fa-university"></i> Bank</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-top: 16px;">
+                        <label class="form-label">Order Notes</label>
+                        <textarea name="notes" class="form-control" rows="2" placeholder="Any special instructions...">{{ order.notes }}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Order Summary -->
+        <div style="position: sticky; top: 0; align-self: start;">
+            <div class="data-table">
+                <div class="table-header">
+                    <h3 class="table-title"><i class="fas fa-receipt"></i> Order Summary</h3>
+                </div>
+                <div style="padding: 20px;">
+                    <!-- Totals -->
+                    <div style="font-size: 14px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                            <span style="color: #64748b;">Subtotal:</span>
+                            <span id="subtotalDisplay">Rs 0</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px; align-items: center;">
+                            <span style="color: #64748b;">Delivery:</span>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="color: #64748b;">Rs</span>
+                                <input type="number" name="delivery_charge" id="deliveryCharge" class="form-control" style="width: 80px; padding: 6px 10px; text-align: center;" value="{{ order.shipping_cost|floatformat:0 }}" min="0">
+                            </div>
+                        </div>
+                        <hr style="border: none; border-top: 2px solid #e2e8f0; margin: 12px 0;">
+                        <div style="display: flex; justify-content: space-between; font-size: 20px;">
+                            <strong>Total:</strong>
+                            <strong style="color: #10b981;" id="totalDisplay">Rs 0</strong>
+                        </div>
+                    </div>
+
+                    <!-- Location Info -->
+                    <div id="locationInfo" style="margin-top: 16px; padding: 12px; background: #f0fdf4; border-radius: 8px; {% if not current_location %}display: none;{% endif %}">
+                        <div style="font-size: 12px; color: #166534;">
+                            <i class="fas fa-truck"></i> Delivery to: <strong id="selectedLocation">{{ current_location }}</strong>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 14px; margin-top: 20px; font-size: 16px;">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+
+                    <a href="{% url 'orders:detail' order.order_id %}" class="btn btn-secondary" style="width: 100%; justify-content: center; padding: 12px; margin-top: 10px;">
+                        Cancel
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<!-- Product Search Modal -->
+<div id="productSearchModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; width: 90%; max-width: 700px; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column;">
+        <div style="padding: 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; color: #1f2937;"><i class="fas fa-search"></i> Search Products</h3>
+            <button type="button" id="closeProductModal" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b;">&times;</button>
+        </div>
+        <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0;">
+            <input type="text" id="productSearchInput" placeholder="Type product name to search..."
+                   style="width: 100%; padding: 12px 16px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 15px;">
+        </div>
+        <div id="productSearchResults" style="padding: 10px; overflow-y: auto; flex: 1; max-height: 400px;">
+            {% for product in products %}
+            <div class="product-search-item" data-id="{{ product.id }}" data-name="{{ product.name }}" data-price="{{ product.price }}" data-image="{{ product.get_main_image|default:'' }}">
+                <div style="width: 60px; height: 60px; border-radius: 8px; overflow: hidden; flex-shrink: 0; background: #f1f5f9;">
+                    {% if product.get_main_image %}
+                    <img src="{{ product.get_main_image }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                    {% else %}
+                    <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8;">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                    <div style="font-weight: 600; color: #1f2937; margin-bottom: 4px;">{{ product.name }}</div>
+                    <div style="font-size: 13px; color: #64748b;">SKU: {{ product.sku|default:"-" }}</div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-weight: 700; color: #10b981; font-size: 16px;">Rs {{ product.price|floatformat:0 }}</div>
+                    <div style="font-size: 12px; color: #64748b;">Stock: {{ product.stock_quantity|default:"N/A" }}</div>
+                </div>
+            </div>
+            {% empty %}
+            <div style="text-align: center; padding: 40px; color: #64748b;">No products available</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Existing order items data
+    const existingItems = [
+        {% for item in order_items %}
+        {
+            id: "{{ item.product.id }}",
+            name: "{{ item.product_name|escapejs }}",
+            price: {{ item.unit_price|floatformat:0 }},
+            quantity: {{ item.quantity }},
+            image: "{% if item.product.get_main_image %}{{ item.product.get_main_image }}{% endif %}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    // Load existing items
+    existingItems.forEach(function(item) {
+        addProductToOrder(item.id, item.name, item.price, item.image, item.quantity);
+    });
+
+    if (existingItems.length === 0) {
+        $('#noProductsMsg').show();
+    }
+
+    // Location select - auto fill delivery charge
+    $('#locationSelect').change(function() {
+        const rate = $(this).find(':selected').data('rate') || 0;
+        const locationText = $(this).find(':selected').text().trim();
+
+        $('#deliveryCharge').val(rate);
+
+        if (locationText && locationText !== '-- Select Location --') {
+            $('#locationInfo').show();
+            $('#selectedLocation').text(locationText);
+        } else {
+            $('#locationInfo').hide();
+        }
+
+        updateSummary();
+    });
+
+    // Delivery charge manual input
+    $('#deliveryCharge').on('input change', function() {
+        updateSummary();
+    });
+
+    // Open product search modal
+    $('#addProductBtn').click(function() {
+        $('#productSearchInput').val('');
+        $('.product-search-item').show();
+        $('#productSearchModal').css('display', 'flex');
+        $('#productSearchInput').focus();
+    });
+
+    // Close modal
+    $('#closeProductModal').click(function() {
+        $('#productSearchModal').hide();
+    });
+
+    // Close on outside click
+    $('#productSearchModal').click(function(e) {
+        if (e.target === this) {
+            $(this).hide();
+        }
+    });
+
+    // Search products
+    $('#productSearchInput').on('input', function() {
+        const search = $(this).val().toLowerCase();
+        $('.product-search-item').each(function() {
+            const name = $(this).data('name').toLowerCase();
+            if (name.includes(search)) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    });
+
+    // Select product
+    $('.product-search-item').click(function() {
+        const id = $(this).data('id');
+        const name = $(this).data('name');
+        const price = $(this).data('price');
+        const image = $(this).data('image');
+
+        addProductToOrder(id, name, price, image, 1);
+        $('#productSearchModal').hide();
+    });
+
+    function addProductToOrder(id, name, price, image, quantity) {
+        $('#noProductsMsg').hide();
+
+        const priceInt = Math.round(price);
+        const qty = quantity || 1;
+
+        const imageHtml = (image && image !== '') ?
+            `<img src="${image}" alt="${name}" style="width: 100%; height: 100%; object-fit: cover;">` :
+            `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #94a3b8; background: #f1f5f9;"><i class="fas fa-image"></i></div>`;
+
+        const itemHtml = `
+            <div class="order-item-row" data-product-id="${id}" data-original-price="${priceInt}">
+                <div class="product-info">
+                    <div class="product-image">
+                        ${imageHtml}
+                    </div>
+                    <div class="product-details">
+                        <div class="product-name">${name}</div>
+                        <div class="product-original-price">Rs ${priceInt}</div>
+                    </div>
+                </div>
+                <div class="product-controls">
+                    <div class="control-group">
+                        <label>Qty</label>
+                        <input type="number" name="quantities" class="form-control quantity-input" value="${qty}" min="1">
+                    </div>
+                    <div class="control-group">
+                        <label>Price</label>
+                        <input type="number" name="prices" class="form-control price-input" value="${priceInt}" min="0" step="1">
+                    </div>
+                    <div class="control-group">
+                        <label>Total</label>
+                        <div class="line-total">Rs ${priceInt * qty}</div>
+                    </div>
+                    <button type="button" class="btn btn-danger btn-sm remove-item">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <input type="hidden" name="products" value="${id}">
+            </div>
+        `;
+
+        $('#orderItems').append(itemHtml);
+        bindEvents();
+        updateSummary();
+    }
+
+    function bindEvents() {
+        $('.remove-item').off('click').on('click', function() {
+            $(this).closest('.order-item-row').remove();
+            updateSummary();
+            if ($('.order-item-row').length === 0) {
+                $('#noProductsMsg').show();
+            }
+        });
+
+        $('.quantity-input, .price-input').off('change input').on('change input', function() {
+            const row = $(this).closest('.order-item-row');
+            const price = Math.round(parseFloat(row.find('.price-input').val()) || 0);
+            const quantity = parseInt(row.find('.quantity-input').val()) || 1;
+            row.find('.line-total').text('Rs ' + (price * quantity));
+            updateSummary();
+        });
+    }
+
+    function updateSummary() {
+        let subtotal = 0;
+
+        $('.order-item-row').each(function() {
+            const price = Math.round(parseFloat($(this).find('.price-input').val()) || 0);
+            const quantity = parseInt($(this).find('.quantity-input').val()) || 0;
+
+            if (price > 0 && quantity > 0) {
+                subtotal += price * quantity;
+            }
+        });
+
+        const delivery = Math.round(parseFloat($('#deliveryCharge').val()) || 0);
+        const total = subtotal + delivery;
+
+        $('#subtotalDisplay').text('Rs ' + subtotal);
+        $('#totalDisplay').text('Rs ' + total);
+    }
+
+    bindEvents();
+    updateSummary();
+});
+</script>
+
+<style>
+.form-label {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+    display: block;
+    font-size: 13px;
+}
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+}
+.form-control:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+.form-group {
+    margin-bottom: 12px;
+}
+.btn-sm {
+    padding: 8px 14px;
+    font-size: 13px;
+}
+.payment-option {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 8px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+.payment-option:hover {
+    border-color: #6366f1;
+    background: #f5f3ff;
+}
+.payment-option input {
+    display: none;
+}
+.payment-option input:checked + span {
+    color: #6366f1;
+}
+.payment-option input:checked ~ span {
+    color: #6366f1;
+}
+.payment-option:has(input:checked) {
+    border-color: #6366f1;
+    background: #f5f3ff;
+}
+.payment-option span {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+}
+.payment-option span i {
+    font-size: 18px;
+}
+
+/* Product Search Trigger */
+.product-search-trigger {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border: 2px dashed #d1d5db;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #9ca3af;
+    font-size: 14px;
+}
+.product-search-trigger:hover {
+    border-color: #6366f1;
+    background: #fafafa;
+    color: #6366f1;
+}
+.product-search-trigger i {
+    font-size: 16px;
+}
+
+/* Product Search Modal Styles */
+.product-search-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 2px solid transparent;
+    margin-bottom: 8px;
+}
+.product-search-item:hover {
+    background: #f0fdf4;
+    border-color: #10b981;
+}
+
+/* Order Item Row Styles */
+.order-item-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    padding: 14px;
+    background: #f8fafc;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    border: 1px solid #e2e8f0;
+    align-items: center;
+}
+.order-item-row .product-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+.order-item-row .product-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #e2e8f0;
+}
+.order-item-row .product-details {
+    flex: 1;
+    min-width: 0;
+}
+.order-item-row .product-name {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 13px;
+    margin-bottom: 2px;
+    line-height: 1.3;
+}
+.order-item-row .product-original-price {
+    font-size: 11px;
+    color: #94a3b8;
+}
+.order-item-row .product-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.order-item-row .control-group {
+    text-align: center;
+}
+.order-item-row .control-group label {
+    display: block;
+    font-size: 10px;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+}
+.order-item-row .control-group .form-control {
+    width: 70px;
+    padding: 8px;
+    text-align: center;
+    font-size: 14px;
+    font-weight: 600;
+}
+.order-item-row .control-group .line-total {
+    font-weight: 700;
+    color: #10b981;
+    font-size: 14px;
+    min-width: 80px;
+}
+.order-item-row .remove-item {
+    padding: 8px 10px;
+    margin-left: 4px;
+}
+</style>
+{% endblock %}

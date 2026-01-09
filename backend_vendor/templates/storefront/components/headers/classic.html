@@ -1,0 +1,90 @@
+{% load static %}
+<!-- Classic Header: Centered logo with horizontal navigation -->
+<header class="header header-classic" id="siteHeader">
+    <div class="header-top">
+        <div class="container">
+            <div class="header-top-content">
+                <div class="header-contact">
+                    {% if vendor.phone %}
+                    <a href="tel:{{ vendor.phone }}"><i class="fas fa-phone"></i> {{ vendor.phone }}</a>
+                    {% endif %}
+                    {% if vendor.email %}
+                    <a href="mailto:{{ vendor.email }}"><i class="fas fa-envelope"></i> {{ vendor.email }}</a>
+                    {% endif %}
+                </div>
+                <div class="header-social">
+                    {% if storefront.facebook_url %}
+                    <a href="{{ storefront.facebook_url }}" target="_blank" rel="noopener"><i class="fab fa-facebook-f"></i></a>
+                    {% endif %}
+                    {% if storefront.instagram_url %}
+                    <a href="{{ storefront.instagram_url }}" target="_blank" rel="noopener"><i class="fab fa-instagram"></i></a>
+                    {% endif %}
+                    {% if storefront.twitter_url %}
+                    <a href="{{ storefront.twitter_url }}" target="_blank" rel="noopener"><i class="fab fa-twitter"></i></a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="header-main">
+        <div class="container">
+            <div class="header-main-content">
+                <!-- Mobile Menu Toggle -->
+                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
+
+                <!-- Logo (Centered) -->
+                <div class="header-logo">
+                    <a href="/v/{{ vendor.slug }}/">
+                        {% if vendor.logo %}
+                        <img src="{{ vendor.logo.url }}" alt="{{ vendor.business_name }}" class="logo-img">
+                        {% else %}
+                        <span class="logo-text">{{ vendor.business_name }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+
+                <!-- Header Actions -->
+                <div class="header-actions">
+                    <button class="header-action-btn search-toggle" aria-label="Search">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <a href="/v/{{ vendor.slug }}/cart/" class="header-action-btn cart-btn" aria-label="Cart">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span class="cart-count" id="cartCount">0</span>
+                    </a>
+                    <a href="/login/" class="header-action-btn account-btn" aria-label="Account">
+                        <i class="fas fa-user"></i>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Navigation (Centered below logo) -->
+            <nav class="header-nav" id="mainNav">
+                <ul class="nav-list">
+                    <li class="nav-item"><a href="/v/{{ vendor.slug }}/" class="nav-link">Home</a></li>
+                    <li class="nav-item"><a href="/v/{{ vendor.slug }}/products/" class="nav-link">Shop</a></li>
+                    {% for category in categories|slice:":5" %}
+                    <li class="nav-item"><a href="/v/{{ vendor.slug }}/products/?category={{ category.slug }}" class="nav-link">{{ category.name }}</a></li>
+                    {% endfor %}
+                    <li class="nav-item"><a href="/v/{{ vendor.slug }}/contact/" class="nav-link">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Search Overlay -->
+    <div class="search-overlay" id="searchOverlay">
+        <div class="container">
+            <form action="/v/{{ vendor.slug }}/products/" method="GET" class="search-form">
+                <input type="search" name="q" placeholder="Search products..." class="search-input" id="searchInput">
+                <button type="submit" class="search-submit"><i class="fas fa-search"></i></button>
+                <button type="button" class="search-close" id="searchClose"><i class="fas fa-times"></i></button>
+            </form>
+        </div>
+    </div>
+</header>

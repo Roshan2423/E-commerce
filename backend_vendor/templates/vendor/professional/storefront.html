@@ -1,0 +1,3056 @@
+{% extends 'vendor/professional/base.html' %}
+{% load static %}
+
+{% block title %}Customize Storefront{% endblock %}
+
+{% block breadcrumb %}Storefront{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Floating Save Bar - Appears when changes are made */
+    .floating-save-bar {
+        position: fixed;
+        bottom: -100px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1e293b;
+        color: white;
+        padding: 14px 20px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        z-index: 1000;
+        transition: bottom 0.3s ease;
+    }
+
+    .floating-save-bar.visible {
+        bottom: 30px;
+    }
+
+    .floating-save-bar .save-message {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 14px;
+    }
+
+    .floating-save-bar .save-message i {
+        font-size: 16px;
+        color: #fbbf24;
+    }
+
+    .floating-save-bar .save-message span {
+        font-weight: 500;
+    }
+
+    .floating-save-bar .btn-save-now {
+        background: #10b981;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: background 0.2s;
+    }
+
+    .floating-save-bar .btn-save-now:hover {
+        background: #059669;
+    }
+
+    .floating-save-bar .btn-dismiss {
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.3);
+        color: rgba(255,255,255,0.8);
+        padding: 8px 14px;
+        border-radius: 6px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .floating-save-bar .btn-dismiss:hover {
+        background: rgba(255,255,255,0.1);
+        color: white;
+    }
+
+    /* Tabs Navigation */
+    .customizer-tabs {
+        display: flex;
+        gap: 0;
+        background: white;
+        border-radius: 12px;
+        padding: 6px;
+        margin-bottom: 24px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        overflow-x: auto;
+    }
+
+    .customizer-tab {
+        padding: 12px 20px;
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 14px;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .customizer-tab:hover {
+        color: var(--text-primary);
+        background: var(--bg-light);
+    }
+
+    .customizer-tab.active {
+        background: var(--primary);
+        color: white;
+    }
+
+    .customizer-tab i {
+        font-size: 16px;
+    }
+
+    /* Tab Content */
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    /* Style Cards */
+    .style-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .style-card {
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+    }
+
+    .style-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+    }
+
+    .style-card.active {
+        border-color: var(--primary);
+        background: rgba(99, 102, 241, 0.05);
+    }
+
+    .style-card.active::after {
+        content: '\f058';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        color: var(--primary);
+        font-size: 18px;
+    }
+
+    .style-card {
+        position: relative;
+    }
+
+    .style-preview {
+        height: 120px;
+        background: var(--bg-light);
+        border-radius: 8px;
+        margin-bottom: 12px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .style-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+    }
+
+    .style-desc {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    /* Header Style Previews */
+    .header-preview-classic .preview-topbar { height: 8px; background: var(--border); }
+    .header-preview-classic .preview-logo {
+        height: 30px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 4px;
+    }
+    .header-preview-classic .preview-logo-box {
+        width: 60px;
+        height: 20px;
+        background: var(--primary);
+        border-radius: 4px;
+    }
+    .header-preview-classic .preview-nav {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        padding: 4px;
+    }
+    .header-preview-classic .preview-nav-item {
+        width: 30px;
+        height: 6px;
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+
+    .header-preview-modern .preview-header-main {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        background: white;
+    }
+    .header-preview-modern .preview-logo-box {
+        width: 50px;
+        height: 18px;
+        background: var(--primary);
+        border-radius: 4px;
+    }
+    .header-preview-modern .preview-nav {
+        display: flex;
+        gap: 6px;
+    }
+    .header-preview-modern .preview-nav-item {
+        width: 28px;
+        height: 6px;
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+    .header-preview-modern .preview-megamenu {
+        background: white;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 12px;
+        padding: 8px 12px;
+    }
+    .header-preview-modern .preview-mega-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .header-preview-modern .preview-mega-item {
+        height: 4px;
+        background: #e2e8f0;
+        border-radius: 2px;
+    }
+
+    .header-preview-minimal .preview-header-main {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px;
+    }
+    .header-preview-minimal .preview-hamburger {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+    .header-preview-minimal .preview-hamburger span {
+        width: 18px;
+        height: 2px;
+        background: #64748b;
+        border-radius: 1px;
+    }
+    .header-preview-minimal .preview-logo-box {
+        width: 50px;
+        height: 18px;
+        background: var(--primary);
+        border-radius: 4px;
+    }
+    .header-preview-minimal .preview-actions {
+        display: flex;
+        gap: 6px;
+    }
+    .header-preview-minimal .preview-action-item {
+        width: 16px;
+        height: 16px;
+        background: #e2e8f0;
+        border-radius: 50%;
+    }
+
+    /* Hero Style Previews */
+    .hero-preview {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .hero-preview-full .preview-hero-bg {
+        flex: 1;
+        background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .hero-preview-full .preview-hero-title {
+        width: 60%;
+        height: 8px;
+        background: rgba(255,255,255,0.8);
+        border-radius: 4px;
+    }
+    .hero-preview-full .preview-hero-subtitle {
+        width: 40%;
+        height: 6px;
+        background: rgba(255,255,255,0.5);
+        border-radius: 3px;
+    }
+    .hero-preview-full .preview-hero-btn {
+        width: 40px;
+        height: 12px;
+        background: white;
+        border-radius: 6px;
+        margin-top: 4px;
+    }
+
+    .hero-preview-split .preview-hero-container {
+        flex: 1;
+        display: flex;
+        background: #f8fafc;
+    }
+    .hero-preview-split .preview-text-side {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 12px;
+        gap: 4px;
+    }
+    .hero-preview-split .preview-image-side {
+        flex: 1;
+        background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+    }
+
+    .hero-preview-slider .preview-slider-container {
+        flex: 1;
+        position: relative;
+        background: linear-gradient(135deg, var(--primary) 0%, #764ba2 100%);
+    }
+    .hero-preview-slider .preview-slider-dots {
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 4px;
+    }
+    .hero-preview-slider .preview-dot {
+        width: 6px;
+        height: 6px;
+        background: rgba(255,255,255,0.5);
+        border-radius: 50%;
+    }
+    .hero-preview-slider .preview-dot.active {
+        background: white;
+    }
+    .hero-preview-slider .preview-slider-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 16px;
+        height: 16px;
+        background: rgba(255,255,255,0.3);
+        border-radius: 50%;
+    }
+    .hero-preview-slider .preview-slider-arrow.left { left: 8px; }
+    .hero-preview-slider .preview-slider-arrow.right { right: 8px; }
+
+    /* Color Pickers */
+    .color-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
+    .color-picker-group {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+    }
+
+    .color-picker-label {
+        font-weight: 500;
+        font-size: 14px;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .color-picker-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .color-input-wrapper {
+        position: relative;
+        width: 50px;
+        height: 50px;
+    }
+
+    .color-input {
+        width: 50px;
+        height: 50px;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        cursor: pointer;
+        padding: 0;
+    }
+
+    .color-input::-webkit-color-swatch-wrapper {
+        padding: 0;
+    }
+
+    .color-input::-webkit-color-swatch {
+        border: none;
+        border-radius: 8px;
+    }
+
+    .color-hex-input {
+        flex: 1;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-family: monospace;
+        font-size: 14px;
+        text-transform: uppercase;
+    }
+
+    /* Hero Content Form */
+    .hero-content-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .hero-slide-card {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+    }
+
+    .hero-slide-card.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+
+    .slide-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        background: var(--primary);
+        color: white;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: 600;
+        margin-bottom: 12px;
+    }
+
+    .form-group {
+        margin-bottom: 16px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+
+    /* Overlay Controls */
+    .overlay-controls {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+
+    .opacity-slider-wrapper {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .opacity-slider {
+        flex: 1;
+        -webkit-appearance: none;
+        height: 8px;
+        background: linear-gradient(to right, transparent, var(--primary));
+        border-radius: 4px;
+        outline: none;
+    }
+
+    .opacity-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        background: white;
+        border: 2px solid var(--primary);
+        border-radius: 50%;
+        cursor: pointer;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    .opacity-value {
+        min-width: 50px;
+        text-align: center;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    /* Section List Styles */
+    .storefront-grid {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 24px;
+    }
+
+    .section-list {
+        min-height: 400px;
+    }
+
+    .section-item {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        margin-bottom: 12px;
+        cursor: grab;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .section-item:hover {
+        border-color: var(--primary);
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+    }
+
+    .section-item.dragging {
+        opacity: 0.5;
+        border: 2px dashed var(--primary);
+    }
+
+    .section-drag-handle {
+        color: var(--text-secondary);
+        cursor: grab;
+    }
+
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+
+    .section-icon.purple { background: #f3e8ff; color: #9333ea; }
+    .section-icon.blue { background: #dbeafe; color: var(--info); }
+    .section-icon.green { background: #d1fae5; color: var(--success); }
+    .section-icon.orange { background: #ffedd5; color: #f97316; }
+    .section-icon.pink { background: #fce7f3; color: #db2777; }
+    .section-icon.yellow { background: #fef3c7; color: #ca8a04; }
+
+    .section-info { flex: 1; }
+    .section-name { font-weight: 500; font-size: 14px; color: var(--text-primary); }
+    .section-desc { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+
+    .section-toggle {
+        width: 44px;
+        height: 24px;
+        background: var(--bg-light);
+        border-radius: 12px;
+        position: relative;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .section-toggle.active {
+        background: var(--success);
+    }
+
+    .section-toggle::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: white;
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.2s;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .section-toggle.active::after {
+        transform: translateX(20px);
+    }
+
+    /* Preview Area */
+    .preview-container {
+        background: white;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        position: sticky;
+        top: 24px;
+    }
+
+    .preview-header {
+        background: var(--bg-light);
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .preview-device-btns {
+        display: flex;
+        gap: 8px;
+    }
+
+    .preview-device-btn {
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--border);
+        background: white;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .preview-device-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .preview-device-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .preview-frame {
+        background: #f8fafc;
+        min-height: 500px;
+        padding: 0;
+        transition: max-width 0.3s;
+        margin: 0 auto;
+    }
+
+    .preview-frame.mobile {
+        max-width: 375px;
+        border-left: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+    }
+
+    .preview-frame.tablet {
+        max-width: 768px;
+        border-left: 1px solid var(--border);
+        border-right: 1px solid var(--border);
+    }
+
+    /* Mini Preview Sections */
+    .preview-section {
+        border: 2px dashed var(--border);
+        border-radius: 8px;
+        padding: 20px;
+        margin: 8px;
+        text-align: center;
+        background: white;
+        transition: all 0.2s;
+    }
+
+    .preview-section.disabled {
+        opacity: 0.4;
+        filter: grayscale(1);
+    }
+
+    .preview-section i {
+        font-size: 20px;
+        color: var(--text-secondary);
+        margin-bottom: 6px;
+    }
+
+    .preview-section span {
+        display: block;
+        font-size: 11px;
+        color: var(--text-secondary);
+    }
+
+    /* ============================================
+       COMPREHENSIVE STOREFRONT MOCKUP PREVIEW
+       ============================================ */
+    .storefront-mockup {
+        background: #f8fafc;
+        border-radius: 0 0 12px 12px;
+        overflow: hidden;
+        min-height: 500px;
+        font-size: 10px;
+        transition: max-width 0.3s;
+        margin: 0 auto;
+    }
+
+    .storefront-mockup.mobile {
+        max-width: 375px;
+    }
+
+    .storefront-mockup.tablet {
+        max-width: 768px;
+    }
+
+    /* Mockup Header Styles */
+    .mockup-header {
+        background: white;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    /* Classic Header */
+    .mockup-header.style-classic .header-topbar {
+        background: #1f2937;
+        padding: 4px 12px;
+        display: flex;
+        justify-content: space-between;
+        font-size: 8px;
+        color: #9ca3af;
+    }
+
+    .mockup-header.style-classic .header-main {
+        text-align: center;
+        padding: 12px;
+    }
+
+    .mockup-header.style-classic .header-logo {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--mockup-primary, #6366f1);
+        margin-bottom: 8px;
+    }
+
+    .mockup-header.style-classic .header-nav {
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        padding: 8px 0;
+        border-top: 1px solid #f3f4f6;
+    }
+
+    .mockup-header.style-classic .nav-item {
+        font-size: 9px;
+        color: #374151;
+        font-weight: 500;
+    }
+
+    /* Modern Header */
+    .mockup-header.style-modern .header-main {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 16px;
+    }
+
+    .mockup-header.style-modern .header-logo {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--mockup-primary, #6366f1);
+    }
+
+    .mockup-header.style-modern .header-nav {
+        display: flex;
+        gap: 12px;
+    }
+
+    .mockup-header.style-modern .nav-item {
+        font-size: 9px;
+        color: #374151;
+        font-weight: 500;
+        padding: 4px 8px;
+    }
+
+    .mockup-header.style-modern .nav-item:hover {
+        color: var(--mockup-primary, #6366f1);
+    }
+
+    .mockup-header.style-modern .mega-dropdown {
+        background: white;
+        border-top: 1px solid #e5e7eb;
+        padding: 12px 16px;
+        display: none;
+    }
+
+    .mockup-header.style-modern.show-mega .mega-dropdown {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+    }
+
+    .mockup-header.style-modern .mega-col-title {
+        font-size: 8px;
+        font-weight: 600;
+        color: #1f2937;
+        margin-bottom: 6px;
+    }
+
+    .mockup-header.style-modern .mega-links {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+
+    .mockup-header.style-modern .mega-link {
+        font-size: 7px;
+        color: #6b7280;
+    }
+
+    .mockup-header.style-modern .header-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .mockup-header.style-modern .action-icon {
+        width: 24px;
+        height: 24px;
+        background: #f3f4f6;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: #6b7280;
+    }
+
+    /* Minimal Header */
+    .mockup-header.style-minimal .header-main {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+    }
+
+    .mockup-header.style-minimal .hamburger-btn {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        cursor: pointer;
+    }
+
+    .mockup-header.style-minimal .hamburger-btn span {
+        width: 18px;
+        height: 2px;
+        background: #374151;
+        border-radius: 1px;
+    }
+
+    .mockup-header.style-minimal .header-logo {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--mockup-primary, #6366f1);
+    }
+
+    .mockup-header.style-minimal .header-actions {
+        display: flex;
+        gap: 8px;
+    }
+
+    .mockup-header.style-minimal .action-icon {
+        width: 24px;
+        height: 24px;
+        background: #f3f4f6;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 10px;
+        color: #6b7280;
+    }
+
+    .mockup-header.style-minimal .slide-nav {
+        display: none;
+        position: absolute;
+        left: 0;
+        top: 48px;
+        width: 200px;
+        background: white;
+        box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        z-index: 10;
+        padding: 16px;
+    }
+
+    .mockup-header.style-minimal.show-nav .slide-nav {
+        display: block;
+    }
+
+    .mockup-header.style-minimal .slide-nav-item {
+        padding: 8px 0;
+        font-size: 9px;
+        color: #374151;
+        border-bottom: 1px solid #f3f4f6;
+    }
+
+    /* Mockup Hero Styles */
+    .mockup-hero {
+        position: relative;
+        overflow: hidden;
+    }
+
+    /* Full Width Hero */
+    .mockup-hero.style-full_width {
+        height: 200px;
+        background: linear-gradient(135deg, var(--mockup-primary, #6366f1) 0%, var(--mockup-secondary, #8b5cf6) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: white;
+    }
+
+    .mockup-hero.style-full_width .hero-overlay {
+        position: absolute;
+        inset: 0;
+        background: var(--mockup-overlay-color, #000000);
+        opacity: var(--mockup-overlay-opacity, 0.3);
+    }
+
+    .mockup-hero.style-full_width .hero-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .mockup-hero.style-full_width .hero-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .mockup-hero.style-full_width .hero-subtitle {
+        font-size: 10px;
+        opacity: 0.9;
+        margin-bottom: 8px;
+    }
+
+    .mockup-hero.style-full_width .hero-cta {
+        display: inline-block;
+        background: white;
+        color: var(--mockup-primary, #6366f1);
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 9px;
+        font-weight: 600;
+    }
+
+    /* Split Hero */
+    .mockup-hero.style-split {
+        display: flex;
+        height: 200px;
+        background: #f8fafc;
+    }
+
+    .mockup-hero.style-split .hero-text {
+        flex: 1;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .mockup-hero.style-split .hero-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: #1f2937;
+        margin-bottom: 4px;
+    }
+
+    .mockup-hero.style-split .hero-subtitle {
+        font-size: 9px;
+        color: #6b7280;
+        margin-bottom: 10px;
+        line-height: 1.4;
+    }
+
+    .mockup-hero.style-split .hero-cta {
+        display: inline-block;
+        background: var(--mockup-primary, #6366f1);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 6px;
+        font-size: 9px;
+        font-weight: 600;
+        width: fit-content;
+    }
+
+    .mockup-hero.style-split .hero-image {
+        flex: 1;
+        background: linear-gradient(135deg, var(--mockup-primary, #6366f1) 0%, var(--mockup-secondary, #8b5cf6) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .mockup-hero.style-split .hero-image i {
+        font-size: 40px;
+        color: rgba(255,255,255,0.3);
+    }
+
+    /* Slider Hero */
+    .mockup-hero.style-slider {
+        height: 200px;
+        position: relative;
+        background: linear-gradient(135deg, var(--mockup-primary, #6366f1) 0%, var(--mockup-secondary, #8b5cf6) 100%);
+    }
+
+    .mockup-hero.style-slider .hero-overlay {
+        position: absolute;
+        inset: 0;
+        background: var(--mockup-overlay-color, #000000);
+        opacity: var(--mockup-overlay-opacity, 0.3);
+    }
+
+    .mockup-hero.style-slider .slider-slides {
+        position: relative;
+        height: 100%;
+    }
+
+    .mockup-hero.style-slider .slider-slide {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: white;
+        opacity: 0;
+        transition: opacity 0.3s;
+    }
+
+    .mockup-hero.style-slider .slider-slide.active {
+        opacity: 1;
+    }
+
+    .mockup-hero.style-slider .slide-content {
+        position: relative;
+        z-index: 2;
+    }
+
+    .mockup-hero.style-slider .hero-title {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .mockup-hero.style-slider .hero-subtitle {
+        font-size: 10px;
+        opacity: 0.9;
+        margin-bottom: 8px;
+    }
+
+    .mockup-hero.style-slider .hero-cta {
+        display: inline-block;
+        background: white;
+        color: var(--mockup-primary, #6366f1);
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 9px;
+        font-weight: 600;
+    }
+
+    .mockup-hero.style-slider .slider-arrows {
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        transform: translateY(-50%);
+        display: flex;
+        justify-content: space-between;
+        padding: 0 8px;
+        z-index: 5;
+    }
+
+    .mockup-hero.style-slider .slider-arrow {
+        width: 24px;
+        height: 24px;
+        background: rgba(255,255,255,0.3);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 10px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .mockup-hero.style-slider .slider-arrow:hover {
+        background: rgba(255,255,255,0.5);
+    }
+
+    .mockup-hero.style-slider .slider-dots {
+        position: absolute;
+        bottom: 12px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 6px;
+        z-index: 5;
+    }
+
+    .mockup-hero.style-slider .slider-dot {
+        width: 8px;
+        height: 8px;
+        background: rgba(255,255,255,0.4);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .mockup-hero.style-slider .slider-dot.active {
+        background: white;
+    }
+
+    /* Mockup Sections */
+    .mockup-section {
+        padding: 20px 16px;
+        background: white;
+        margin-top: 12px;
+        transition: opacity 0.3s, height 0.3s;
+    }
+
+    .mockup-section.disabled {
+        display: none;
+    }
+
+    .mockup-section-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: #1f2937;
+        text-align: center;
+        margin-bottom: 12px;
+    }
+
+    /* Categories Section */
+    .mockup-categories {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+
+    .mockup-category {
+        text-align: center;
+    }
+
+    .mockup-category-icon {
+        width: 40px;
+        height: 40px;
+        background: #f3f4f6;
+        border-radius: 50%;
+        margin: 0 auto 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: var(--mockup-primary, #6366f1);
+    }
+
+    .mockup-category-name {
+        font-size: 8px;
+        color: #374151;
+    }
+
+    /* Featured Products */
+    .mockup-products {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+    }
+
+    .mockup-product {
+        background: #f8fafc;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .mockup-product-image {
+        height: 50px;
+        background: linear-gradient(135deg, #e5e7eb 0%, #d1d5db 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #9ca3af;
+        font-size: 14px;
+    }
+
+    .mockup-product-info {
+        padding: 6px;
+    }
+
+    .mockup-product-name {
+        font-size: 8px;
+        color: #374151;
+        margin-bottom: 2px;
+    }
+
+    .mockup-product-price {
+        font-size: 9px;
+        font-weight: 600;
+        color: var(--mockup-primary, #6366f1);
+    }
+
+    /* Flash Sale Section */
+    .mockup-flash-sale {
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        border-radius: 8px;
+        padding: 12px;
+        text-align: center;
+    }
+
+    .mockup-flash-header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-bottom: 8px;
+    }
+
+    .mockup-flash-icon {
+        color: #d97706;
+        font-size: 14px;
+    }
+
+    .mockup-flash-timer {
+        display: flex;
+        gap: 4px;
+    }
+
+    .mockup-timer-box {
+        background: #1f2937;
+        color: white;
+        padding: 3px 6px;
+        border-radius: 3px;
+        font-size: 8px;
+        font-weight: 600;
+    }
+
+    /* Testimonials Section */
+    .mockup-testimonials {
+        display: flex;
+        gap: 8px;
+        overflow: hidden;
+    }
+
+    .mockup-testimonial {
+        flex: 0 0 calc(50% - 4px);
+        background: #f8fafc;
+        border-radius: 8px;
+        padding: 10px;
+    }
+
+    .mockup-testimonial-stars {
+        color: #f59e0b;
+        font-size: 8px;
+        margin-bottom: 4px;
+    }
+
+    .mockup-testimonial-text {
+        font-size: 8px;
+        color: #6b7280;
+        font-style: italic;
+        margin-bottom: 6px;
+    }
+
+    .mockup-testimonial-author {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .mockup-author-avatar {
+        width: 20px;
+        height: 20px;
+        background: var(--mockup-primary, #6366f1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 8px;
+        font-weight: 600;
+    }
+
+    .mockup-author-name {
+        font-size: 8px;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    /* Newsletter Section */
+    .mockup-newsletter {
+        background: linear-gradient(135deg, var(--mockup-primary, #6366f1) 0%, var(--mockup-secondary, #8b5cf6) 100%);
+        border-radius: 8px;
+        padding: 16px;
+        text-align: center;
+        color: white;
+    }
+
+    .mockup-newsletter-title {
+        font-size: 11px;
+        font-weight: 700;
+        margin-bottom: 4px;
+    }
+
+    .mockup-newsletter-subtitle {
+        font-size: 8px;
+        opacity: 0.9;
+        margin-bottom: 10px;
+    }
+
+    .mockup-newsletter-form {
+        display: flex;
+        gap: 6px;
+        max-width: 200px;
+        margin: 0 auto;
+    }
+
+    .mockup-newsletter-input {
+        flex: 1;
+        padding: 6px 10px;
+        border-radius: 20px;
+        border: none;
+        font-size: 8px;
+        background: white;
+    }
+
+    .mockup-newsletter-btn {
+        background: var(--mockup-accent, #10b981);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 8px;
+        font-weight: 600;
+        border: none;
+    }
+
+    /* Mockup Footer */
+    .mockup-footer {
+        background: #1f2937;
+        color: white;
+        padding: 16px;
+        text-align: center;
+        font-size: 8px;
+    }
+
+    .mockup-footer-links {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    .mockup-footer-link {
+        color: #9ca3af;
+    }
+
+    .mockup-footer-copyright {
+        color: #6b7280;
+    }
+
+    /* Style Comparison Cards */
+    .style-comparison {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-top: 20px;
+    }
+
+    .comparison-card {
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .comparison-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+    }
+
+    .comparison-card.active {
+        border-color: var(--primary);
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+    }
+
+    .comparison-card-header {
+        background: var(--bg-light);
+        padding: 8px 12px;
+        font-size: 11px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .comparison-card.active .comparison-card-header::after {
+        content: '\f058';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        color: var(--primary);
+    }
+
+    .comparison-card-preview {
+        height: 150px;
+        overflow: hidden;
+        background: #f8fafc;
+    }
+
+    /* Dashboard Theme Preview */
+    .dashboard-preview {
+        background: var(--dashboard-sidebar, #111827);
+        border-radius: 12px;
+        overflow: hidden;
+        display: flex;
+        height: 300px;
+        margin-top: 20px;
+    }
+
+    .dashboard-preview-sidebar {
+        width: 60px;
+        background: var(--dashboard-sidebar, #111827);
+        padding: 12px 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .preview-sidebar-item {
+        width: 100%;
+        height: 36px;
+        background: rgba(255,255,255,0.1);
+        border-radius: 8px;
+    }
+
+    .preview-sidebar-item.active {
+        background: var(--dashboard-primary, #6366f1);
+    }
+
+    .dashboard-preview-main {
+        flex: 1;
+        background: #f8fafc;
+        padding: 16px;
+    }
+
+    .preview-main-header {
+        height: 40px;
+        background: white;
+        border-radius: 8px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        padding: 0 12px;
+        gap: 8px;
+    }
+
+    .preview-header-dot {
+        width: 24px;
+        height: 24px;
+        background: var(--dashboard-accent, #10b981);
+        border-radius: 50%;
+    }
+
+    .preview-main-cards {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+
+    .preview-card {
+        background: white;
+        border-radius: 8px;
+        padding: 12px;
+        height: 80px;
+    }
+
+    .preview-card-icon {
+        width: 28px;
+        height: 28px;
+        background: var(--dashboard-primary, #6366f1);
+        opacity: 0.2;
+        border-radius: 6px;
+        margin-bottom: 8px;
+    }
+
+    .preview-card-value {
+        height: 12px;
+        width: 50%;
+        background: #e2e8f0;
+        border-radius: 4px;
+    }
+
+    /* Image Upload */
+    .image-upload-area {
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        background: var(--bg-light);
+    }
+
+    .image-upload-area:hover {
+        border-color: var(--primary);
+        background: rgba(99, 102, 241, 0.05);
+    }
+
+    .image-upload-area i {
+        font-size: 32px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+    }
+
+    .image-upload-text {
+        font-size: 14px;
+        color: var(--text-secondary);
+    }
+
+    .image-upload-hint {
+        font-size: 12px;
+        color: var(--text-tertiary);
+        margin-top: 4px;
+    }
+
+    .current-image-preview {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 12px;
+    }
+
+    .current-image-preview img {
+        width: 100%;
+        height: 150px;
+        object-fit: cover;
+    }
+
+    .remove-image-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 28px;
+        height: 28px;
+        background: rgba(0,0,0,0.6);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    /* Template Grid */
+    .template-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+        margin-top: 16px;
+    }
+
+    .template-card {
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+        position: relative;
+    }
+
+    .template-card:hover {
+        border-color: var(--primary);
+    }
+
+    .template-card.active {
+        border-color: var(--primary);
+        background: rgba(99, 102, 241, 0.05);
+    }
+
+    .template-card.active::after {
+        content: '\f058';
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        color: var(--primary);
+    }
+
+    .template-preview {
+        background: var(--bg-light);
+        border-radius: 8px;
+        height: 80px;
+        margin-bottom: 8px;
+        display: flex;
+        flex-direction: column;
+        padding: 8px;
+        gap: 4px;
+    }
+
+    .template-preview div {
+        background: var(--border);
+        border-radius: 2px;
+    }
+
+    .template-name {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    @media (max-width: 1200px) {
+        .style-cards {
+            grid-template-columns: 1fr;
+        }
+
+        .storefront-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .color-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+
+    @media (max-width: 768px) {
+        .color-grid,
+        .hero-content-grid,
+        .template-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .customizer-tabs {
+            flex-wrap: nowrap;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Customize Storefront</h1>
+        <p class="page-subtitle">Design your perfect store with advanced customization options</p>
+    </div>
+    <div class="page-actions">
+        <a href="/v/{{ business.slug }}/" target="_blank" class="btn btn-outline">
+            <i class="fas fa-external-link-alt"></i> Preview Store
+        </a>
+        <button type="button" class="btn btn-outline" onclick="confirmRestore()" style="color: #ef4444; border-color: #ef4444;">
+            <i class="fas fa-undo"></i> Restore Default
+        </button>
+        <button type="button" class="btn btn-primary" id="saveChangesBtn" onclick="saveStorefront()">
+            <i class="fas fa-save"></i> Save Changes
+        </button>
+    </div>
+</div>
+
+<!-- Customizer Tabs -->
+<div class="customizer-tabs">
+    <button class="customizer-tab active" data-tab="layout">
+        <i class="fas fa-th-large"></i> Layout & Sections
+    </button>
+    <button class="customizer-tab" data-tab="header">
+        <i class="fas fa-window-maximize"></i> Header Style
+    </button>
+    <button class="customizer-tab" data-tab="hero">
+        <i class="fas fa-image"></i> Hero Banner
+    </button>
+    <button class="customizer-tab" data-tab="colors">
+        <i class="fas fa-palette"></i> Store Colors
+    </button>
+    <button class="customizer-tab" data-tab="dashboard">
+        <i class="fas fa-columns"></i> Dashboard Theme
+    </button>
+</div>
+
+<!-- Main Form -->
+<form method="post" action="{% url 'vendor:storefront' %}" id="storefrontForm" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <!-- Hidden fields for layout builder -->
+    <input type="hidden" name="layout_template" id="layoutTemplateInput" value="{{ storefront.layout_template|default:'classic' }}">
+    <input type="hidden" name="section_order" id="sectionOrderInput" value="{{ storefront.section_order|default:'' }}">
+    <input type="hidden" name="sections_enabled" id="sectionsEnabledInput" value="{{ storefront.sections_enabled|default:'' }}">
+
+    <!-- Tab 1: Layout & Sections -->
+    <div class="tab-content active" id="tab-layout">
+        <!-- Section Ordering -->
+        <div class="storefront-grid">
+            <div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-sort"></i> Section Order</h3>
+                    </div>
+                    <div class="card-body">
+                        <p style="color: var(--text-secondary); font-size: 12px; margin-bottom: 16px;">
+                            <i class="fas fa-grip-vertical"></i> Drag to reorder &bull; <i class="fas fa-toggle-on"></i> Toggle to show/hide
+                        </p>
+
+                        <div class="section-list" id="sectionList">
+                            {% for section in available_sections %}
+                            <div class="section-item" draggable="true" data-section="{{ section.id }}">
+                                <i class="fas fa-grip-vertical section-drag-handle"></i>
+                                <div class="section-icon {% if section.id == 'hero' %}purple{% elif section.id == 'categories' %}blue{% elif section.id == 'featured' %}orange{% elif section.id == 'new-arrivals' %}green{% elif section.id == 'deals' %}pink{% elif section.id == 'testimonials' %}yellow{% else %}blue{% endif %}">
+                                    <i class="{{ section.icon }}"></i>
+                                </div>
+                                <div class="section-info">
+                                    <div class="section-name">{{ section.name }}</div>
+                                </div>
+                                <div class="section-toggle {% if section.enabled %}active{% endif %}" onclick="toggleSection(this)" data-section="{{ section.id }}"></div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Panel - Comprehensive Storefront Mockup -->
+            <div>
+                <div class="preview-container">
+                    <div class="preview-header">
+                        <span style="font-weight: 500; font-size: 13px;"><i class="fas fa-eye"></i> Live Preview</span>
+                        <div class="preview-device-btns">
+                            <button type="button" class="preview-device-btn active" onclick="setDevice('desktop')" title="Desktop">
+                                <i class="fas fa-desktop"></i>
+                            </button>
+                            <button type="button" class="preview-device-btn" onclick="setDevice('tablet')" title="Tablet">
+                                <i class="fas fa-tablet-alt"></i>
+                            </button>
+                            <button type="button" class="preview-device-btn" onclick="setDevice('mobile')" title="Mobile">
+                                <i class="fas fa-mobile-alt"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Full Storefront Mockup -->
+                    <div class="storefront-mockup" id="storefrontMockup">
+
+                        <!-- Header Mockup - Changes based on header_style -->
+                        <div class="mockup-header style-classic" id="mockupHeader">
+                            <!-- Classic Header -->
+                            <div class="header-classic-content">
+                                <div class="header-topbar">
+                                    <span>Free shipping on orders over Rs 5,000</span>
+                                    <span>Help | Track Order</span>
+                                </div>
+                                <div class="header-main">
+                                    <div class="header-logo" id="mockupLogo">{{ business.business_name }}</div>
+                                </div>
+                                <div class="header-nav">
+                                    <span class="nav-item">Home</span>
+                                    <span class="nav-item">Shop</span>
+                                    <span class="nav-item">Categories</span>
+                                    <span class="nav-item">About</span>
+                                    <span class="nav-item">Contact</span>
+                                </div>
+                            </div>
+
+                            <!-- Modern Header (hidden by default) -->
+                            <div class="header-modern-content" style="display: none;">
+                                <div class="header-main">
+                                    <div class="header-logo" id="mockupLogoModern">{{ business.business_name }}</div>
+                                    <div class="header-nav">
+                                        <span class="nav-item">Shop <i class="fas fa-chevron-down" style="font-size: 6px;"></i></span>
+                                        <span class="nav-item">Categories</span>
+                                        <span class="nav-item">Deals</span>
+                                    </div>
+                                    <div class="header-actions">
+                                        <div class="action-icon"><i class="fas fa-search"></i></div>
+                                        <div class="action-icon"><i class="fas fa-user"></i></div>
+                                        <div class="action-icon"><i class="fas fa-shopping-cart"></i></div>
+                                    </div>
+                                </div>
+                                <div class="mega-dropdown">
+                                    <div class="mega-col">
+                                        <div class="mega-col-title">Electronics</div>
+                                        <div class="mega-links">
+                                            <span class="mega-link">Phones</span>
+                                            <span class="mega-link">Laptops</span>
+                                            <span class="mega-link">Tablets</span>
+                                        </div>
+                                    </div>
+                                    <div class="mega-col">
+                                        <div class="mega-col-title">Clothing</div>
+                                        <div class="mega-links">
+                                            <span class="mega-link">Men's</span>
+                                            <span class="mega-link">Women's</span>
+                                        </div>
+                                    </div>
+                                    <div class="mega-col">
+                                        <div class="mega-col-title">Home</div>
+                                        <div class="mega-links">
+                                            <span class="mega-link">Furniture</span>
+                                            <span class="mega-link">Decor</span>
+                                        </div>
+                                    </div>
+                                    <div class="mega-col">
+                                        <div class="mega-col-title">Sports</div>
+                                        <div class="mega-links">
+                                            <span class="mega-link">Fitness</span>
+                                            <span class="mega-link">Outdoor</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Minimal Header (hidden by default) -->
+                            <div class="header-minimal-content" style="display: none;">
+                                <div class="header-main">
+                                    <div class="hamburger-btn">
+                                        <span></span><span></span><span></span>
+                                    </div>
+                                    <div class="header-logo" id="mockupLogoMinimal">{{ business.business_name }}</div>
+                                    <div class="header-actions">
+                                        <div class="action-icon"><i class="fas fa-search"></i></div>
+                                        <div class="action-icon"><i class="fas fa-shopping-cart"></i></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Hero Mockup - Changes based on hero_style -->
+                        <div class="mockup-hero style-full_width" id="mockupHero" data-section="hero">
+                            <!-- Full Width Hero -->
+                            <div class="hero-full-content">
+                                <div class="hero-overlay" id="heroOverlay"></div>
+                                <div class="hero-content">
+                                    <div class="hero-title" id="mockupHeroTitle">{{ storefront.hero_title|default:"Welcome to Our Store" }}</div>
+                                    <div class="hero-subtitle" id="mockupHeroSubtitle">{{ storefront.hero_subtitle|default:"Discover amazing products" }}</div>
+                                    <span class="hero-cta" id="mockupHeroCta">{{ storefront.hero_cta_text|default:"Shop Now" }}</span>
+                                </div>
+                            </div>
+
+                            <!-- Split Hero (hidden by default) -->
+                            <div class="hero-split-content" style="display: none;">
+                                <div class="hero-text">
+                                    <div class="hero-title" id="mockupHeroTitleSplit">{{ storefront.hero_title|default:"Welcome to Our Store" }}</div>
+                                    <div class="hero-subtitle" id="mockupHeroSubtitleSplit">{{ storefront.hero_subtitle|default:"Discover amazing products at unbeatable prices." }}</div>
+                                    <span class="hero-cta" id="mockupHeroCtaSplit">{{ storefront.hero_cta_text|default:"Shop Now" }}</span>
+                                </div>
+                                <div class="hero-image">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                            </div>
+
+                            <!-- Slider Hero (hidden by default) -->
+                            <div class="hero-slider-content" style="display: none;">
+                                <div class="hero-overlay" id="heroOverlaySlider"></div>
+                                <div class="slider-slides">
+                                    <div class="slider-slide active">
+                                        <div class="slide-content">
+                                            <div class="hero-title">{{ storefront.hero_title|default:"Welcome" }}</div>
+                                            <div class="hero-subtitle">{{ storefront.hero_subtitle|default:"Slide 1" }}</div>
+                                            <span class="hero-cta">{{ storefront.hero_cta_text|default:"Shop" }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="slider-slide">
+                                        <div class="slide-content">
+                                            <div class="hero-title">{{ storefront.hero_title_2|default:"New Arrivals" }}</div>
+                                            <div class="hero-subtitle">{{ storefront.hero_subtitle_2|default:"Slide 2" }}</div>
+                                            <span class="hero-cta">{{ storefront.hero_cta_text_2|default:"Explore" }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="slider-slide">
+                                        <div class="slide-content">
+                                            <div class="hero-title">{{ storefront.hero_title_3|default:"Special Offers" }}</div>
+                                            <div class="hero-subtitle">{{ storefront.hero_subtitle_3|default:"Slide 3" }}</div>
+                                            <span class="hero-cta">{{ storefront.hero_cta_text_3|default:"View" }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="slider-arrows">
+                                    <div class="slider-arrow" onclick="mockupSliderPrev()"><i class="fas fa-chevron-left"></i></div>
+                                    <div class="slider-arrow" onclick="mockupSliderNext()"><i class="fas fa-chevron-right"></i></div>
+                                </div>
+                                <div class="slider-dots">
+                                    <div class="slider-dot active" onclick="mockupSliderGo(0)"></div>
+                                    <div class="slider-dot" onclick="mockupSliderGo(1)"></div>
+                                    <div class="slider-dot" onclick="mockupSliderGo(2)"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Categories Section -->
+                        <div class="mockup-section" id="mockupCategories" data-section="categories">
+                            <div class="mockup-section-title">Shop by Category</div>
+                            <div class="mockup-categories">
+                                <div class="mockup-category">
+                                    <div class="mockup-category-icon"><i class="fas fa-mobile-alt"></i></div>
+                                    <div class="mockup-category-name">Electronics</div>
+                                </div>
+                                <div class="mockup-category">
+                                    <div class="mockup-category-icon"><i class="fas fa-tshirt"></i></div>
+                                    <div class="mockup-category-name">Clothing</div>
+                                </div>
+                                <div class="mockup-category">
+                                    <div class="mockup-category-icon"><i class="fas fa-couch"></i></div>
+                                    <div class="mockup-category-name">Home</div>
+                                </div>
+                                <div class="mockup-category">
+                                    <div class="mockup-category-icon"><i class="fas fa-running"></i></div>
+                                    <div class="mockup-category-name">Sports</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Featured Products Section -->
+                        <div class="mockup-section" id="mockupFeatured" data-section="featured">
+                            <div class="mockup-section-title">Featured Products</div>
+                            <div class="mockup-products">
+                                <div class="mockup-product">
+                                    <div class="mockup-product-image"><i class="fas fa-image"></i></div>
+                                    <div class="mockup-product-info">
+                                        <div class="mockup-product-name">Product 1</div>
+                                        <div class="mockup-product-price">Rs 9,900</div>
+                                    </div>
+                                </div>
+                                <div class="mockup-product">
+                                    <div class="mockup-product-image"><i class="fas fa-image"></i></div>
+                                    <div class="mockup-product-info">
+                                        <div class="mockup-product-name">Product 2</div>
+                                        <div class="mockup-product-price">Rs 14,900</div>
+                                    </div>
+                                </div>
+                                <div class="mockup-product">
+                                    <div class="mockup-product-image"><i class="fas fa-image"></i></div>
+                                    <div class="mockup-product-info">
+                                        <div class="mockup-product-name">Product 3</div>
+                                        <div class="mockup-product-price">Rs 7,900</div>
+                                    </div>
+                                </div>
+                                <div class="mockup-product">
+                                    <div class="mockup-product-image"><i class="fas fa-image"></i></div>
+                                    <div class="mockup-product-info">
+                                        <div class="mockup-product-name">Product 4</div>
+                                        <div class="mockup-product-price">Rs 19,900</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- New Arrivals Section -->
+                        <div class="mockup-section" id="mockupNewArrivals" data-section="new-arrivals">
+                            <div class="mockup-section-title">New Arrivals</div>
+                            <div class="mockup-products">
+                                <div class="mockup-product">
+                                    <div class="mockup-product-image"><i class="fas fa-star" style="color: #f59e0b;"></i></div>
+                                    <div class="mockup-product-info">
+                                        <div class="mockup-product-name">New Item 1</div>
+                                        <div class="mockup-product-price">Rs 12,900</div>
+                                    </div>
+                                </div>
+                                <div class="mockup-product">
+                                    <div class="mockup-product-image"><i class="fas fa-star" style="color: #f59e0b;"></i></div>
+                                    <div class="mockup-product-info">
+                                        <div class="mockup-product-name">New Item 2</div>
+                                        <div class="mockup-product-price">Rs 8,900</div>
+                                    </div>
+                                </div>
+                                <div class="mockup-product">
+                                    <div class="mockup-product-image"><i class="fas fa-star" style="color: #f59e0b;"></i></div>
+                                    <div class="mockup-product-info">
+                                        <div class="mockup-product-name">New Item 3</div>
+                                        <div class="mockup-product-price">Rs 15,900</div>
+                                    </div>
+                                </div>
+                                <div class="mockup-product">
+                                    <div class="mockup-product-image"><i class="fas fa-star" style="color: #f59e0b;"></i></div>
+                                    <div class="mockup-product-info">
+                                        <div class="mockup-product-name">New Item 4</div>
+                                        <div class="mockup-product-price">Rs 6,900</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Flash Sale Section -->
+                        <div class="mockup-section" id="mockupFlashSale" data-section="deals">
+                            <div class="mockup-flash-sale">
+                                <div class="mockup-flash-header">
+                                    <i class="fas fa-bolt mockup-flash-icon"></i>
+                                    <span style="font-weight: 700; color: #92400e;">Flash Sale!</span>
+                                    <div class="mockup-flash-timer">
+                                        <span class="mockup-timer-box">02</span>
+                                        <span class="mockup-timer-box">15</span>
+                                        <span class="mockup-timer-box">30</span>
+                                    </div>
+                                </div>
+                                <div class="mockup-products" style="grid-template-columns: repeat(3, 1fr);">
+                                    <div class="mockup-product">
+                                        <div class="mockup-product-image" style="background: #fef3c7;"><i class="fas fa-tag" style="color: #d97706;"></i></div>
+                                        <div class="mockup-product-info">
+                                            <div class="mockup-product-name">Sale Item</div>
+                                            <div class="mockup-product-price">Rs 4,900 <s style="color: #9ca3af; font-size: 7px;">Rs 9,900</s></div>
+                                        </div>
+                                    </div>
+                                    <div class="mockup-product">
+                                        <div class="mockup-product-image" style="background: #fef3c7;"><i class="fas fa-tag" style="color: #d97706;"></i></div>
+                                        <div class="mockup-product-info">
+                                            <div class="mockup-product-name">Sale Item</div>
+                                            <div class="mockup-product-price">Rs 2,900 <s style="color: #9ca3af; font-size: 7px;">Rs 5,900</s></div>
+                                        </div>
+                                    </div>
+                                    <div class="mockup-product">
+                                        <div class="mockup-product-image" style="background: #fef3c7;"><i class="fas fa-tag" style="color: #d97706;"></i></div>
+                                        <div class="mockup-product-info">
+                                            <div class="mockup-product-name">Sale Item</div>
+                                            <div class="mockup-product-price">Rs 7,900 <s style="color: #9ca3af; font-size: 7px;">Rs 14,900</s></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Testimonials Section -->
+                        <div class="mockup-section" id="mockupTestimonials" data-section="testimonials">
+                            <div class="mockup-section-title">What Customers Say</div>
+                            <div class="mockup-testimonials">
+                                <div class="mockup-testimonial">
+                                    <div class="mockup-testimonial-stars">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <div class="mockup-testimonial-text">"Amazing products and fast shipping!"</div>
+                                    <div class="mockup-testimonial-author">
+                                        <div class="mockup-author-avatar">JD</div>
+                                        <div class="mockup-author-name">John D.</div>
+                                    </div>
+                                </div>
+                                <div class="mockup-testimonial">
+                                    <div class="mockup-testimonial-stars">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <div class="mockup-testimonial-text">"Great quality and customer service!"</div>
+                                    <div class="mockup-testimonial-author">
+                                        <div class="mockup-author-avatar">SM</div>
+                                        <div class="mockup-author-name">Sarah M.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Newsletter Section -->
+                        <div class="mockup-section" id="mockupNewsletter" data-section="newsletter">
+                            <div class="mockup-newsletter">
+                                <div class="mockup-newsletter-title">Stay in the Loop</div>
+                                <div class="mockup-newsletter-subtitle">Subscribe for exclusive deals and updates</div>
+                                <div class="mockup-newsletter-form">
+                                    <input type="text" class="mockup-newsletter-input" placeholder="Enter email" disabled>
+                                    <button class="mockup-newsletter-btn" disabled>Subscribe</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="mockup-footer">
+                            <div class="mockup-footer-links">
+                                <span class="mockup-footer-link">About</span>
+                                <span class="mockup-footer-link">Contact</span>
+                                <span class="mockup-footer-link">Privacy</span>
+                                <span class="mockup-footer-link">Terms</span>
+                            </div>
+                            <div class="mockup-footer-copyright">&copy; 2024 {{ business.business_name }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 2: Header Style -->
+    <div class="tab-content" id="tab-header">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-window-maximize"></i> Header Style</h3>
+                <span class="badge badge-primary">PRO</span>
+            </div>
+            <div class="card-body">
+                <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">
+                    Select a header layout for your storefront:
+                </p>
+                <div class="style-cards">
+                    {% for style in header_styles %}
+                    <div class="style-card {% if storefront.header_style == style.id or not storefront.header_style and style.id == 'classic' %}active{% endif %}"
+                         onclick="selectHeaderStyle(this, '{{ style.id }}')" data-style="{{ style.id }}">
+                        <div class="style-preview header-preview-{{ style.id }}">
+                            {% if style.id == 'classic' %}
+                            <div class="preview-topbar"></div>
+                            <div class="preview-logo"><div class="preview-logo-box"></div></div>
+                            <div class="preview-nav">
+                                <div class="preview-nav-item"></div>
+                                <div class="preview-nav-item"></div>
+                                <div class="preview-nav-item"></div>
+                                <div class="preview-nav-item"></div>
+                            </div>
+                            {% elif style.id == 'modern' %}
+                            <div class="preview-header-main">
+                                <div class="preview-logo-box"></div>
+                                <div class="preview-nav">
+                                    <div class="preview-nav-item"></div>
+                                    <div class="preview-nav-item"></div>
+                                    <div class="preview-nav-item"></div>
+                                </div>
+                            </div>
+                            <div class="preview-megamenu">
+                                <div class="preview-mega-col">
+                                    <div class="preview-mega-item"></div>
+                                    <div class="preview-mega-item"></div>
+                                    <div class="preview-mega-item"></div>
+                                </div>
+                                <div class="preview-mega-col">
+                                    <div class="preview-mega-item"></div>
+                                    <div class="preview-mega-item"></div>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div class="preview-header-main">
+                                <div class="preview-hamburger">
+                                    <span></span><span></span><span></span>
+                                </div>
+                                <div class="preview-logo-box"></div>
+                                <div class="preview-actions">
+                                    <div class="preview-action-item"></div>
+                                    <div class="preview-action-item"></div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="style-name">{{ style.name }}</div>
+                        <div class="style-desc">{{ style.description }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <input type="hidden" name="header_style" id="headerStyleInput" value="{{ storefront.header_style|default:'classic' }}">
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 3: Hero Banner -->
+    <div class="tab-content" id="tab-hero">
+        <!-- Hero Style Selection -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-images"></i> Hero Style</h3>
+                <span class="badge badge-primary">PRO</span>
+            </div>
+            <div class="card-body">
+                <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">
+                    Choose how your hero banner displays:
+                </p>
+                <div class="style-cards">
+                    {% for style in hero_styles %}
+                    <div class="style-card {% if storefront.hero_style == style.id or not storefront.hero_style and style.id == 'full_width' %}active{% endif %}"
+                         onclick="selectHeroStyle(this, '{{ style.id }}')" data-style="{{ style.id }}">
+                        <div class="style-preview hero-preview hero-preview-{{ style.id|slugify }}">
+                            {% if style.id == 'full_width' %}
+                            <div class="preview-hero-bg">
+                                <div class="preview-hero-title"></div>
+                                <div class="preview-hero-subtitle"></div>
+                                <div class="preview-hero-btn"></div>
+                            </div>
+                            {% elif style.id == 'split' %}
+                            <div class="preview-hero-container">
+                                <div class="preview-text-side">
+                                    <div style="height: 8px; width: 80%; background: #cbd5e1; border-radius: 4px;"></div>
+                                    <div style="height: 6px; width: 60%; background: #e2e8f0; border-radius: 3px;"></div>
+                                    <div style="height: 12px; width: 40px; background: var(--primary); border-radius: 6px; margin-top: 4px;"></div>
+                                </div>
+                                <div class="preview-image-side"></div>
+                            </div>
+                            {% else %}
+                            <div class="preview-slider-container">
+                                <div class="preview-slider-arrow left"></div>
+                                <div class="preview-slider-arrow right"></div>
+                                <div class="preview-slider-dots">
+                                    <div class="preview-dot active"></div>
+                                    <div class="preview-dot"></div>
+                                    <div class="preview-dot"></div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="style-name">{{ style.name }}</div>
+                        <div class="style-desc">{{ style.description }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <input type="hidden" name="hero_style" id="heroStyleInput" value="{{ storefront.hero_style|default:'full_width' }}">
+            </div>
+        </div>
+
+        <!-- Hero Content -->
+        <div class="card" style="margin-bottom: 24px;">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-edit"></i> Hero Content</h3>
+            </div>
+            <div class="card-body">
+                <div class="hero-content-grid">
+                    <!-- Slide 1 -->
+                    <div class="hero-slide-card">
+                        <span class="slide-number">1</span>
+                        <div class="form-group">
+                            <label class="form-label">Title</label>
+                            <input type="text" name="hero_title" class="form-input" value="{{ storefront.hero_title }}" placeholder="Welcome to Our Store">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Subtitle</label>
+                            <input type="text" name="hero_subtitle" class="form-input" value="{{ storefront.hero_subtitle }}" placeholder="Discover amazing products">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Button Text</label>
+                            <input type="text" name="hero_cta_text" class="form-input" value="{{ storefront.hero_cta_text }}" placeholder="Shop Now">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Button Link</label>
+                            <input type="text" name="hero_cta_link" class="form-input" value="{{ storefront.hero_cta_link }}" placeholder="/products">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Hero Image</label>
+                            {% if storefront.hero_image %}
+                            <div class="current-image-preview">
+                                <img src="{{ storefront.hero_image.url }}" alt="Hero Image">
+                            </div>
+                            {% endif %}
+                            <div class="image-upload-area" onclick="document.getElementById('hero_image_1').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <div class="image-upload-text">Click to upload image</div>
+                                <div class="image-upload-hint">Recommended: 1920x800px, JPG/PNG</div>
+                            </div>
+                            <input type="file" name="hero_image" id="hero_image_1" style="display: none;" accept="image/*">
+                        </div>
+                    </div>
+
+                    <!-- Slide 2 (for slider) -->
+                    <div class="hero-slide-card" id="slide2Card">
+                        <span class="slide-number">2</span>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+                            <i class="fas fa-info-circle"></i> Only visible when using Slider style
+                        </p>
+                        <div class="form-group">
+                            <label class="form-label">Title</label>
+                            <input type="text" name="hero_title_2" class="form-input" value="{{ storefront.hero_title_2 }}" placeholder="Slide 2 Title">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Subtitle</label>
+                            <input type="text" name="hero_subtitle_2" class="form-input" value="{{ storefront.hero_subtitle_2 }}" placeholder="Slide 2 Subtitle">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Button Text</label>
+                            <input type="text" name="hero_cta_text_2" class="form-input" value="{{ storefront.hero_cta_text_2 }}" placeholder="Shop Now">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Button Link</label>
+                            <input type="text" name="hero_cta_link_2" class="form-input" value="{{ storefront.hero_cta_link_2 }}" placeholder="/products">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Hero Image</label>
+                            {% if storefront.hero_image_2 %}
+                            <div class="current-image-preview">
+                                <img src="{{ storefront.hero_image_2.url }}" alt="Hero Image 2">
+                            </div>
+                            {% endif %}
+                            <div class="image-upload-area" onclick="document.getElementById('hero_image_2').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <div class="image-upload-text">Click to upload image</div>
+                            </div>
+                            <input type="file" name="hero_image_2" id="hero_image_2" style="display: none;" accept="image/*">
+                        </div>
+                    </div>
+
+                    <!-- Slide 3 (for slider) -->
+                    <div class="hero-slide-card" id="slide3Card">
+                        <span class="slide-number">3</span>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 16px;">
+                            <i class="fas fa-info-circle"></i> Only visible when using Slider style
+                        </p>
+                        <div class="form-group">
+                            <label class="form-label">Title</label>
+                            <input type="text" name="hero_title_3" class="form-input" value="{{ storefront.hero_title_3 }}" placeholder="Slide 3 Title">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Subtitle</label>
+                            <input type="text" name="hero_subtitle_3" class="form-input" value="{{ storefront.hero_subtitle_3 }}" placeholder="Slide 3 Subtitle">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Button Text</label>
+                            <input type="text" name="hero_cta_text_3" class="form-input" value="{{ storefront.hero_cta_text_3 }}" placeholder="Shop Now">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Button Link</label>
+                            <input type="text" name="hero_cta_link_3" class="form-input" value="{{ storefront.hero_cta_link_3 }}" placeholder="/products">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Hero Image</label>
+                            {% if storefront.hero_image_3 %}
+                            <div class="current-image-preview">
+                                <img src="{{ storefront.hero_image_3.url }}" alt="Hero Image 3">
+                            </div>
+                            {% endif %}
+                            <div class="image-upload-area" onclick="document.getElementById('hero_image_3').click()">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <div class="image-upload-text">Click to upload image</div>
+                            </div>
+                            <input type="file" name="hero_image_3" id="hero_image_3" style="display: none;" accept="image/*">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hero Overlay -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-adjust"></i> Hero Overlay</h3>
+            </div>
+            <div class="card-body">
+                <div class="overlay-controls">
+                    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 24px; align-items: start;">
+                        <div class="color-picker-group">
+                            <label class="color-picker-label">Overlay Color</label>
+                            <div class="color-picker-wrapper">
+                                <input type="color" name="hero_overlay_color" class="color-input" value="{{ storefront.hero_overlay_color|default:'#000000' }}" id="overlayColorInput">
+                                <input type="text" class="color-hex-input" value="{{ storefront.hero_overlay_color|default:'#000000' }}" id="overlayColorHex" maxlength="7">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="color-picker-label">Overlay Opacity: <span id="opacityValue">{{ storefront.hero_overlay_opacity|default:30 }}%</span></label>
+                            <div class="opacity-slider-wrapper">
+                                <input type="range" name="hero_overlay_opacity" class="opacity-slider" min="0" max="100" step="5" value="{{ storefront.hero_overlay_opacity|default:30 }}" id="opacitySlider">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 4: Store Colors -->
+    <div class="tab-content" id="tab-colors">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-palette"></i> Store Brand Colors</h3>
+            </div>
+            <div class="card-body">
+                <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">
+                    Customize your store's color scheme to match your brand:
+                </p>
+                <div class="color-grid">
+                    <div class="color-picker-group">
+                        <label class="color-picker-label">Primary Color</label>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Main brand color for buttons, links</p>
+                        <div class="color-picker-wrapper">
+                            <input type="color" name="primary_color" class="color-input" value="{{ storefront.primary_color|default:'#667eea' }}" data-target="primaryHex">
+                            <input type="text" class="color-hex-input" value="{{ storefront.primary_color|default:'#667eea' }}" id="primaryHex" maxlength="7">
+                        </div>
+                    </div>
+                    <div class="color-picker-group">
+                        <label class="color-picker-label">Secondary Color</label>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Complementary color for gradients</p>
+                        <div class="color-picker-wrapper">
+                            <input type="color" name="secondary_color" class="color-input" value="{{ storefront.secondary_color|default:'#764ba2' }}" data-target="secondaryHex">
+                            <input type="text" class="color-hex-input" value="{{ storefront.secondary_color|default:'#764ba2' }}" id="secondaryHex" maxlength="7">
+                        </div>
+                    </div>
+                    <div class="color-picker-group">
+                        <label class="color-picker-label">Accent Color</label>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Highlights, badges, sale tags</p>
+                        <div class="color-picker-wrapper">
+                            <input type="color" name="accent_color" class="color-input" value="{{ storefront.accent_color|default:'#10b981' }}" data-target="accentHex">
+                            <input type="text" class="color-hex-input" value="{{ storefront.accent_color|default:'#10b981' }}" id="accentHex" maxlength="7">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tab 5: Dashboard Theme -->
+    <div class="tab-content" id="tab-dashboard">
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-columns"></i> Dashboard Theme</h3>
+                <span class="badge badge-primary">PRO</span>
+            </div>
+            <div class="card-body">
+                <p style="color: var(--text-secondary); font-size: 13px; margin-bottom: 20px;">
+                    Customize the colors of your vendor dashboard:
+                </p>
+                <div class="color-grid">
+                    <div class="color-picker-group">
+                        <label class="color-picker-label">Sidebar Color</label>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Dashboard sidebar background</p>
+                        <div class="color-picker-wrapper">
+                            <input type="color" name="dashboard_sidebar_color" class="color-input dashboard-color" value="{{ storefront.dashboard_sidebar_color|default:'#111827' }}" data-target="sidebarHex" data-css-var="--dashboard-sidebar">
+                            <input type="text" class="color-hex-input" value="{{ storefront.dashboard_sidebar_color|default:'#111827' }}" id="sidebarHex" maxlength="7">
+                        </div>
+                    </div>
+                    <div class="color-picker-group">
+                        <label class="color-picker-label">Primary Color</label>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Active items, primary actions</p>
+                        <div class="color-picker-wrapper">
+                            <input type="color" name="dashboard_primary_color" class="color-input dashboard-color" value="{{ storefront.dashboard_primary_color|default:'#6366f1' }}" data-target="dashPrimaryHex" data-css-var="--dashboard-primary">
+                            <input type="text" class="color-hex-input" value="{{ storefront.dashboard_primary_color|default:'#6366f1' }}" id="dashPrimaryHex" maxlength="7">
+                        </div>
+                    </div>
+                    <div class="color-picker-group">
+                        <label class="color-picker-label">Accent Color</label>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px;">Highlights, status indicators</p>
+                        <div class="color-picker-wrapper">
+                            <input type="color" name="dashboard_accent_color" class="color-input dashboard-color" value="{{ storefront.dashboard_accent_color|default:'#10b981' }}" data-target="dashAccentHex" data-css-var="--dashboard-accent">
+                            <input type="text" class="color-hex-input" value="{{ storefront.dashboard_accent_color|default:'#10b981' }}" id="dashAccentHex" maxlength="7">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Preview -->
+                <h4 style="margin-top: 24px; margin-bottom: 12px; font-size: 14px; font-weight: 600;">Preview</h4>
+                <div class="dashboard-preview" id="dashboardPreview">
+                    <div class="dashboard-preview-sidebar" id="previewSidebar">
+                        <div class="preview-sidebar-item"></div>
+                        <div class="preview-sidebar-item active" id="previewSidebarActive"></div>
+                        <div class="preview-sidebar-item"></div>
+                        <div class="preview-sidebar-item"></div>
+                    </div>
+                    <div class="dashboard-preview-main">
+                        <div class="preview-main-header">
+                            <div class="preview-header-dot" id="previewHeaderDot"></div>
+                            <div style="flex: 1; height: 8px; background: #e2e8f0; border-radius: 4px;"></div>
+                        </div>
+                        <div class="preview-main-cards">
+                            <div class="preview-card">
+                                <div class="preview-card-icon" id="previewCardIcon1"></div>
+                                <div class="preview-card-value"></div>
+                            </div>
+                            <div class="preview-card">
+                                <div class="preview-card-icon" id="previewCardIcon2"></div>
+                                <div class="preview-card-value"></div>
+                            </div>
+                            <div class="preview-card">
+                                <div class="preview-card-icon" id="previewCardIcon3"></div>
+                                <div class="preview-card-value"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+// ============================================
+// STOREFRONT CUSTOMIZER - COMPREHENSIVE PREVIEW
+// ============================================
+
+// Tab Navigation
+document.querySelectorAll('.customizer-tab').forEach(tab => {
+    tab.addEventListener('click', function() {
+        document.querySelectorAll('.customizer-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        this.classList.add('active');
+        document.getElementById('tab-' + this.dataset.tab).classList.add('active');
+    });
+});
+
+// State
+let hasChanges = false;
+let mockupSliderIndex = 0;
+let mockupSliderTimer = null;
+
+// Drag and Drop for Sections
+const sectionList = document.getElementById('sectionList');
+let draggedItem = null;
+
+if (sectionList) {
+    sectionList.addEventListener('dragstart', (e) => {
+        if (e.target.classList.contains('section-item')) {
+            draggedItem = e.target;
+            e.target.classList.add('dragging');
+        }
+    });
+
+    sectionList.addEventListener('dragend', (e) => {
+        if (e.target.classList.contains('section-item')) {
+            e.target.classList.remove('dragging');
+            draggedItem = null;
+            updateMockupSectionOrder();
+            markChanged();
+        }
+    });
+
+    sectionList.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        const afterElement = getDragAfterElement(sectionList, e.clientY);
+        const dragging = document.querySelector('.dragging');
+        if (afterElement == null) {
+            sectionList.appendChild(dragging);
+        } else {
+            sectionList.insertBefore(dragging, afterElement);
+        }
+    });
+}
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.section-item:not(.dragging)')];
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// Toggle section visibility - now updates mockup
+function toggleSection(toggle) {
+    toggle.classList.toggle('active');
+    const sectionItem = toggle.closest('.section-item');
+    const sectionName = sectionItem.dataset.section;
+
+    // Update mockup section visibility
+    updateMockupSectionVisibility(sectionName, toggle.classList.contains('active'));
+    markChanged();
+}
+
+// Update mockup section visibility
+function updateMockupSectionVisibility(sectionId, isEnabled) {
+    const sectionMap = {
+        'hero': 'mockupHero',
+        'categories': 'mockupCategories',
+        'featured': 'mockupFeatured',
+        'new-arrivals': 'mockupNewArrivals',
+        'deals': 'mockupFlashSale',
+        'testimonials': 'mockupTestimonials',
+        'newsletter': 'mockupNewsletter'
+    };
+
+    const mockupId = sectionMap[sectionId];
+    if (mockupId) {
+        const mockupSection = document.getElementById(mockupId);
+        if (mockupSection) {
+            if (isEnabled) {
+                mockupSection.classList.remove('disabled');
+            } else {
+                mockupSection.classList.add('disabled');
+            }
+        }
+    }
+}
+
+// Update mockup section order
+function updateMockupSectionOrder() {
+    const mockup = document.getElementById('storefrontMockup');
+    const footer = document.querySelector('.mockup-footer');
+    const sections = document.querySelectorAll('#sectionList .section-item');
+
+    const sectionMap = {
+        'hero': 'mockupHero',
+        'categories': 'mockupCategories',
+        'featured': 'mockupFeatured',
+        'new-arrivals': 'mockupNewArrivals',
+        'deals': 'mockupFlashSale',
+        'testimonials': 'mockupTestimonials',
+        'newsletter': 'mockupNewsletter'
+    };
+
+    sections.forEach(section => {
+        const sectionName = section.dataset.section;
+        const mockupId = sectionMap[sectionName];
+        if (mockupId) {
+            const mockupSection = document.getElementById(mockupId);
+            if (mockupSection && footer) {
+                mockup.insertBefore(mockupSection, footer);
+            }
+        }
+    });
+}
+
+// Device preview - now uses storefront mockup
+function setDevice(device) {
+    const mockup = document.getElementById('storefrontMockup');
+    const btns = document.querySelectorAll('.preview-device-btn');
+
+    btns.forEach(btn => btn.classList.remove('active'));
+    event.target.closest('.preview-device-btn').classList.add('active');
+
+    mockup.classList.remove('mobile', 'tablet');
+    if (device !== 'desktop') {
+        mockup.classList.add(device);
+    }
+}
+
+// ============================================
+// HEADER STYLE SELECTION WITH LIVE PREVIEW
+// ============================================
+function selectHeaderStyle(card, style) {
+    document.querySelectorAll('[data-style]').forEach(c => {
+        if (c.closest('#tab-header')) c.classList.remove('active');
+    });
+    card.classList.add('active');
+    document.getElementById('headerStyleInput').value = style;
+
+    // Update mockup header
+    updateMockupHeader(style);
+    markChanged();
+}
+
+function updateMockupHeader(style) {
+    const header = document.getElementById('mockupHeader');
+
+    // Remove all style classes
+    header.classList.remove('style-classic', 'style-modern', 'style-minimal');
+    header.classList.add('style-' + style);
+
+    // Hide all header content
+    const classicContent = header.querySelector('.header-classic-content');
+    const modernContent = header.querySelector('.header-modern-content');
+    const minimalContent = header.querySelector('.header-minimal-content');
+
+    if (classicContent) classicContent.style.display = 'none';
+    if (modernContent) modernContent.style.display = 'none';
+    if (minimalContent) minimalContent.style.display = 'none';
+
+    // Show the selected header style
+    if (style === 'classic' && classicContent) {
+        classicContent.style.display = 'block';
+    } else if (style === 'modern' && modernContent) {
+        modernContent.style.display = 'block';
+    } else if (style === 'minimal' && minimalContent) {
+        minimalContent.style.display = 'block';
+    }
+}
+
+// ============================================
+// HERO STYLE SELECTION WITH LIVE PREVIEW
+// ============================================
+function selectHeroStyle(card, style) {
+    document.querySelectorAll('[data-style]').forEach(c => {
+        if (c.closest('#tab-hero')) c.classList.remove('active');
+    });
+    card.classList.add('active');
+    document.getElementById('heroStyleInput').value = style;
+
+    // Show/hide slide cards based on slider selection
+    const slide2 = document.getElementById('slide2Card');
+    const slide3 = document.getElementById('slide3Card');
+    if (style === 'slider') {
+        slide2.classList.remove('disabled');
+        slide3.classList.remove('disabled');
+        startMockupSlider();
+    } else {
+        slide2.classList.add('disabled');
+        slide3.classList.add('disabled');
+        stopMockupSlider();
+    }
+
+    // Update mockup hero
+    updateMockupHero(style);
+    markChanged();
+}
+
+function updateMockupHero(style) {
+    const hero = document.getElementById('mockupHero');
+
+    // Remove all style classes
+    hero.classList.remove('style-full_width', 'style-split', 'style-slider');
+    hero.classList.add('style-' + style);
+
+    // Hide all hero content
+    const fullContent = hero.querySelector('.hero-full-content');
+    const splitContent = hero.querySelector('.hero-split-content');
+    const sliderContent = hero.querySelector('.hero-slider-content');
+
+    if (fullContent) fullContent.style.display = 'none';
+    if (splitContent) splitContent.style.display = 'none';
+    if (sliderContent) sliderContent.style.display = 'none';
+
+    // Show the selected hero style
+    if (style === 'full_width' && fullContent) {
+        fullContent.style.display = 'flex';
+    } else if (style === 'split' && splitContent) {
+        splitContent.style.display = 'flex';
+    } else if (style === 'slider' && sliderContent) {
+        sliderContent.style.display = 'block';
+    }
+}
+
+// ============================================
+// MOCKUP SLIDER FUNCTIONALITY
+// ============================================
+function mockupSliderPrev() {
+    mockupSliderIndex = (mockupSliderIndex - 1 + 3) % 3;
+    updateMockupSlide();
+}
+
+function mockupSliderNext() {
+    mockupSliderIndex = (mockupSliderIndex + 1) % 3;
+    updateMockupSlide();
+}
+
+function mockupSliderGo(index) {
+    mockupSliderIndex = index;
+    updateMockupSlide();
+}
+
+function updateMockupSlide() {
+    const slides = document.querySelectorAll('.hero-slider-content .slider-slide');
+    const dots = document.querySelectorAll('.hero-slider-content .slider-dot');
+
+    slides.forEach((slide, i) => {
+        slide.classList.toggle('active', i === mockupSliderIndex);
+    });
+
+    dots.forEach((dot, i) => {
+        dot.classList.toggle('active', i === mockupSliderIndex);
+    });
+}
+
+function startMockupSlider() {
+    stopMockupSlider();
+    mockupSliderTimer = setInterval(() => {
+        mockupSliderNext();
+    }, 3000);
+}
+
+function stopMockupSlider() {
+    if (mockupSliderTimer) {
+        clearInterval(mockupSliderTimer);
+        mockupSliderTimer = null;
+    }
+}
+
+// ============================================
+// COLOR PICKERS WITH LIVE PREVIEW
+// ============================================
+document.querySelectorAll('.color-input').forEach(input => {
+    input.addEventListener('input', function() {
+        const targetId = this.dataset.target;
+        if (targetId) {
+            document.getElementById(targetId).value = this.value;
+        }
+
+        // Update dashboard preview if dashboard color
+        if (this.classList.contains('dashboard-color')) {
+            updateDashboardPreview();
+        }
+
+        // Update storefront mockup colors
+        updateMockupColors();
+        markChanged();
+    });
+});
+
+document.querySelectorAll('.color-hex-input').forEach(input => {
+    input.addEventListener('input', function() {
+        if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+            const colorInput = this.previousElementSibling;
+            if (colorInput) {
+                colorInput.value = this.value;
+                if (colorInput.classList.contains('dashboard-color')) {
+                    updateDashboardPreview();
+                }
+            }
+            updateMockupColors();
+        }
+        markChanged();
+    });
+});
+
+// Update mockup colors
+function updateMockupColors() {
+    const primary = document.querySelector('[name="primary_color"]')?.value || '#667eea';
+    const secondary = document.querySelector('[name="secondary_color"]')?.value || '#764ba2';
+    const accent = document.querySelector('[name="accent_color"]')?.value || '#10b981';
+    const overlayColor = document.querySelector('[name="hero_overlay_color"]')?.value || '#000000';
+    const overlayOpacity = (document.querySelector('[name="hero_overlay_opacity"]')?.value || 30) / 100;
+
+    const mockup = document.getElementById('storefrontMockup');
+    if (mockup) {
+        mockup.style.setProperty('--mockup-primary', primary);
+        mockup.style.setProperty('--mockup-secondary', secondary);
+        mockup.style.setProperty('--mockup-accent', accent);
+        mockup.style.setProperty('--mockup-overlay-color', overlayColor);
+        mockup.style.setProperty('--mockup-overlay-opacity', overlayOpacity);
+    }
+
+    // Update hero overlay directly
+    const heroOverlay = document.getElementById('heroOverlay');
+    const heroOverlaySlider = document.getElementById('heroOverlaySlider');
+    if (heroOverlay) {
+        heroOverlay.style.background = overlayColor;
+        heroOverlay.style.opacity = overlayOpacity;
+    }
+    if (heroOverlaySlider) {
+        heroOverlaySlider.style.background = overlayColor;
+        heroOverlaySlider.style.opacity = overlayOpacity;
+    }
+
+    // Update newsletter button
+    const newsletterBtn = document.querySelector('.mockup-newsletter-btn');
+    if (newsletterBtn) {
+        newsletterBtn.style.background = accent;
+    }
+
+    // Update category icons
+    document.querySelectorAll('.mockup-category-icon').forEach(icon => {
+        icon.style.color = primary;
+    });
+
+    // Update product prices
+    document.querySelectorAll('.mockup-product-price').forEach(price => {
+        price.style.color = primary;
+    });
+
+    // Update author avatars
+    document.querySelectorAll('.mockup-author-avatar').forEach(avatar => {
+        avatar.style.background = primary;
+    });
+}
+
+// Overlay color sync
+document.getElementById('overlayColorInput')?.addEventListener('input', function() {
+    document.getElementById('overlayColorHex').value = this.value;
+    updateMockupColors();
+    markChanged();
+});
+
+document.getElementById('overlayColorHex')?.addEventListener('input', function() {
+    if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+        document.getElementById('overlayColorInput').value = this.value;
+        updateMockupColors();
+    }
+    markChanged();
+});
+
+// Opacity slider
+document.getElementById('opacitySlider')?.addEventListener('input', function() {
+    document.getElementById('opacityValue').textContent = this.value + '%';
+    updateMockupColors();
+    markChanged();
+});
+
+// Dashboard preview update
+function updateDashboardPreview() {
+    const sidebar = document.querySelector('[name="dashboard_sidebar_color"]')?.value || '#111827';
+    const primary = document.querySelector('[name="dashboard_primary_color"]')?.value || '#6366f1';
+    const accent = document.querySelector('[name="dashboard_accent_color"]')?.value || '#10b981';
+
+    document.getElementById('dashboardPreview').style.setProperty('--dashboard-sidebar', sidebar);
+    document.getElementById('previewSidebar').style.background = sidebar;
+    document.getElementById('previewSidebarActive').style.background = primary;
+    document.getElementById('previewHeaderDot').style.background = accent;
+    document.querySelectorAll('.preview-card-icon').forEach(el => el.style.background = primary);
+}
+
+// Mark as changed - shows floating save bar
+function markChanged() {
+    hasChanges = true;
+    // Update top save button
+    const saveBtn = document.getElementById('saveChangesBtn');
+    if (!saveBtn.innerHTML.includes('*')) {
+        saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes *';
+    }
+    // Show floating save bar
+    const floatingBar = document.getElementById('floatingSaveBar');
+    if (floatingBar) {
+        floatingBar.classList.add('visible');
+    }
+}
+
+// Dismiss floating save bar (but keep changes marked)
+function dismissSaveBar() {
+    const floatingBar = document.getElementById('floatingSaveBar');
+    if (floatingBar) {
+        floatingBar.classList.remove('visible');
+    }
+}
+
+// Hide floating save bar and reset button
+function resetSaveState() {
+    hasChanges = false;
+    // Reset top button
+    const saveBtn = document.getElementById('saveChangesBtn');
+    if (saveBtn) {
+        saveBtn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+    }
+    // Hide floating bar
+    const floatingBar = document.getElementById('floatingSaveBar');
+    if (floatingBar) {
+        floatingBar.classList.remove('visible');
+    }
+}
+
+// Save storefront - called by save button click
+function saveStorefront() {
+    // Collect section order
+    const sections = document.querySelectorAll('#sectionList .section-item');
+    const sectionOrder = Array.from(sections).map(s => s.dataset.section).join(',');
+    document.getElementById('sectionOrderInput').value = sectionOrder;
+
+    // Collect enabled sections from active toggles
+    const enabledSections = [];
+    document.querySelectorAll('#sectionList .section-toggle.active').forEach(toggle => {
+        enabledSections.push(toggle.dataset.section);
+    });
+    document.getElementById('sectionsEnabledInput').value = enabledSections.join(',');
+
+
+    // Reset state and hide floating bar
+    resetSaveState();
+
+    // Submit the form
+    const form = document.getElementById('storefrontForm');
+    if (form) {
+        form.submit();
+    } else {
+        alert('ERROR: Form not found!');
+    }
+}
+
+// Warn before leaving with unsaved changes
+window.addEventListener('beforeunload', function(e) {
+    if (hasChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+// ============================================
+// INITIALIZATION
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize hero style state
+    const heroStyle = '{{ storefront.hero_style|default:"full_width" }}';
+    if (heroStyle !== 'slider') {
+        document.getElementById('slide2Card')?.classList.add('disabled');
+        document.getElementById('slide3Card')?.classList.add('disabled');
+    } else {
+        startMockupSlider();
+    }
+
+    // Initialize header in mockup
+    const headerStyle = '{{ storefront.header_style|default:"classic" }}';
+    updateMockupHeader(headerStyle);
+
+    // Initialize hero in mockup
+    updateMockupHero(heroStyle);
+
+    // Initialize colors in mockup
+    updateMockupColors();
+
+    // Initialize section visibility
+    document.querySelectorAll('#sectionList .section-toggle').forEach(toggle => {
+        const sectionId = toggle.dataset.section;
+        const isEnabled = toggle.classList.contains('active');
+        updateMockupSectionVisibility(sectionId, isEnabled);
+    });
+
+    // Initialize dashboard preview
+    updateDashboardPreview();
+});
+
+// ============================================
+// RESTORE TO DEFAULT
+// ============================================
+function confirmRestore() {
+    if (confirm('Are you sure you want to restore all storefront settings to default?\n\nThis will reset:\n• Header style\n• Hero banner\n• Colors\n• Section order\n• All customizations\n\nThis action cannot be undone!')) {
+        document.getElementById('restoreForm').submit();
+    }
+}
+</script>
+
+<!-- Floating Save Bar - Appears when changes are made -->
+<div class="floating-save-bar" id="floatingSaveBar">
+    <div class="save-message">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>You have unsaved changes</span>
+    </div>
+    <button type="button" class="btn-save-now" onclick="saveStorefront()">
+        <i class="fas fa-save"></i> Save Now
+    </button>
+    <button type="button" class="btn-dismiss" onclick="dismissSaveBar()">
+        Dismiss
+    </button>
+</div>
+
+<!-- Restore Form -->
+<form method="post" action="{% url 'vendor:storefront_restore' %}" id="restoreForm" style="display: none;">
+    {% csrf_token %}
+</form>
+{% endblock %}

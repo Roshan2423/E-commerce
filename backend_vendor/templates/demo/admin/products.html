@@ -1,0 +1,205 @@
+{% extends 'demo/admin/base.html' %}
+
+{% block title %}Products{% endblock %}
+{% block breadcrumb %}View Products{% endblock %}
+
+{% block extra_css %}
+<style>
+    .product-image-cell {
+        width: 60px;
+        height: 60px;
+        background: #f1f5f9;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .product-image-cell img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .product-image-cell .no-image {
+        color: #cbd5e1;
+        font-size: 1.25rem;
+    }
+
+    .product-name-cell {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .product-name-cell strong {
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .product-name-cell small {
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+    }
+
+    .actions-cell {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+        cursor: not-allowed;
+    }
+
+    .btn-icon.edit {
+        background: #dbeafe;
+        color: #2563eb;
+    }
+
+    .btn-icon.delete {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .empty-state i {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: var(--text-secondary);
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header" style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h1 class="page-title">Products</h1>
+        <p class="page-subtitle">Manage your product inventory</p>
+    </div>
+    <a href="{% url 'demo:admin_add_product' %}" class="btn btn-primary">
+        <i class="fas fa-plus"></i>
+        Add Product
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">All Products ({{ products|length }})</h3>
+        <div style="display: flex; gap: 0.5rem;">
+            <input type="text" class="form-control" placeholder="Search products..." style="width: 250px;" disabled>
+            <select class="form-control" style="width: 150px;" disabled>
+                <option>All Status</option>
+                <option>Active</option>
+                <option>Inactive</option>
+            </select>
+        </div>
+    </div>
+
+    {% if products %}
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Product</th>
+                    <th>SKU</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>
+                        <div class="product-image-cell">
+                            {% if product.get_main_image %}
+                            <img src="{{ product.get_main_image }}" alt="{{ product.name }}">
+                            {% else %}
+                            <i class="fas fa-image no-image"></i>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="product-name-cell">
+                            <strong>{{ product.name }}</strong>
+                            <small>{% if product.category %}{{ product.category.name }}{% else %}Uncategorized{% endif %}</small>
+                        </div>
+                    </td>
+                    <td><code style="font-size: 0.8125rem; background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 4px;">{{ product.sku|default:"-" }}</code></td>
+                    <td>
+                        {% if product.compare_price %}
+                        <span style="text-decoration: line-through; color: var(--text-secondary); font-size: 0.8125rem;">Rs. {{ product.price|floatformat:0 }}</span><br>
+                        <strong style="color: var(--success);">Rs. {{ product.compare_price|floatformat:0 }}</strong>
+                        {% else %}
+                        <strong>Rs. {{ product.price|floatformat:0 }}</strong>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if product.stock_quantity > product.low_stock_threshold %}
+                        <span class="badge badge-success">{{ product.stock_quantity }} in stock</span>
+                        {% elif product.stock_quantity > 0 %}
+                        <span class="badge badge-warning">{{ product.stock_quantity }} low</span>
+                        {% else %}
+                        <span class="badge badge-danger">Out of stock</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if product.is_active %}
+                        <span class="badge badge-success">Active</span>
+                        {% else %}
+                        <span class="badge badge-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="btn-icon edit" title="Edit (Demo)">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-icon delete" title="Delete (Demo)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-box-open"></i>
+        <h3>No Products Yet</h3>
+        <p>Products you add will appear here. This is a demo preview.</p>
+        <a href="{% url 'demo:admin_add_product' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            Add Your First Product
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,319 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Order #{{ order.get_order_number }} - Details{% endblock %}
+
+{% block content %}
+<div class="page-header" style="margin-bottom: 16px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+        <a href="{% url 'orders:list' %}" class="btn btn-secondary" style="padding: 6px 10px;">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="page-title" style="margin: 0; font-size: 20px;">Order #{{ order.get_order_number }}</h1>
+        <span class="badge {% if order.status == 'delivered' %}success{% elif order.status == 'pending' %}warning{% elif order.status == 'cancelled' %}danger{% else %}primary{% endif %}" style="padding: 5px 12px; font-size: 12px;">
+            {{ order.get_status_display }}
+        </span>
+    </div>
+    <div style="display: flex; gap: 10px; margin-left: auto;">
+        <a href="{% url 'orders:update' order.order_id %}" class="btn btn-primary" style="padding: 8px 16px; font-size: 13px;">
+            <i class="fas fa-edit"></i> Edit
+        </a>
+        <button class="btn btn-danger delete-order-btn" style="padding: 8px 16px; font-size: 13px;">
+            <i class="fas fa-trash"></i> Delete
+        </button>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 300px 1fr; gap: 16px; align-items: start;">
+    <!-- Left Sidebar -->
+    <div style="display: flex; flex-direction: column; gap: 0;">
+        <!-- Customer -->
+        <div class="data-table">
+            <div style="padding: 12px 16px; border-bottom: 1px solid #f1f5f9;">
+                <h3 style="margin: 0; font-size: 13px; font-weight: 600; color: #374151;">Customer</h3>
+            </div>
+            <div style="padding: 12px 16px;">
+                <div style="font-weight: 600; color: #1f2937; font-size: 14px;">{% if order.user %}{{ order.user.get_full_name|default:order.user.username }}{% else %}Guest{% if order.guest_email %} ({{ order.guest_email }}){% endif %}{% endif %}</div>
+                {% if order.is_guest_order %}<div style="font-size: 12px; color: #f59e0b; margin-top: 4px;">Guest Checkout</div>{% endif %}
+            </div>
+        </div>
+
+        <!-- Shipping Address -->
+        <div class="data-table">
+            <div style="padding: 12px 16px; border-bottom: 1px solid #f1f5f9;">
+                <h3 style="margin: 0; font-size: 13px; font-weight: 600; color: #374151;">Shipping Address</h3>
+            </div>
+            <div style="padding: 12px 16px;">
+                <div style="color: #374151; line-height: 1.5; white-space: pre-line; font-size: 13px;">{{ order.shipping_address|default:"No address" }}</div>
+            </div>
+        </div>
+
+        <!-- Payment -->
+        <div class="data-table">
+            <div style="padding: 12px 16px; border-bottom: 1px solid #f1f5f9;">
+                <h3 style="margin: 0; font-size: 13px; font-weight: 600; color: #374151;">Payment</h3>
+            </div>
+            <div style="padding: 12px 16px;">
+                <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;">
+                    <span style="color: #64748b;">Method:</span>
+                    <span style="font-weight: 600; color: #1f2937; text-transform: uppercase;">{{ order.payment_method|default:"COD" }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px; align-items: center;">
+                    <span style="color: #64748b;">Status:</span>
+                    <span class="badge {% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'pending' %}warning{% else %}danger{% endif %}" style="padding: 3px 8px; font-size: 11px;">
+                        {{ order.get_payment_status_display }}
+                    </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 6px 0; font-size: 13px;">
+                    <span style="color: #64748b;">Delivery:</span>
+                    <span style="color: #1f2937;">Rs {{ order.shipping_cost|default:0|floatformat:0 }}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 10px 0 2px 0; margin-top: 6px; border-top: 1px solid #e2e8f0;">
+                    <span style="font-weight: 700; color: #1f2937; font-size: 14px;">Total:</span>
+                    <span style="font-weight: 700; color: #1f2937; font-size: 16px;">Rs {{ order.total_amount|default:0|floatformat:0 }}</span>
+                </div>
+            </div>
+        </div>
+
+        {% if order.notes %}
+        <!-- Notes -->
+        <div class="data-table">
+            <div style="padding: 12px 16px; border-bottom: 1px solid #f1f5f9;">
+                <h3 style="margin: 0; font-size: 13px; font-weight: 600; color: #374151;">Notes</h3>
+            </div>
+            <div style="padding: 12px 16px;">
+                <div style="color: #374151; font-size: 13px; line-height: 1.5;">{{ order.notes }}</div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Right Content -->
+    <div>
+        <!-- Order Items -->
+        <div class="data-table">
+            <div style="padding: 12px 16px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 13px; font-weight: 600; color: #374151;">Order Items</h3>
+                <span style="color: #64748b; font-size: 12px;">{{ order_items|length }} item{{ order_items|length|pluralize }}</span>
+            </div>
+            <div style="padding: 8px 12px;">
+                {% for item in order_items %}
+                <div style="display: flex; gap: 12px; padding: 10px 4px; {% if not forloop.last %}border-bottom: 1px solid #f8fafc;{% endif %}">
+                    <div style="width: 56px; height: 56px; border-radius: 8px; overflow: hidden; background: #f8fafc; flex-shrink: 0;">
+                        {% if item.product and item.product.get_main_image %}
+                        <img src="{{ item.product.get_main_image }}" alt="{{ item.product_name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                        <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #cbd5e1;">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div style="flex: 1; min-width: 0; display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600; color: #1f2937; font-size: 13px; line-height: 1.3;">{{ item.product_name }}</div>
+                            <div style="color: #94a3b8; font-size: 12px; margin-top: 4px;">Qty: {{ item.quantity }} @ Rs {{ item.unit_price|floatformat:0 }}</div>
+                        </div>
+                        <div style="font-weight: 700; color: #1f2937; font-size: 14px; white-space: nowrap;">Rs {{ item.total_price|floatformat:0 }}</div>
+                    </div>
+                </div>
+                {% empty %}
+                <div style="text-align: center; padding: 30px; color: #94a3b8;">
+                    <i class="fas fa-box-open" style="font-size: 24px; margin-bottom: 8px;"></i>
+                    <div style="font-size: 13px;">No items</div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Order Date Info -->
+            <div style="padding: 10px 16px; border-top: 1px solid #f1f5f9; background: #fafafa;">
+                <div style="display: flex; gap: 24px; font-size: 12px; color: #94a3b8;">
+                    <span>Created: {{ order.created_at|date:"d M, Y h:i A" }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order History -->
+        <div class="data-table" style="margin-top: 16px;">
+            <div style="padding: 12px 16px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 13px; font-weight: 600; color: #374151;">
+                    <i class="fas fa-history" style="margin-right: 6px; color: #6366f1;"></i> Order History
+                </h3>
+            </div>
+            <div style="padding: 0;">
+                {% if order_history %}
+                <div class="history-timeline">
+                    {% for history in order_history %}
+                    <div class="history-item">
+                        <div class="history-icon {% if history.action == 'status_changed' %}status{% elif history.action == 'payment_changed' %}payment{% elif history.action == 'created' %}created{% else %}updated{% endif %}">
+                            {% if history.action == 'status_changed' %}
+                            <i class="fas fa-exchange-alt"></i>
+                            {% elif history.action == 'payment_changed' %}
+                            <i class="fas fa-credit-card"></i>
+                            {% elif history.action == 'created' %}
+                            <i class="fas fa-plus"></i>
+                            {% else %}
+                            <i class="fas fa-edit"></i>
+                            {% endif %}
+                        </div>
+                        <div class="history-content">
+                            <div class="history-title">
+                                {% if history.action == 'status_changed' %}
+                                Status changed from <strong>{{ history.old_value }}</strong> to <strong>{{ history.new_value }}</strong>
+                                {% elif history.action == 'payment_changed' %}
+                                Payment changed from <strong>{{ history.old_value }}</strong> to <strong>{{ history.new_value }}</strong>
+                                {% elif history.action == 'created' %}
+                                Order created
+                                {% else %}
+                                Order updated
+                                {% endif %}
+                            </div>
+                            <div class="history-meta">
+                                <span>{{ history.created_at|date:"d M, Y" }} at {{ history.created_at|time:"h:i A" }}</span>
+                                {% if history.created_by %}
+                                <span>by {{ history.created_by.get_full_name|default:history.created_by.username }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div style="text-align: center; padding: 30px; color: #94a3b8;">
+                    <i class="fas fa-history" style="font-size: 24px; margin-bottom: 8px; opacity: 0.5;"></i>
+                    <div style="font-size: 13px;">No history yet</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; padding: 32px; max-width: 400px; width: 90%; text-align: center;">
+        <div style="width: 60px; height: 60px; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 24px; color: #dc2626;"></i>
+        </div>
+        <h3 style="margin-bottom: 12px; color: #1f2937;">Delete Order?</h3>
+        <p style="color: #6b7280; margin-bottom: 24px;">Are you sure you want to delete order <strong>#{{ order.get_order_number }}</strong>? You can restore it from the Deleted Orders section later.</p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            <button id="cancelDelete" class="btn btn-secondary">Cancel</button>
+            <button id="confirmDelete" class="btn btn-danger">Delete</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Delete order - show modal
+    $('.delete-order-btn').click(function() {
+        $('#deleteModal').css('display', 'flex');
+    });
+
+    // Cancel delete
+    $('#cancelDelete').click(function() {
+        $('#deleteModal').hide();
+    });
+
+    // Confirm delete
+    $('#confirmDelete').click(function() {
+        $.post('/orders/{{ order.order_id }}/delete/', {
+            csrfmiddlewaretoken: '{{ csrf_token }}'
+        })
+        .done(function(response) {
+            if (response.success) {
+                window.location.href = '{% url "orders:list" %}';
+            } else {
+                alert(response.message || 'Failed to delete order');
+                $('#deleteModal').hide();
+            }
+        })
+        .fail(function() {
+            alert('Failed to delete order');
+            $('#deleteModal').hide();
+        });
+    });
+
+    // Close modal on outside click
+    $('#deleteModal').click(function(e) {
+        if (e.target === this) {
+            $(this).hide();
+        }
+    });
+});
+</script>
+
+<style>
+/* History Timeline Styles */
+.history-timeline {
+    padding: 16px;
+}
+
+.history-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.history-item:last-child {
+    border-bottom: none;
+}
+
+.history-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 12px;
+}
+
+.history-icon.status {
+    background: #ede9fe;
+    color: #7c3aed;
+}
+
+.history-icon.payment {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.history-icon.created {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.history-icon.updated {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.history-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.history-title {
+    font-size: 13px;
+    color: #374151;
+    line-height: 1.4;
+}
+
+.history-title strong {
+    color: #1f2937;
+}
+
+.history-meta {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 4px;
+    display: flex;
+    gap: 8px;
+}
+</style>
+{% endblock %}

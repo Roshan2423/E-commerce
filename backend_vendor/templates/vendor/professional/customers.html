@@ -1,0 +1,461 @@
+{% extends 'vendor/professional/base.html' %}
+{% load static %}
+
+{% block title %}Customers - {{ business.business_name }}{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'vendor:dashboard' %}" class="cf-breadcrumb-item">
+    <i class="fas fa-home"></i>
+</a>
+<span class="cf-breadcrumb-separator">/</span>
+<span class="cf-breadcrumb-item active">Customers</span>
+{% endblock %}
+
+{% block content %}
+<div class="cf-page-header">
+    <div>
+        <h1 class="cf-page-title">Customers</h1>
+        <p class="cf-page-subtitle">Manage your customer base</p>
+    </div>
+    <div class="cf-page-actions">
+        <button class="cf-btn cf-btn-outline" onclick="exportCustomers()">
+            <i class="fas fa-download"></i>
+            Export
+        </button>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="cf-stats-grid">
+    <div class="cf-stat-card">
+        <div class="cf-stat-icon primary">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="cf-stat-content">
+            <div class="cf-stat-value">{{ total_customers|default:"0" }}</div>
+            <div class="cf-stat-label">Total Customers</div>
+        </div>
+    </div>
+
+    <div class="cf-stat-card">
+        <div class="cf-stat-icon success">
+            <i class="fas fa-user-check"></i>
+        </div>
+        <div class="cf-stat-content">
+            <div class="cf-stat-value">{{ active_customers|default:"0" }}</div>
+            <div class="cf-stat-label">Active Customers</div>
+        </div>
+    </div>
+
+    <div class="cf-stat-card">
+        <div class="cf-stat-icon warning">
+            <i class="fas fa-user-plus"></i>
+        </div>
+        <div class="cf-stat-content">
+            <div class="cf-stat-value">{{ new_customers_this_month|default:"0" }}</div>
+            <div class="cf-stat-label">New This Month</div>
+        </div>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="cf-filter-bar">
+    <div class="cf-search-box">
+        <i class="fas fa-search"></i>
+        <input type="text" id="searchInput" placeholder="Search customers..." value="{{ request.GET.q }}">
+    </div>
+    <div class="cf-filter-group">
+        <select id="statusFilter" class="cf-filter-select">
+            <option value="">All Status</option>
+            <option value="active" {% if request.GET.status == 'active' %}selected{% endif %}>Active</option>
+            <option value="inactive" {% if request.GET.status == 'inactive' %}selected{% endif %}>Inactive</option>
+        </select>
+    </div>
+</div>
+
+<div class="cf-card">
+    <div class="cf-card-header">
+        <h3 class="cf-card-title">All Customers</h3>
+    </div>
+
+    <div class="cf-table-responsive">
+        <table class="cf-table">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Phone</th>
+                    <th>Orders</th>
+                    <th>Total Spent</th>
+                    <th>Joined</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    <td>
+                        <div class="cf-customer-cell">
+                            <div class="cf-avatar">
+                                {{ customer.first_name|slice:":1"|upper|default:"U" }}
+                            </div>
+                            <div class="cf-customer-info">
+                                <span class="cf-customer-name">{{ customer.get_full_name|default:"Customer" }}</span>
+                                <span class="cf-customer-email">{{ customer.email }}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ customer.phone|default:"-" }}</td>
+                    <td>{{ customer.order_count|default:"0" }}</td>
+                    <td><strong>Rs. {{ customer.total_spent|default:"0" }}</strong></td>
+                    <td>{{ customer.date_joined|date:"M d, Y" }}</td>
+                    <td>
+                        {% if customer.is_active %}
+                        <span class="cf-status-badge cf-status-active">Active</span>
+                        {% else %}
+                        <span class="cf-status-badge cf-status-inactive">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="cf-action-buttons">
+                            <a href="{% url 'vendor:customer_detail' customer.id %}" class="cf-btn cf-btn-sm cf-btn-outline" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="mailto:{{ customer.email }}" class="cf-btn cf-btn-sm cf-btn-outline" title="Email">
+                                <i class="fas fa-envelope"></i>
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7">
+                        <div class="cf-empty-state">
+                            <i class="fas fa-users"></i>
+                            <p>No customers yet</p>
+                            <span>Customers who purchase your products will appear here</span>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if customers.has_other_pages %}
+<div class="cf-pagination">
+    {% if customers.has_previous %}
+    <a href="?page={{ customers.previous_page_number }}" class="cf-page-btn">
+        <i class="fas fa-chevron-left"></i>
+    </a>
+    {% endif %}
+
+    {% for num in customers.paginator.page_range %}
+        {% if customers.number == num %}
+        <span class="cf-page-btn active">{{ num }}</span>
+        {% elif num > customers.number|add:'-3' and num < customers.number|add:'3' %}
+        <a href="?page={{ num }}" class="cf-page-btn">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if customers.has_next %}
+    <a href="?page={{ customers.next_page_number }}" class="cf-page-btn">
+        <i class="fas fa-chevron-right"></i>
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .cf-page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .cf-page-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: var(--cf-text-primary);
+        margin: 0;
+    }
+
+    .cf-page-subtitle {
+        font-size: 0.875rem;
+        color: var(--cf-text-secondary);
+        margin: 0.25rem 0 0;
+    }
+
+    .cf-page-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    /* Stats Grid */
+    .cf-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .cf-stat-card {
+        background: var(--cf-bg-primary, white);
+        border-radius: var(--cf-radius, 8px);
+        padding: 1.25rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        border: 1px solid var(--cf-border, #e2e8f0);
+    }
+
+    .cf-stat-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.25rem;
+    }
+
+    .cf-stat-icon.primary {
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+    }
+
+    .cf-stat-icon.success {
+        background: linear-gradient(135deg, #10b981, #34d399);
+        color: white;
+    }
+
+    .cf-stat-icon.warning {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+        color: white;
+    }
+
+    .cf-stat-content {
+        flex: 1;
+    }
+
+    .cf-stat-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--cf-text-primary, #1e293b);
+    }
+
+    .cf-stat-label {
+        font-size: 0.8125rem;
+        color: var(--cf-text-secondary, #64748b);
+    }
+
+    /* Filter Bar */
+    .cf-filter-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+
+    .cf-search-box {
+        position: relative;
+        flex: 1;
+        max-width: 400px;
+    }
+
+    .cf-search-box i {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--cf-text-secondary);
+    }
+
+    .cf-search-box input {
+        width: 100%;
+        padding: 0.625rem 1rem 0.625rem 2.5rem;
+        border: 1px solid var(--cf-border, #e2e8f0);
+        border-radius: var(--cf-radius, 8px);
+        background: var(--cf-bg-primary, white);
+        font-size: 0.875rem;
+    }
+
+    .cf-filter-group {
+        display: flex;
+        gap: 0.75rem;
+    }
+
+    .cf-filter-select {
+        padding: 0.625rem 1rem;
+        border: 1px solid var(--cf-border, #e2e8f0);
+        border-radius: var(--cf-radius, 8px);
+        background: var(--cf-bg-primary, white);
+        font-size: 0.875rem;
+        min-width: 140px;
+    }
+
+    /* Card Header */
+    .cf-card-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--cf-border, #e2e8f0);
+    }
+
+    .cf-card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0;
+        color: var(--cf-text-primary, #1e293b);
+    }
+
+    /* Customer Cell */
+    .cf-customer-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .cf-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+
+    .cf-customer-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .cf-customer-name {
+        font-weight: 500;
+        color: var(--cf-text-primary, #1e293b);
+    }
+
+    .cf-customer-email {
+        font-size: 0.8125rem;
+        color: var(--cf-text-secondary, #64748b);
+    }
+
+    /* Status Badges */
+    .cf-status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+
+    .cf-status-active {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .cf-status-inactive {
+        background: #f1f5f9;
+        color: #64748b;
+    }
+
+    /* Action Buttons */
+    .cf-action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    /* Empty State */
+    .cf-empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--cf-text-secondary, #64748b);
+    }
+
+    .cf-empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .cf-empty-state p {
+        font-size: 1rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .cf-empty-state span {
+        font-size: 0.875rem;
+    }
+
+    /* Pagination */
+    .cf-pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .cf-page-btn {
+        padding: 0.5rem 0.875rem;
+        border: 1px solid var(--cf-border, #e2e8f0);
+        border-radius: var(--cf-radius, 8px);
+        background: var(--cf-bg-primary, white);
+        color: var(--cf-text-primary, #1e293b);
+        text-decoration: none;
+        font-size: 0.875rem;
+    }
+
+    .cf-page-btn.active {
+        background: var(--cf-primary, #6366f1);
+        color: white;
+        border-color: var(--cf-primary, #6366f1);
+    }
+
+    .cf-page-btn:hover:not(.active) {
+        background: var(--cf-bg-secondary, #f8fafc);
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Search functionality
+    document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            const params = new URLSearchParams(window.location.search);
+            if (this.value) {
+                params.set('q', this.value);
+            } else {
+                params.delete('q');
+            }
+            window.location.href = '?' + params.toString();
+        }
+    });
+
+    // Status filter
+    document.getElementById('statusFilter').addEventListener('change', function() {
+        const params = new URLSearchParams(window.location.search);
+        if (this.value) {
+            params.set('status', this.value);
+        } else {
+            params.delete('status');
+        }
+        window.location.href = '?' + params.toString();
+    });
+
+    // Export functionality
+    function exportCustomers() {
+        window.location.href = "{% url 'vendor:customers_export' %}";
+    }
+</script>
+{% endblock %}

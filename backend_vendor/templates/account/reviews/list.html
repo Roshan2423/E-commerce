@@ -1,0 +1,270 @@
+{% extends 'account/base.html' %}
+
+{% block title %}My Reviews{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'customer_dashboard:overview' %}" class="cf-breadcrumb-item">
+    <i class="fas fa-home"></i>
+</a>
+<span class="cf-breadcrumb-separator">/</span>
+<span class="cf-breadcrumb-item active">Reviews</span>
+{% endblock %}
+
+{% block content %}
+<div class="cf-page-header">
+    <div class="cf-page-header-content">
+        <h1 class="cf-page-title">My Reviews</h1>
+        <p class="cf-page-subtitle">Reviews you've written for products</p>
+    </div>
+</div>
+
+{% if reviews %}
+<div class="cf-reviews-list">
+    {% for review in reviews %}
+    <div class="cf-card cf-review-card">
+        <div class="cf-card-body">
+            <div class="cf-review-header">
+                <div class="cf-review-product">
+                    <div class="cf-product-image">
+                        {% if review.product.images.first %}
+                        <img src="{{ review.product.images.first.image.url }}" alt="{{ review.product.name }}">
+                        {% else %}
+                        <div class="cf-product-placeholder">
+                            <i class="fas fa-image"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="cf-product-info">
+                        <h4 class="cf-product-name">{{ review.product.name }}</h4>
+                        <span class="cf-review-date">Reviewed on {{ review.created_at|date:"F d, Y" }}</span>
+                    </div>
+                </div>
+                <div class="cf-review-rating">
+                    {% for i in "12345" %}
+                    <i class="fas fa-star {% if forloop.counter <= review.rating %}cf-star-filled{% else %}cf-star-empty{% endif %}"></i>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% if review.title %}
+            <h5 class="cf-review-title">{{ review.title }}</h5>
+            {% endif %}
+
+            <p class="cf-review-comment">{{ review.comment }}</p>
+
+            {% if review.is_verified %}
+            <span class="cf-badge cf-badge-success cf-badge-sm">
+                <i class="fas fa-check"></i> Verified Purchase
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if page_obj.has_other_pages %}
+<div class="cf-pagination-wrapper">
+    <nav class="cf-pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="cf-page-link">
+            <i class="fas fa-chevron-left"></i>
+        </a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <span class="cf-page-link active">{{ num }}</span>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <a href="?page={{ num }}" class="cf-page-link">{{ num }}</a>
+        {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="cf-page-link">
+            <i class="fas fa-chevron-right"></i>
+        </a>
+        {% endif %}
+    </nav>
+</div>
+{% endif %}
+
+{% else %}
+<div class="cf-card">
+    <div class="cf-card-body">
+        <div class="cf-empty-state">
+            <i class="fas fa-star"></i>
+            <h3>No reviews yet</h3>
+            <p>You haven't written any product reviews. Share your thoughts on products you've purchased!</p>
+            <a href="{% url 'customer_dashboard:orders' %}" class="cf-btn cf-btn-primary">
+                <i class="fas fa-shopping-bag"></i> View Past Orders
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+.cf-reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.cf-review-card {
+    transition: box-shadow var(--cf-transition-fast);
+}
+
+.cf-review-card:hover {
+    box-shadow: var(--cf-shadow-md);
+}
+
+.cf-review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.cf-review-product {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+.cf-product-image {
+    width: 64px;
+    height: 64px;
+    border-radius: var(--cf-radius);
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.cf-product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.cf-product-placeholder {
+    width: 100%;
+    height: 100%;
+    background: var(--cf-gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--cf-text-muted);
+}
+
+.cf-product-name {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    margin: 0 0 0.25rem;
+}
+
+.cf-review-date {
+    font-size: 0.8125rem;
+    color: var(--cf-text-secondary);
+}
+
+.cf-review-rating {
+    display: flex;
+    gap: 2px;
+}
+
+.cf-star-filled {
+    color: #fbbf24;
+}
+
+.cf-star-empty {
+    color: var(--cf-gray-300);
+}
+
+.cf-review-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+}
+
+.cf-review-comment {
+    font-size: 0.875rem;
+    color: var(--cf-text-secondary);
+    line-height: 1.6;
+    margin: 0 0 1rem;
+}
+
+.cf-badge-sm {
+    font-size: 0.6875rem;
+    padding: 0.25rem 0.5rem;
+}
+
+.cf-pagination-wrapper {
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+}
+
+.cf-pagination {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.cf-page-link {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--cf-radius);
+    text-decoration: none;
+    color: var(--cf-text);
+    font-size: 0.875rem;
+    transition: background var(--cf-transition-fast);
+}
+
+.cf-page-link:hover {
+    background: var(--cf-bg-secondary);
+}
+
+.cf-page-link.active {
+    background: var(--cf-blue);
+    color: white;
+}
+
+.cf-empty-state {
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.cf-empty-state i {
+    font-size: 4rem;
+    color: var(--cf-text-muted);
+    margin-bottom: 1rem;
+}
+
+.cf-empty-state h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.cf-empty-state p {
+    color: var(--cf-text-secondary);
+    margin-bottom: 1.5rem;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 640px) {
+    .cf-review-header {
+        flex-direction: column;
+    }
+
+    .cf-review-rating {
+        order: -1;
+    }
+}
+</style>
+{% endblock %}

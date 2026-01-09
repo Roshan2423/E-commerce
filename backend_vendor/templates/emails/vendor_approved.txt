@@ -1,0 +1,25 @@
+CONGRATULATIONS!
+================
+
+Your vendor application has been approved!
+
+Welcome to OVN Store, {{ business.business_name }}!
+
+Great news! Your application to become a vendor on OVN Store has been approved.
+You now have access to your vendor dashboard with a 14-day free trial of the {{ plan_name }}.
+
+YOUR PLAN: {{ plan_name }}
+Trial Period: {{ trial_days }} days free access to all features
+
+WHAT'S NEXT?
+------------
+1. Add your products to the catalog
+2. Customize your storefront
+3. Start receiving orders!
+
+Go to your dashboard: {{ dashboard_url }}
+
+---
+Need help? Contact us at support@ovnstore.com
+
+(c) 2024 OVN Store. All rights reserved.

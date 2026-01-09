@@ -1,0 +1,345 @@
+{% load static %}
+<!-- Testimonials Section -->
+<section class="section section-testimonials" id="testimonialsSection">
+    <div class="container">
+        <div class="section-header text-center">
+            <h2 class="section-title">What Our Customers Say</h2>
+            <p class="section-subtitle">Real reviews from real customers</p>
+        </div>
+
+        <div class="testimonials-slider">
+            <div class="testimonials-track" id="testimonialsTrack">
+                {% for review in reviews %}
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">
+                        {% for i in "12345" %}
+                        {% if forloop.counter <= review.rating %}
+                        <i class="fas fa-star"></i>
+                        {% else %}
+                        <i class="far fa-star"></i>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    <blockquote class="testimonial-quote">
+                        "{{ review.comment|truncatechars:200 }}"
+                    </blockquote>
+                    <div class="testimonial-product">
+                        {% if review.product.primary_image %}
+                        <img src="{{ review.product.primary_image.url }}" alt="{{ review.product.name }}" class="product-thumb">
+                        {% endif %}
+                        <span class="product-name">{{ review.product.name|truncatechars:30 }}</span>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            {% if review.user.avatar %}
+                            <img src="{{ review.user.avatar.url }}" alt="{{ review.user.first_name }}">
+                            {% else %}
+                            <span class="avatar-initial">{{ review.user.first_name|first|default:"C" }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="author-info">
+                            <span class="author-name">{{ review.user.first_name }} {{ review.user.last_name|first }}.</span>
+                            {% if review.is_verified_purchase %}
+                            <span class="verified-badge"><i class="fas fa-check-circle"></i> Verified Buyer</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <!-- Default testimonials if none exist -->
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <blockquote class="testimonial-quote">
+                        "Amazing quality products and excellent customer service. Will definitely shop here again!"
+                    </blockquote>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <span class="avatar-initial">J</span>
+                        </div>
+                        <div class="author-info">
+                            <span class="author-name">John D.</span>
+                            <span class="verified-badge"><i class="fas fa-check-circle"></i> Verified Buyer</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <blockquote class="testimonial-quote">
+                        "Fast shipping and the product exceeded my expectations. Highly recommended!"
+                    </blockquote>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <span class="avatar-initial">S</span>
+                        </div>
+                        <div class="author-info">
+                            <span class="author-name">Sarah M.</span>
+                            <span class="verified-badge"><i class="fas fa-check-circle"></i> Verified Buyer</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card">
+                    <div class="testimonial-rating">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="far fa-star"></i>
+                    </div>
+                    <blockquote class="testimonial-quote">
+                        "Great selection and competitive prices. Customer support was very helpful with my questions."
+                    </blockquote>
+                    <div class="testimonial-author">
+                        <div class="author-avatar">
+                            <span class="avatar-initial">M</span>
+                        </div>
+                        <div class="author-info">
+                            <span class="author-name">Michael R.</span>
+                            <span class="verified-badge"><i class="fas fa-check-circle"></i> Verified Buyer</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Navigation -->
+            <button class="testimonials-nav testimonials-prev" id="testimonialsPrev">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            <button class="testimonials-nav testimonials-next" id="testimonialsNext">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>
+
+        <!-- Trust Stats -->
+        <div class="trust-stats">
+            <div class="stat-item">
+                <span class="stat-value">{{ total_reviews|default:"500" }}+</span>
+                <span class="stat-label">Happy Customers</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ average_rating|default:"4.8" }}</span>
+                <span class="stat-label">Average Rating</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value">{{ total_products|default:"100" }}+</span>
+                <span class="stat-label">Products</span>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .section-testimonials {
+        padding: 5rem 0;
+        background: #f8fafc;
+    }
+
+    .section-testimonials .section-header {
+        margin-bottom: 3rem;
+    }
+
+    .testimonials-slider {
+        position: relative;
+        overflow: hidden;
+        padding: 0 3rem;
+    }
+
+    .testimonials-track {
+        display: flex;
+        gap: 1.5rem;
+        overflow-x: auto;
+        scroll-behavior: smooth;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        padding: 1rem 0;
+    }
+
+    .testimonials-track::-webkit-scrollbar {
+        display: none;
+    }
+
+    .testimonial-card {
+        flex: 0 0 350px;
+        background: #ffffff;
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .testimonial-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+
+    .testimonial-rating {
+        color: #fbbf24;
+        font-size: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .testimonial-quote {
+        font-size: 1rem;
+        color: #475569;
+        line-height: 1.7;
+        margin: 0 0 1.5rem 0;
+        font-style: italic;
+    }
+
+    .testimonial-product {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        background: #f8fafc;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+    }
+
+    .product-thumb {
+        width: 40px;
+        height: 40px;
+        object-fit: cover;
+        border-radius: 6px;
+    }
+
+    .product-name {
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+
+    .testimonial-author {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .author-avatar {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        overflow: hidden;
+        background: linear-gradient(135deg, {{ storefront.primary_color|default:'#667eea' }} 0%, {{ storefront.secondary_color|default:'#764ba2' }} 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .author-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .avatar-initial {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #ffffff;
+    }
+
+    .author-info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .author-name {
+        font-weight: 600;
+        color: #1a202c;
+    }
+
+    .verified-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        color: {{ storefront.accent_color|default:'#10b981' }};
+    }
+
+    .testimonials-nav {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 44px;
+        height: 44px;
+        border: none;
+        border-radius: 50%;
+        background: #ffffff;
+        color: #1a202c;
+        font-size: 1rem;
+        cursor: pointer;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: all 0.3s ease;
+        z-index: 10;
+    }
+
+    .testimonials-nav:hover {
+        background: {{ storefront.primary_color|default:'#667eea' }};
+        color: #ffffff;
+    }
+
+    .testimonials-prev { left: 0; }
+    .testimonials-next { right: 0; }
+
+    .trust-stats {
+        display: flex;
+        justify-content: center;
+        gap: 4rem;
+        margin-top: 3rem;
+        padding-top: 3rem;
+        border-top: 1px solid #e2e8f0;
+    }
+
+    .stat-item {
+        text-align: center;
+    }
+
+    .stat-value {
+        display: block;
+        font-size: 2rem;
+        font-weight: 700;
+        color: {{ storefront.primary_color|default:'#667eea' }};
+        line-height: 1;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-label {
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+
+    @media (max-width: 768px) {
+        .testimonials-slider {
+            padding: 0;
+        }
+
+        .testimonial-card {
+            flex: 0 0 300px;
+        }
+
+        .testimonials-nav {
+            display: none;
+        }
+
+        .trust-stats {
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+        }
+    }
+</style>

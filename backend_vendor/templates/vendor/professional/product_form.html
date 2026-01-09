@@ -1,0 +1,338 @@
+{% extends 'vendor/professional/base.html' %}
+{% load static %}
+
+{% block title %}{% if product %}Edit{% else %}Add{% endif %} Product - {{ business.business_name }}{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'vendor:dashboard' %}">
+    <i class="fas fa-home"></i>
+</a>
+<span>/</span>
+<a href="{% url 'vendor:products' %}">Products</a>
+<span>/</span>
+<span class="breadcrumb-current">{% if product %}Edit{% else %}Add{% endif %}</span>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">{% if product %}Edit Product{% else %}Add New Product{% endif %}</h1>
+        <p class="page-subtitle">{% if product %}Update product details{% else %}Create a new product for your store{% endif %}</p>
+    </div>
+    <div class="page-actions">
+        <a href="{% url 'vendor:products' %}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i>
+            Back to Products
+        </a>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="product-form">
+    {% csrf_token %}
+
+    <div class="form-grid">
+        <!-- Main Info -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Basic Information</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label class="form-label" for="name">Product Name *</label>
+                    <input type="text" id="name" name="name" class="form-control" value="{{ product.name|default:'' }}" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="category">Category *</label>
+                        <select id="category" name="category" class="form-control" required>
+                            <option value="">Select Category</option>
+                            {% for category in categories %}
+                            <option value="{{ category.id }}" {% if product.category_id == category.id %}selected{% endif %}>
+                                {{ category.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="sku">SKU</label>
+                        <input type="text" id="sku" name="sku" class="form-control" value="{{ product.sku|default:'' }}" placeholder="Auto-generated if empty">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="short_description">Short Description</label>
+                    <textarea id="short_description" name="short_description" class="form-control" rows="2" maxlength="500">{{ product.short_description|default:'' }}</textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="description">Full Description *</label>
+                    <textarea id="description" name="description" class="form-control" rows="5" required>{{ product.description|default:'' }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pricing -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Pricing</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="price">Price (Rs.) *</label>
+                        <input type="number" id="price" name="price" class="form-control" step="0.01" min="0" value="{{ product.price|default:'' }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="compare_price">Compare at Price (Rs.)</label>
+                        <input type="number" id="compare_price" name="compare_price" class="form-control" step="0.01" min="0" value="{{ product.compare_price|default:'' }}">
+                        <small class="form-hint">Original price for showing discount</small>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="cost_price">Cost Price (Rs.)</label>
+                    <input type="number" id="cost_price" name="cost_price" class="form-control" step="0.01" min="0" value="{{ product.cost_price|default:'' }}">
+                    <small class="form-hint">Your cost (for profit tracking)</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Inventory</h3>
+            </div>
+            <div class="card-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label" for="stock_quantity">Stock Quantity *</label>
+                        <input type="number" id="stock_quantity" name="stock_quantity" class="form-control" min="0" value="{{ product.stock_quantity|default:0 }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="low_stock_threshold">Low Stock Alert</label>
+                        <input type="number" id="low_stock_threshold" name="low_stock_threshold" class="form-control" min="0" value="{{ product.low_stock_threshold|default:10 }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Images -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Product Images</h3>
+            </div>
+            <div class="card-body">
+                <div class="image-upload" id="imageUploadArea">
+                    <input type="file" id="images" name="images" multiple accept="image/*" hidden>
+                    <div class="upload-placeholder" onclick="document.getElementById('images').click()">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p>Click to upload images</p>
+                        <small>PNG, JPG up to 10MB each</small>
+                    </div>
+                </div>
+                {% if product and product.images.all %}
+                <div class="existing-images">
+                    <h4>Current Images</h4>
+                    <div class="image-grid">
+                        {% for image in product.images.all %}
+                        <div class="image-item">
+                            <img src="{{ image.image.url }}" alt="{{ image.alt_text }}">
+                            <div class="image-actions">
+                                <label>
+                                    <input type="radio" name="main_image" value="{{ image.id }}" {% if image.is_main %}checked{% endif %}>
+                                    Main
+                                </label>
+                                <button type="button" class="btn-delete-image" data-id="{{ image.id }}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Options -->
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Options</h3>
+            </div>
+            <div class="card-body">
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="is_active" {% if product.is_active or not product %}checked{% endif %}>
+                        <span>Active (visible on store)</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="is_featured" {% if product.is_featured %}checked{% endif %}>
+                        <span>Featured Product</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" name="is_flash_sale" {% if product.is_flash_sale %}checked{% endif %} id="flashSaleCheck">
+                        <span>Flash Sale</span>
+                    </label>
+                </div>
+
+                <div class="form-group flash-sale-price" id="flashSalePrice" style="margin-top: 1rem; {% if not product.is_flash_sale %}display: none;{% endif %}">
+                    <label class="form-label" for="flash_sale_price">Flash Sale Price (Rs.)</label>
+                    <input type="number" id="flash_sale_price" name="flash_sale_price" class="form-control" step="0.01" min="0" value="{{ product.flash_sale_price|default:'' }}">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-actions">
+        <button type="submit" class="btn btn-primary btn-lg">
+            <i class="fas fa-save"></i>
+            <span>{% if product %}Update Product{% else %}Create Product{% endif %}</span>
+        </button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-grid {
+        display: grid;
+        gap: 1.5rem;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .form-hint {
+        display: block;
+        margin-top: 0.25rem;
+        color: var(--text-secondary);
+        font-size: 0.75rem;
+    }
+
+    .image-upload {
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .image-upload:hover {
+        border-color: var(--primary);
+        background: var(--bg-light);
+    }
+
+    .upload-placeholder i {
+        font-size: 3rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    .upload-placeholder p {
+        margin-bottom: 0.25rem;
+        color: var(--text-primary);
+    }
+
+    .upload-placeholder small {
+        color: var(--text-secondary);
+    }
+
+    .existing-images {
+        margin-top: 1.5rem;
+    }
+
+    .existing-images h4 {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+        margin-bottom: 1rem;
+    }
+
+    .image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 1rem;
+    }
+
+    .image-item {
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid var(--border);
+    }
+
+    .image-item img {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+    }
+
+    .image-actions {
+        padding: 0.5rem;
+        background: var(--bg-light);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.8125rem;
+    }
+
+    .btn-delete-image {
+        background: none;
+        border: none;
+        color: var(--danger);
+        cursor: pointer;
+        padding: 0.25rem;
+    }
+
+    .btn-delete-image:hover {
+        color: #dc2626;
+    }
+
+    .checkbox-group {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    .checkbox-label {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+
+    .checkbox-label input[type="checkbox"] {
+        width: 1.125rem;
+        height: 1.125rem;
+        accent-color: var(--primary);
+    }
+
+    .form-actions {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .btn-lg {
+        padding: 0.875rem 1.5rem;
+        font-size: 0.9375rem;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('flashSaleCheck').addEventListener('change', function() {
+        document.getElementById('flashSalePrice').style.display = this.checked ? 'block' : 'none';
+    });
+</script>
+{% endblock %}

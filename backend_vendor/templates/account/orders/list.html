@@ -1,0 +1,265 @@
+{% extends 'account/base.html' %}
+
+{% block title %}My Orders{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'customer_dashboard:overview' %}" class="cf-breadcrumb-item">
+    <i class="fas fa-home"></i>
+</a>
+<span class="cf-breadcrumb-separator">/</span>
+<span class="cf-breadcrumb-item active">Orders</span>
+{% endblock %}
+
+{% block content %}
+<div class="cf-page-header">
+    <div class="cf-page-header-content">
+        <h1 class="cf-page-title">My Orders</h1>
+        <p class="cf-page-subtitle">Track and manage your orders</p>
+    </div>
+</div>
+
+<!-- Filters -->
+<div class="cf-card cf-mb-4">
+    <div class="cf-card-body">
+        <div class="cf-filters">
+            <a href="{% url 'customer_dashboard:orders' %}" class="cf-filter-chip {% if not current_status %}active{% endif %}">
+                All Orders
+            </a>
+            {% for status, label in status_choices %}
+            <a href="{% url 'customer_dashboard:orders' %}?status={{ status }}" class="cf-filter-chip {% if current_status == status %}active{% endif %}">
+                {{ label }}
+            </a>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- Orders List -->
+<div class="cf-card">
+    <div class="cf-card-body cf-p-0">
+        {% if orders %}
+        <div class="cf-table-responsive">
+            <table class="cf-table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Date</th>
+                        <th>Items</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Payment</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>
+                            <span class="cf-text-mono cf-text-primary">#{{ order.get_order_number }}</span>
+                        </td>
+                        <td>
+                            <div class="cf-date-cell">
+                                <span class="cf-date">{{ order.created_at|date:"M d, Y" }}</span>
+                                <span class="cf-time">{{ order.created_at|time:"g:i A" }}</span>
+                            </div>
+                        </td>
+                        <td>{{ order.items.count }} item{{ order.items.count|pluralize }}</td>
+                        <td><strong>Rs. {{ order.total_amount }}</strong></td>
+                        <td>
+                            <span class="cf-badge cf-badge-{% if order.status == 'delivered' %}success{% elif order.status == 'cancelled' or order.status == 'returned' %}danger{% elif order.status == 'shipped' %}info{% else %}warning{% endif %}">
+                                {{ order.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="cf-badge cf-badge-{% if order.payment_status == 'paid' %}success{% elif order.payment_status == 'failed' %}danger{% else %}default{% endif %} cf-badge-outline">
+                                {{ order.get_payment_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'customer_dashboard:order_detail' order.order_id %}" class="cf-btn cf-btn-sm cf-btn-ghost">
+                                View <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <div class="cf-pagination-wrapper">
+            <nav class="cf-pagination">
+                {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}" class="cf-page-link">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+                {% endif %}
+
+                {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <span class="cf-page-link active">{{ num }}</span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?page={{ num }}{% if current_status %}&status={{ current_status }}{% endif %}" class="cf-page-link">{{ num }}</a>
+                {% endif %}
+                {% endfor %}
+
+                {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if current_status %}&status={{ current_status }}{% endif %}" class="cf-page-link">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="cf-empty-state">
+            <i class="fas fa-shopping-bag"></i>
+            <h3>No orders found</h3>
+            <p>{% if current_status %}No orders with "{{ current_status }}" status{% else %}You haven't placed any orders yet{% endif %}</p>
+            <a href="{% url 'home' %}" class="cf-btn cf-btn-primary">Start Shopping</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.cf-mb-4 {
+    margin-bottom: 1rem;
+}
+
+.cf-p-0 {
+    padding: 0 !important;
+}
+
+.cf-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.cf-filter-chip {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--cf-border);
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    text-decoration: none;
+    color: var(--cf-text-secondary);
+    transition: all var(--cf-transition-fast);
+}
+
+.cf-filter-chip:hover {
+    border-color: var(--cf-border-hover);
+    color: var(--cf-text);
+}
+
+.cf-filter-chip.active {
+    background: var(--cf-blue);
+    border-color: var(--cf-blue);
+    color: white;
+}
+
+.cf-text-mono {
+    font-family: var(--cf-font-mono);
+}
+
+.cf-text-primary {
+    color: var(--cf-blue);
+}
+
+.cf-date-cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.cf-date {
+    font-weight: 500;
+}
+
+.cf-time {
+    font-size: 0.75rem;
+    color: var(--cf-text-secondary);
+}
+
+.cf-btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8125rem;
+}
+
+.cf-btn-ghost {
+    background: transparent;
+    border: none;
+    color: var(--cf-blue);
+}
+
+.cf-btn-ghost:hover {
+    background: var(--cf-blue-light);
+}
+
+.cf-badge-outline {
+    background: transparent;
+    border: 1px solid currentColor;
+}
+
+.cf-badge-default {
+    background: var(--cf-gray-100);
+    color: var(--cf-text-secondary);
+}
+
+.cf-pagination-wrapper {
+    padding: 1rem;
+    border-top: 1px solid var(--cf-border);
+}
+
+.cf-pagination {
+    display: flex;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.cf-page-link {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--cf-radius);
+    text-decoration: none;
+    color: var(--cf-text);
+    font-size: 0.875rem;
+    transition: background var(--cf-transition-fast);
+}
+
+.cf-page-link:hover {
+    background: var(--cf-bg-secondary);
+}
+
+.cf-page-link.active {
+    background: var(--cf-blue);
+    color: white;
+}
+
+.cf-empty-state {
+    padding: 4rem 2rem;
+    text-align: center;
+}
+
+.cf-empty-state i {
+    font-size: 4rem;
+    color: var(--cf-text-muted);
+    margin-bottom: 1rem;
+}
+
+.cf-empty-state h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.cf-empty-state p {
+    color: var(--cf-text-secondary);
+    margin-bottom: 1.5rem;
+}
+</style>
+{% endblock %}

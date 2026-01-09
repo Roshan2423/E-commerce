@@ -1,0 +1,423 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upgrade Your Plan - {{ business.business_name }}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        .navbar {
+            background: white;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+            color: #1e293b;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 800;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #64748b;
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+
+        .back-btn:hover { color: #1e293b; }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            color: #64748b;
+            font-size: 1.125rem;
+        }
+
+        .current-status {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #e2e8f0;
+        }
+
+        .status-info h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .status-info p {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+        }
+
+        .status-badge.trial {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .status-badge.expired {
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .status-badge.active {
+            background: #d1fae5;
+            color: #059669;
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .plans-grid { grid-template-columns: 1fr; }
+        }
+
+        .plan-card {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            border: 2px solid #e2e8f0;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .plan-card:hover {
+            border-color: #10b981;
+            box-shadow: 0 10px 40px rgba(16, 185, 129, 0.1);
+        }
+
+        .plan-card.current {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+
+        .plan-card.featured {
+            border-color: #6366f1;
+        }
+
+        .plan-card.featured:hover {
+            border-color: #6366f1;
+            box-shadow: 0 10px 40px rgba(99, 102, 241, 0.15);
+        }
+
+        .plan-tag {
+            position: absolute;
+            top: -12px;
+            right: 20px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .current-tag {
+            background: #10b981;
+        }
+
+        .plan-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .plan-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .plan-price {
+            display: flex;
+            align-items: baseline;
+            gap: 0.25rem;
+        }
+
+        .price-amount {
+            font-size: 2.5rem;
+            font-weight: 800;
+        }
+
+        .price-period {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .plan-features {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .plan-features li {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.9375rem;
+        }
+
+        .plan-features li:last-child { border-bottom: none; }
+
+        .plan-features i.fa-check {
+            color: #10b981;
+            width: 18px;
+        }
+
+        .plan-features i.fa-times {
+            color: #d1d5db;
+            width: 18px;
+        }
+
+        .plan-features .disabled {
+            color: #9ca3af;
+        }
+
+        .plan-btn {
+            display: block;
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            text-align: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .plan-btn.primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .plan-btn.primary:hover {
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+
+        .plan-btn.featured {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+        }
+
+        .plan-btn.featured:hover {
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .plan-btn.disabled {
+            background: #e2e8f0;
+            color: #94a3b8;
+            cursor: not-allowed;
+        }
+
+        .contact-section {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .contact-section h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .contact-section p {
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+
+        .contact-email {
+            color: #6366f1;
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .contact-email:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo">
+            <div class="logo-icon">O</div>
+            OVN Store
+        </a>
+        <a href="{% url 'vendor:dashboard' %}" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>Upgrade Your Plan</h1>
+            <p>Choose the plan that best fits your business needs</p>
+        </div>
+
+        <!-- Current Status -->
+        <div class="current-status">
+            <div class="status-info">
+                <h3>Current Plan: {{ business.get_plan_display }}</h3>
+                {% if subscription_status == 'trial' %}
+                <p><i class="fas fa-clock"></i> {{ trial_days_remaining }} days remaining in your trial</p>
+                {% elif subscription_status == 'expired' %}
+                <p><i class="fas fa-exclamation-triangle"></i> Your trial has expired</p>
+                {% elif subscription_status == 'active' %}
+                <p><i class="fas fa-check-circle"></i> Active subscription</p>
+                {% endif %}
+            </div>
+            <span class="status-badge {% if subscription_status == 'trial' %}trial{% elif subscription_status == 'expired' %}expired{% else %}active{% endif %}">
+                {% if subscription_status == 'trial' %}Trial
+                {% elif subscription_status == 'expired' %}Expired
+                {% else %}Active{% endif %}
+            </span>
+        </div>
+
+        <!-- Plans -->
+        <div class="plans-grid">
+            <!-- Starter Plan -->
+            <div class="plan-card {% if current_plan == 'starter' %}current{% endif %}">
+                {% if current_plan == 'starter' %}
+                <span class="plan-tag current-tag">Current Plan</span>
+                {% endif %}
+                <div class="plan-header">
+                    <h2 class="plan-name">Starter Pack</h2>
+                    <div class="plan-price">
+                        <span class="price-amount">Rs. 999</span>
+                        <span class="price-period">/month</span>
+                    </div>
+                </div>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i> Basic Dashboard</li>
+                    <li><i class="fas fa-check"></i> Product Management</li>
+                    <li><i class="fas fa-check"></i> Order Management</li>
+                    <li><i class="fas fa-check"></i> Up to 50 Products</li>
+                    <li class="disabled"><i class="fas fa-times"></i> Analytics & Reports</li>
+                    <li class="disabled"><i class="fas fa-times"></i> Customer Management</li>
+                    <li class="disabled"><i class="fas fa-times"></i> Reviews & Messages</li>
+                    <li class="disabled"><i class="fas fa-times"></i> Custom Storefront</li>
+                </ul>
+                {% if current_plan == 'starter' and subscription_status == 'active' %}
+                <button class="plan-btn disabled">Current Plan</button>
+                {% elif current_plan == 'professional' %}
+                <button class="plan-btn disabled">Downgrade</button>
+                {% else %}
+                <a href="mailto:support@ovnstore.com?subject=Subscribe to Starter Pack - {{ business.business_name }}" class="plan-btn primary">
+                    Subscribe Now
+                </a>
+                {% endif %}
+            </div>
+
+            <!-- Professional Plan -->
+            <div class="plan-card featured {% if current_plan == 'professional' %}current{% endif %}">
+                {% if current_plan == 'professional' %}
+                <span class="plan-tag current-tag">Current Plan</span>
+                {% else %}
+                <span class="plan-tag">Most Popular</span>
+                {% endif %}
+                <div class="plan-header">
+                    <h2 class="plan-name">Professional Pack</h2>
+                    <div class="plan-price">
+                        <span class="price-amount">Rs. 2,499</span>
+                        <span class="price-period">/month</span>
+                    </div>
+                </div>
+                <ul class="plan-features">
+                    <li><i class="fas fa-check"></i> Full Dashboard</li>
+                    <li><i class="fas fa-check"></i> Product Management</li>
+                    <li><i class="fas fa-check"></i> Order Management</li>
+                    <li><i class="fas fa-check"></i> Unlimited Products</li>
+                    <li><i class="fas fa-check"></i> Analytics & Reports</li>
+                    <li><i class="fas fa-check"></i> Customer Management</li>
+                    <li><i class="fas fa-check"></i> Reviews & Messages</li>
+                    <li><i class="fas fa-check"></i> Custom Storefront</li>
+                </ul>
+                {% if current_plan == 'professional' and subscription_status == 'active' %}
+                <button class="plan-btn disabled">Current Plan</button>
+                {% else %}
+                <a href="mailto:support@ovnstore.com?subject=Subscribe to Professional Pack - {{ business.business_name }}" class="plan-btn featured">
+                    {% if current_plan == 'starter' %}Upgrade Now{% else %}Subscribe Now{% endif %}
+                </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Contact Section -->
+        <div class="contact-section">
+            <h3>Need Help Choosing?</h3>
+            <p>Contact our sales team for personalized recommendations</p>
+            <a href="mailto:support@ovnstore.com" class="contact-email">
+                <i class="fas fa-envelope"></i> support@ovnstore.com
+            </a>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,363 @@
+{% extends 'vendor/professional/base.html' %}
+
+{% block title %}Reviews{% endblock %}
+
+{% block breadcrumb %}Reviews{% endblock %}
+
+{% block extra_css %}
+<style>
+    .review-item {
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--border);
+    }
+    .review-item:last-child { border-bottom: none; }
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 0.75rem;
+    }
+    .review-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .review-avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        color: white;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    }
+    .review-info {
+        display: flex;
+        flex-direction: column;
+    }
+    .review-author {
+        font-weight: 500;
+    }
+    .review-date {
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+    .review-product {
+        font-size: 12px;
+        color: var(--primary);
+    }
+    .review-status {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .review-content {
+        color: var(--text-secondary);
+        font-size: 13px;
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+    .review-actions { display: flex; gap: 8px; }
+    .review-btn {
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 500;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        text-decoration: none;
+        transition: all 0.2s;
+    }
+    .review-btn.approve { background: #d1fae5; color: #059669; }
+    .review-btn.approve:hover { background: #a7f3d0; }
+    .review-btn.reject { background: #fee2e2; color: #dc2626; }
+    .review-btn.reject:hover { background: #fecaca; }
+    .review-btn.reply { background: var(--bg-light); color: var(--text-secondary); }
+    .review-btn.reply:hover { background: var(--border); color: var(--text-primary); }
+
+    /* Reply Modal */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-content {
+        background: white;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 500px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    .modal-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .modal-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+    }
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 1.25rem;
+        cursor: pointer;
+        color: var(--text-secondary);
+    }
+    .modal-body { padding: 1.5rem; }
+    .modal-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border);
+        display: flex;
+        justify-content: flex-end;
+        gap: 0.75rem;
+    }
+
+    /* Filter dropdown */
+    .filter-select {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 0.875rem;
+        background: white;
+        cursor: pointer;
+    }
+    .filter-select:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+
+    /* Vendor response section */
+    .vendor-response {
+        background: #f8fafc;
+        border-left: 3px solid var(--primary);
+        padding: 0.75rem 1rem;
+        margin-top: 0.75rem;
+        border-radius: 0 8px 8px 0;
+    }
+    .vendor-response-label {
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--primary);
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+    }
+    .vendor-response-text {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Reviews</h1>
+        <p class="page-subtitle">Manage customer reviews and feedback for your products</p>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon warning">
+            <i class="fas fa-star"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">{{ total_reviews|default:"0" }}</div>
+            <div class="stat-label">Total Reviews</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon success">
+            <i class="fas fa-star-half-alt"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">{{ avg_rating|floatformat:1|default:"0.0" }}</div>
+            <div class="stat-label">Average Rating</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon info">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">{{ pending_reviews|default:"0" }}</div>
+            <div class="stat-label">Pending Approval</div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title">All Reviews</h3>
+        <form method="get" action="{% url 'vendor:reviews' %}">
+            <select name="status" class="filter-select" onchange="this.form.submit()">
+                <option value="">All Reviews</option>
+                <option value="pending" {% if request.GET.status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="approved" {% if request.GET.status == 'approved' %}selected{% endif %}>Approved</option>
+                <option value="rejected" {% if request.GET.status == 'rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+        </form>
+    </div>
+    <div class="card-body" style="padding: 0;">
+        {% for review in reviews %}
+        <div class="review-item">
+            <div class="review-header">
+                <div class="review-meta">
+                    <div class="review-avatar">
+                        {{ review.user.first_name|slice:":1"|upper|default:"U" }}
+                    </div>
+                    <div class="review-info">
+                        <div class="review-author">{{ review.user.get_full_name|default:review.user.username }}</div>
+                        <div class="review-date">{{ review.created_at|date:"M d, Y" }}</div>
+                        <div class="review-product">on {{ review.product.name|truncatewords:5 }}</div>
+                    </div>
+                </div>
+                <div class="review-status">
+                    <div class="stars">
+                        {% for i in "12345" %}
+                            {% if forloop.counter <= review.rating %}
+                            <i class="fas fa-star star-filled"></i>
+                            {% else %}
+                            <i class="fas fa-star star-empty"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% if review.status == 'approved' %}
+                    <span class="badge badge-success">Approved</span>
+                    {% elif review.status == 'rejected' %}
+                    <span class="badge badge-danger">Rejected</span>
+                    {% else %}
+                    <span class="badge badge-warning">Pending</span>
+                    {% endif %}
+                </div>
+            </div>
+            {% if review.title %}
+            <p class="review-content" style="font-weight: 500; margin-bottom: 0.5rem;">{{ review.title }}</p>
+            {% endif %}
+            <p class="review-content">{{ review.comment }}</p>
+
+            {% if review.admin_response %}
+            <div class="vendor-response">
+                <div class="vendor-response-label">Your Response</div>
+                <div class="vendor-response-text">{{ review.admin_response }}</div>
+            </div>
+            {% endif %}
+
+            <div class="review-actions">
+                {% if review.status == 'pending' %}
+                <form method="post" action="{% url 'vendor:review_action' review.id 'approve' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="review-btn approve"><i class="fas fa-check"></i> Approve</button>
+                </form>
+                <form method="post" action="{% url 'vendor:review_action' review.id 'reject' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="review-btn reject"><i class="fas fa-times"></i> Reject</button>
+                </form>
+                {% endif %}
+                <button type="button" class="review-btn reply" onclick="openReplyModal({{ review.id }}, '{{ review.user.get_full_name|default:review.user.username|escapejs }}', '{{ review.admin_response|default:''|escapejs }}')">
+                    <i class="fas fa-reply"></i> {% if review.admin_response %}Edit Reply{% else %}Reply{% endif %}
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-star"></i>
+            <h3>No reviews yet</h3>
+            <p>Customer reviews for your products will appear here.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% if page_obj.has_other_pages %}
+<div style="display: flex; justify-content: center; margin-top: 1.5rem; gap: 0.5rem;">
+    {% if page_obj.has_previous %}
+    <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="btn btn-outline">Previous</a>
+    {% endif %}
+    <span class="btn btn-outline" style="cursor: default;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+    <a href="?page={{ page_obj.next_page_number }}{% if request.GET.status %}&status={{ request.GET.status }}{% endif %}" class="btn btn-outline">Next</a>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Reply Modal -->
+<div class="modal-overlay" id="replyModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Reply to Review</h3>
+            <button type="button" class="modal-close" onclick="closeReplyModal()">&times;</button>
+        </div>
+        <form method="post" action="" id="replyForm" data-base-url="{% url 'vendor:reviews' %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <p style="margin-bottom: 1rem; color: var(--text-secondary);">Responding to review by <strong id="reviewAuthor"></strong></p>
+                <div class="form-group">
+                    <label class="form-label">Your Response</label>
+                    <textarea name="response" id="responseText" class="form-control" rows="4" placeholder="Write your response to the customer..." required></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline" onclick="closeReplyModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary">Submit Response</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function openReplyModal(reviewId, authorName, existingResponse) {
+    document.getElementById('replyModal').classList.add('active');
+    document.getElementById('reviewAuthor').textContent = authorName;
+    document.getElementById('responseText').value = existingResponse || '';
+    // Update form action with correct review ID
+    var form = document.getElementById('replyForm');
+    var baseUrl = form.getAttribute('data-base-url');
+    // Build URL: /vendor/reviews/{id}/respond/
+    form.action = baseUrl.replace(/\/$/, '') + '/' + reviewId + '/respond/';
+}
+
+function closeReplyModal() {
+    document.getElementById('replyModal').classList.remove('active');
+    // Reset form action
+    var form = document.getElementById('replyForm');
+    form.action = '';
+}
+
+// Close modal on outside click
+document.getElementById('replyModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeReplyModal();
+    }
+});
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeReplyModal();
+    }
+});
+</script>
+{% endblock %}

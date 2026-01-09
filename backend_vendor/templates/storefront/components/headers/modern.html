@@ -1,0 +1,129 @@
+{% load static %}
+<!-- Modern Header: Left-aligned logo with mega menu -->
+<header class="header header-modern" id="siteHeader">
+    <div class="header-main">
+        <div class="container">
+            <div class="header-main-content">
+                <!-- Logo (Left aligned) -->
+                <div class="header-logo">
+                    <a href="/v/{{ vendor.slug }}/">
+                        {% if vendor.logo %}
+                        <img src="{{ vendor.logo.url }}" alt="{{ vendor.business_name }}" class="logo-img">
+                        {% else %}
+                        <span class="logo-text">{{ vendor.business_name }}</span>
+                        {% endif %}
+                    </a>
+                </div>
+
+                <!-- Navigation (Center with Mega Menu) -->
+                <nav class="header-nav mega-nav" id="mainNav">
+                    <ul class="nav-list">
+                        <li class="nav-item"><a href="/v/{{ vendor.slug }}/" class="nav-link">Home</a></li>
+                        <li class="nav-item has-megamenu">
+                            <a href="/v/{{ vendor.slug }}/products/" class="nav-link">
+                                Shop <i class="fas fa-chevron-down"></i>
+                            </a>
+                            <div class="megamenu">
+                                <div class="megamenu-inner">
+                                    <div class="megamenu-column">
+                                        <h4 class="megamenu-title">Categories</h4>
+                                        <ul class="megamenu-list">
+                                            {% for category in categories|slice:":8" %}
+                                            <li><a href="/v/{{ vendor.slug }}/products/?category={{ category.slug }}">{{ category.name }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <div class="megamenu-column">
+                                        <h4 class="megamenu-title">Quick Links</h4>
+                                        <ul class="megamenu-list">
+                                            <li><a href="/v/{{ vendor.slug }}/products/?sort=newest">New Arrivals</a></li>
+                                            <li><a href="/v/{{ vendor.slug }}/products/?on_sale=true">On Sale</a></li>
+                                            <li><a href="/v/{{ vendor.slug }}/products/?is_featured=true">Best Sellers</a></li>
+                                            <li><a href="/v/{{ vendor.slug }}/products/">All Products</a></li>
+                                        </ul>
+                                    </div>
+                                    {% if featured_product %}
+                                    <div class="megamenu-column megamenu-featured">
+                                        <div class="megamenu-product">
+                                            <img src="{{ featured_product.image.url }}" alt="{{ featured_product.name }}">
+                                            <h5>Featured</h5>
+                                            <p>{{ featured_product.name }}</p>
+                                            <a href="/v/{{ vendor.slug }}/products/{{ featured_product.slug }}/" class="btn btn-sm">Shop Now</a>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </li>
+                        {% for category in categories|slice:":3" %}
+                        <li class="nav-item"><a href="/v/{{ vendor.slug }}/products/?category={{ category.slug }}" class="nav-link">{{ category.name }}</a></li>
+                        {% endfor %}
+                        <li class="nav-item"><a href="/v/{{ vendor.slug }}/contact/" class="nav-link">Contact</a></li>
+                    </ul>
+                </nav>
+
+                <!-- Header Actions (Right) -->
+                <div class="header-actions">
+                    <div class="search-inline">
+                        <form action="/v/{{ vendor.slug }}/products/" method="GET" class="search-form-inline">
+                            <input type="search" name="q" placeholder="Search..." class="search-input-inline">
+                            <button type="submit" class="search-btn-inline"><i class="fas fa-search"></i></button>
+                        </form>
+                    </div>
+                    <a href="/v/{{ vendor.slug }}/cart/" class="header-action-btn cart-btn" aria-label="Cart">
+                        <i class="fas fa-shopping-bag"></i>
+                        <span class="cart-count" id="cartCount">0</span>
+                    </a>
+                    <a href="/login/" class="header-action-btn account-btn" aria-label="Account">
+                        <i class="fas fa-user"></i>
+                    </a>
+                </div>
+
+                <!-- Mobile Menu Toggle -->
+                <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Toggle menu">
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                    <span class="hamburger-line"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- Mobile Slide-out Menu -->
+<div class="mobile-menu-overlay" id="mobileMenuOverlay"></div>
+<div class="mobile-menu" id="mobileMenu">
+    <div class="mobile-menu-header">
+        <div class="mobile-menu-logo">
+            {% if vendor.logo %}
+            <img src="{{ vendor.logo.url }}" alt="{{ vendor.business_name }}">
+            {% else %}
+            <span>{{ vendor.business_name }}</span>
+            {% endif %}
+        </div>
+        <button class="mobile-menu-close" id="mobileMenuClose"><i class="fas fa-times"></i></button>
+    </div>
+    <nav class="mobile-menu-nav">
+        <ul>
+            <li><a href="/v/{{ vendor.slug }}/">Home</a></li>
+            <li><a href="/v/{{ vendor.slug }}/products/">Shop All</a></li>
+            {% for category in categories %}
+            <li><a href="/v/{{ vendor.slug }}/products/?category={{ category.slug }}">{{ category.name }}</a></li>
+            {% endfor %}
+            <li><a href="/v/{{ vendor.slug }}/contact/">Contact</a></li>
+        </ul>
+    </nav>
+    <div class="mobile-menu-footer">
+        <div class="mobile-menu-social">
+            {% if storefront.facebook_url %}
+            <a href="{{ storefront.facebook_url }}" target="_blank"><i class="fab fa-facebook-f"></i></a>
+            {% endif %}
+            {% if storefront.instagram_url %}
+            <a href="{{ storefront.instagram_url }}" target="_blank"><i class="fab fa-instagram"></i></a>
+            {% endif %}
+            {% if storefront.twitter_url %}
+            <a href="{{ storefront.twitter_url }}" target="_blank"><i class="fab fa-twitter"></i></a>
+            {% endif %}
+        </div>
+    </div>
+</div>

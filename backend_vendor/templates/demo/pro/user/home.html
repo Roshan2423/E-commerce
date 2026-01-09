@@ -1,0 +1,413 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professional Store Demo - OVN Store</title>
+
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <!-- Meta tags for SEO -->
+    <meta name="description" content="Professional Store Demo - Experience the full e-commerce platform">
+    <meta name="robots" content="noindex, nofollow">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%23667eea;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%23764ba2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23grad)'/%3E%3Ctext x='50' y='72' font-family='Arial,sans-serif' font-size='65' font-weight='900' fill='white' text-anchor='middle'%3EO%3C/text%3E%3C/svg%3E">
+
+    <!-- CSS - Same as store -->
+    <link rel="stylesheet" href="{% static 'frontend/css/styles.css' %}">
+    <link rel="stylesheet" href="{% static 'frontend/css/notification-styles.css' %}">
+
+    <style>
+        body { opacity: 0; transition: opacity 0.3s ease; }
+        .loaded { opacity: 1; }
+
+        /* Demo Banner */
+        .demo-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.5rem 1rem;
+            text-align: center;
+            font-size: 0.8125rem;
+            font-weight: 500;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            height: 36px;
+        }
+
+        .demo-banner a {
+            color: white;
+            text-decoration: underline;
+            margin-left: 0.5rem;
+        }
+
+        .demo-banner .close-demo {
+            position: absolute;
+            right: 1rem;
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.25rem;
+            opacity: 0.8;
+            padding: 0.25rem 0.5rem;
+        }
+
+        .demo-banner .close-demo:hover {
+            opacity: 1;
+        }
+
+    </style>
+
+    <!-- Demo mode CSS overrides - loaded after main CSS -->
+    <style id="demo-overrides">
+        /* Push the fixed header down by demo banner height */
+        body.demo-mode .header,
+        body.demo-mode header.header,
+        body.demo-mode .navbar,
+        body.demo-mode header {
+            top: 36px !important;
+        }
+
+        /* Add margin to #app to account for demo banner */
+        body.demo-mode #app {
+            margin-top: 36px;
+        }
+
+        /* Ensure flash sale is perfect - same as store */
+        body.demo-mode .flash-sale-scroll {
+            padding: var(--space-xs) 10px var(--space-sm) !important;
+        }
+    </style>
+</head>
+<body class="demo-mode">
+    <!-- Demo Banner -->
+    <div class="demo-banner" id="demoBanner">
+        <i class="fas fa-star"></i>
+        <span><strong>Professional Demo</strong> - Full e-commerce experience preview</span>
+        <a href="/">Start Free Trial</a>
+        <button class="close-demo" onclick="closeDemoBanner()">&times;</button>
+    </div>
+
+    <!-- Main Application Container - Same as store -->
+    <div id="app"></div>
+
+    <!-- Configuration -->
+    <script>
+        // API Base URL - same server, so use relative path
+        window.API_BASE_URL = '';
+
+        // Demo mode flag
+        window.IS_DEMO_MODE = true;
+
+        // Placeholder images
+        window.placeholderImageService = 'https://picsum.photos';
+
+        document.addEventListener('error', function(e) {
+            if (e.target.tagName === 'IMG') {
+                const width = e.target.getAttribute('data-width') || 400;
+                const height = e.target.getAttribute('data-height') || 400;
+                e.target.src = `https://via.placeholder.com/${width}x${height}/667eea/ffffff?text=OVN+Store`;
+            }
+        }, true);
+    </script>
+
+    <!-- Demo Mode: Intercept API calls to use demo endpoints -->
+    <script>
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options) {
+            let newUrl = url;
+
+            // Redirect product API calls to demo API endpoints
+            if (typeof url === 'string') {
+                if (url.includes('/products/api/list')) {
+                    newUrl = '/demo/api/products/';
+                } else if (url.includes('/products/api/flash-sale')) {
+                    newUrl = '/demo/api/products/flash-sale/';
+                } else if (url.includes('/products/api/categories')) {
+                    newUrl = '/demo/api/categories/';
+                } else if (url.includes('/products/api/site-stats')) {
+                    newUrl = '/demo/api/site-stats/';
+                } else if (url.match(/\/products\/api\/(\d+)\//)) {
+                    const productId = url.match(/\/products\/api\/(\d+)\//)[1];
+                    newUrl = `/demo/api/products/${productId}/`;
+                }
+            }
+
+            return originalFetch.call(this, newUrl, options);
+        };
+    </script>
+
+    <!-- Demo Mode: Disable authentication -->
+    <script>
+        window.DISABLE_GOOGLE_AUTH = true;
+
+        // Block login/register actions in demo mode
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('a, button');
+            if (target) {
+                const text = (target.textContent || '').toLowerCase();
+                const href = target.getAttribute('href') || '';
+
+                // Block auth-related actions
+                if (text.includes('login') || text.includes('sign in') ||
+                    text.includes('register') || text.includes('sign up') ||
+                    href.includes('/login') || href.includes('/register') ||
+                    href.includes('/accounts/google')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showDemoNotification('Authentication is disabled in demo mode. Start a free trial to access full features!');
+                    return false;
+                }
+
+                // Block checkout
+                if (text.includes('checkout') || text.includes('place order') || href.includes('/checkout')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    showDemoNotification('Checkout is disabled in demo mode. Start a free trial to make purchases!');
+                    return false;
+                }
+            }
+        }, true);
+
+        // Demo notification function
+        function showDemoNotification(message) {
+            // Remove existing notification
+            const existing = document.querySelector('.demo-notification');
+            if (existing) existing.remove();
+
+            const notification = document.createElement('div');
+            notification.className = 'demo-notification';
+            notification.innerHTML = `
+                <div class="demo-notification-content">
+                    <i class="fas fa-info-circle"></i>
+                    <span>${message}</span>
+                    <a href="/" class="demo-notification-cta">Start Free Trial</a>
+                    <button onclick="this.parentElement.parentElement.remove()">&times;</button>
+                </div>
+            `;
+            notification.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 100000;
+                animation: slideUp 0.3s ease;
+            `;
+
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideUp {
+                    from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+                    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+                }
+                .demo-notification-content {
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    padding: 1rem 1.5rem;
+                    border-radius: 12px;
+                    display: flex;
+                    align-items: center;
+                    gap: 0.75rem;
+                    box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4);
+                    font-size: 0.9375rem;
+                }
+                .demo-notification-content i {
+                    font-size: 1.25rem;
+                }
+                .demo-notification-cta {
+                    background: white;
+                    color: #667eea;
+                    padding: 0.5rem 1rem;
+                    border-radius: 8px;
+                    text-decoration: none;
+                    font-weight: 600;
+                    margin-left: 0.5rem;
+                    white-space: nowrap;
+                }
+                .demo-notification-cta:hover {
+                    background: #f0f0f0;
+                }
+                .demo-notification-content button {
+                    background: none;
+                    border: none;
+                    color: white;
+                    font-size: 1.25rem;
+                    cursor: pointer;
+                    opacity: 0.8;
+                    margin-left: 0.5rem;
+                }
+                .demo-notification-content button:hover {
+                    opacity: 1;
+                }
+            `;
+            document.head.appendChild(style);
+            document.body.appendChild(notification);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.style.animation = 'slideUp 0.3s ease reverse';
+                    setTimeout(() => notification.remove(), 300);
+                }
+            }, 5000);
+        }
+
+        // Close demo banner function
+        function closeDemoBanner() {
+            const banner = document.getElementById('demoBanner');
+            if (banner) {
+                banner.style.display = 'none';
+                document.body.classList.remove('demo-mode');
+                // Reset header position
+                const header = document.querySelector('.header, header');
+                if (header) header.style.top = '0';
+            }
+        }
+
+        // Fix header position after SPA loads
+        function applyDemoHeaderFix() {
+            const header = document.querySelector('.header, header.header');
+            if (header && document.body.classList.contains('demo-mode')) {
+                const computed = window.getComputedStyle(header);
+                if (computed.position === 'fixed' || computed.position === 'sticky') {
+                    header.style.top = '36px';
+                }
+            }
+        }
+
+        // Apply fix after app.js renders
+        setTimeout(applyDemoHeaderFix, 200);
+        setTimeout(applyDemoHeaderFix, 500);
+        setTimeout(applyDemoHeaderFix, 1000);
+
+        // Also observe for header creation
+        const observer = new MutationObserver(() => {
+            applyDemoHeaderFix();
+        });
+        observer.observe(document.getElementById('app'), { childList: true, subtree: true });
+        // Stop observing after 3 seconds to prevent performance issues
+        setTimeout(() => observer.disconnect(), 3000);
+    </script>
+
+    <!-- Scripts - Same as store -->
+    <script src="{% static 'frontend/js/google-auth.js' %}"></script>
+    <script src="{% static 'frontend/js/api-integration.js' %}"></script>
+
+    <!-- Demo Mode: Override navigation to stay within demo context -->
+    <script>
+        // Demo base path
+        const DEMO_BASE = '/demo/pro/user';
+
+        // Override history.pushState to prepend demo base path
+        const originalPushState = history.pushState;
+        history.pushState = function(state, title, url) {
+            if (url && typeof url === 'string') {
+                // Don't modify if already has demo base or is absolute URL
+                if (!url.startsWith(DEMO_BASE) && !url.startsWith('http') && url.startsWith('/')) {
+                    url = DEMO_BASE + url;
+                }
+            }
+            return originalPushState.call(this, state, title, url);
+        };
+
+        // Override history.replaceState similarly
+        const originalReplaceState = history.replaceState;
+        history.replaceState = function(state, title, url) {
+            if (url && typeof url === 'string') {
+                if (!url.startsWith(DEMO_BASE) && !url.startsWith('http') && url.startsWith('/')) {
+                    url = DEMO_BASE + url;
+                }
+            }
+            return originalReplaceState.call(this, state, title, url);
+        };
+
+        // Set initial path context for app.js to use
+        window.DEMO_BASE_PATH = DEMO_BASE;
+    </script>
+
+    <script src="{% static 'frontend/js/app.js' %}"></script>
+
+    <script>
+        // Show body after fonts load
+        document.fonts.ready.then(() => {
+            document.body.classList.add('loaded');
+        });
+
+        // Error handling
+        window.addEventListener('error', (e) => {
+            console.error('Application error:', e.error);
+        });
+
+        window.addEventListener('unhandledrejection', (e) => {
+            console.error('Unhandled promise rejection:', e.reason);
+        });
+
+        // Theme detection
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
+        function handleThemeChange(e) {
+            document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+        }
+        prefersDark.addEventListener('change', handleThemeChange);
+        handleThemeChange(prefersDark);
+
+        // Viewport height fix for mobile
+        function setVH() {
+            const vh = window.innerHeight * 0.01;
+            document.documentElement.style.setProperty('--vh', `${vh}px`);
+        }
+        setVH();
+        window.addEventListener('resize', setVH);
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                document.body.classList.add('keyboard-navigation');
+            }
+        });
+
+        document.addEventListener('mousedown', () => {
+            document.body.classList.remove('keyboard-navigation');
+        });
+
+        // DEMO MODE: Fix header position for demo banner
+        (function fixHeaderForDemo() {
+            function applyFix() {
+                const header = document.querySelector('.header');
+                if (header && document.body.classList.contains('demo-mode')) {
+                    header.style.setProperty('top', '36px', 'important');
+                }
+            }
+
+            // Run multiple times to catch when app renders
+            applyFix();
+            setTimeout(applyFix, 100);
+            setTimeout(applyFix, 300);
+            setTimeout(applyFix, 600);
+            setTimeout(applyFix, 1000);
+
+            // Watch for app changes
+            const appEl = document.getElementById('app');
+            if (appEl) {
+                const obs = new MutationObserver(applyFix);
+                obs.observe(appEl, { childList: true, subtree: true });
+                setTimeout(() => obs.disconnect(), 5000);
+            }
+        })();
+    </script>
+</body>
+</html>

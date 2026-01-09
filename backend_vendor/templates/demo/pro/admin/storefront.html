@@ -1,0 +1,538 @@
+{% extends 'demo/pro/admin/base.html' %}
+
+{% block title %}Customize Storefront{% endblock %}
+
+{% block breadcrumb %}Storefront{% endblock %}
+
+{% block extra_css %}
+<style>
+    .storefront-grid {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 24px;
+    }
+
+    .section-list {
+        min-height: 400px;
+    }
+
+    .section-item {
+        background: var(--cf-surface);
+        border: 1px solid var(--cf-border);
+        border-radius: var(--cf-radius-md);
+        padding: 16px;
+        margin-bottom: 12px;
+        cursor: grab;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .section-item:hover {
+        border-color: var(--cf-blue);
+        box-shadow: 0 2px 8px rgba(37, 99, 235, 0.1);
+    }
+
+    .section-item.dragging {
+        opacity: 0.5;
+        border: 2px dashed var(--cf-blue);
+    }
+
+    .section-item.drag-over {
+        border-color: var(--cf-blue);
+        background: var(--cf-blue-light);
+    }
+
+    .section-drag-handle {
+        color: var(--cf-text-muted);
+        cursor: grab;
+    }
+
+    .section-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: var(--cf-radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+    }
+
+    .section-icon.purple { background: #f3e8ff; color: #9333ea; }
+    .section-icon.blue { background: var(--cf-blue-light); color: var(--cf-blue); }
+    .section-icon.green { background: var(--cf-success-light); color: var(--cf-success); }
+    .section-icon.orange { background: var(--cf-primary-light); color: var(--cf-primary); }
+    .section-icon.pink { background: #fce7f3; color: #db2777; }
+    .section-icon.yellow { background: var(--cf-warning-light); color: #ca8a04; }
+
+    .section-info { flex: 1; }
+    .section-name { font-weight: 500; font-size: 14px; color: var(--cf-text); }
+    .section-desc { font-size: 12px; color: var(--cf-text-muted); margin-top: 2px; }
+
+    .section-toggle {
+        width: 44px;
+        height: 24px;
+        background: var(--cf-bg-tertiary);
+        border-radius: 12px;
+        position: relative;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .section-toggle.active {
+        background: var(--cf-success);
+    }
+
+    .section-toggle::after {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        background: white;
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.2s;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .section-toggle.active::after {
+        transform: translateX(20px);
+    }
+
+    /* Preview Area */
+    .preview-container {
+        background: var(--cf-surface);
+        border: 1px solid var(--cf-border);
+        border-radius: var(--cf-radius-md);
+        overflow: hidden;
+    }
+
+    .preview-header {
+        background: var(--cf-bg-tertiary);
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--cf-border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .preview-device-btns {
+        display: flex;
+        gap: 8px;
+    }
+
+    .preview-device-btn {
+        width: 32px;
+        height: 32px;
+        border: 1px solid var(--cf-border);
+        background: var(--cf-bg);
+        border-radius: var(--cf-radius);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--cf-text-muted);
+        cursor: pointer;
+    }
+
+    .preview-device-btn.active {
+        background: var(--cf-blue);
+        color: white;
+        border-color: var(--cf-blue);
+    }
+
+    .preview-frame {
+        background: white;
+        min-height: 500px;
+        padding: 16px;
+        transition: max-width 0.3s;
+        margin: 0 auto;
+    }
+
+    .preview-frame.mobile {
+        max-width: 375px;
+        border-left: 1px solid var(--cf-border);
+        border-right: 1px solid var(--cf-border);
+    }
+
+    .preview-frame.tablet {
+        max-width: 768px;
+        border-left: 1px solid var(--cf-border);
+        border-right: 1px solid var(--cf-border);
+    }
+
+    /* Preview Sections */
+    .preview-section {
+        border: 2px dashed var(--cf-border);
+        border-radius: var(--cf-radius);
+        padding: 24px;
+        margin-bottom: 12px;
+        text-align: center;
+        background: var(--cf-bg-secondary);
+        transition: all 0.2s;
+    }
+
+    .preview-section.disabled {
+        opacity: 0.4;
+        filter: grayscale(1);
+    }
+
+    .preview-section i {
+        font-size: 24px;
+        color: var(--cf-text-muted);
+        margin-bottom: 8px;
+    }
+
+    .preview-section span {
+        display: block;
+        font-size: 12px;
+        color: var(--cf-text-secondary);
+    }
+
+    /* Templates */
+    .template-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .template-card {
+        border: 2px solid var(--cf-border);
+        border-radius: var(--cf-radius-md);
+        padding: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+    }
+
+    .template-card:hover {
+        border-color: var(--cf-blue);
+    }
+
+    .template-card.active {
+        border-color: var(--cf-blue);
+        background: var(--cf-blue-light);
+    }
+
+    .template-preview {
+        background: var(--cf-bg-tertiary);
+        border-radius: var(--cf-radius);
+        height: 80px;
+        margin-bottom: 8px;
+        display: flex;
+        flex-direction: column;
+        padding: 8px;
+        gap: 4px;
+    }
+
+    .template-preview div {
+        background: var(--cf-border);
+        border-radius: 2px;
+    }
+
+    .template-name {
+        font-size: 12px;
+        font-weight: 500;
+        color: var(--cf-text);
+    }
+
+    @media (max-width: 1024px) {
+        .storefront-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Customize Storefront</h1>
+        <p class="page-subtitle">Drag and drop sections to customize your store layout</p>
+    </div>
+    <div class="page-actions">
+        <button class="btn btn-outline demo-disabled">
+            <i class="fas fa-eye"></i> Preview Store
+        </button>
+        <button class="btn btn-primary demo-disabled">
+            <i class="fas fa-save"></i> Save Changes
+        </button>
+    </div>
+</div>
+
+<!-- Layout Templates -->
+<div class="card" style="margin-bottom: 1.5rem;">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-palette"></i> Layout Templates</h3>
+        <span class="badge badge-info">PRO Feature</span>
+    </div>
+    <div class="card-body">
+        <p style="color: var(--cf-text-secondary); margin-bottom: 12px; font-size: 13px;">Choose a starting template for your storefront layout:</p>
+        <div class="template-grid">
+            <div class="template-card active" onclick="selectTemplate(this, 'classic')">
+                <div class="template-preview">
+                    <div style="height: 30%;"></div>
+                    <div style="height: 20%;"></div>
+                    <div style="flex: 1;"></div>
+                </div>
+                <span class="template-name">Classic</span>
+            </div>
+            <div class="template-card" onclick="selectTemplate(this, 'modern')">
+                <div class="template-preview">
+                    <div style="height: 40%;"></div>
+                    <div style="display: flex; gap: 4px; flex: 1;">
+                        <div style="flex: 1;"></div>
+                        <div style="flex: 1;"></div>
+                    </div>
+                </div>
+                <span class="template-name">Modern</span>
+            </div>
+            <div class="template-card" onclick="selectTemplate(this, 'minimal')">
+                <div class="template-preview">
+                    <div style="height: 15%;"></div>
+                    <div style="flex: 1;"></div>
+                    <div style="height: 20%;"></div>
+                </div>
+                <span class="template-name">Minimal</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="storefront-grid">
+    <!-- Sections Panel -->
+    <div>
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title"><i class="fas fa-layer-group"></i> Sections</h3>
+            </div>
+            <div class="card-body">
+                <p style="color: var(--cf-text-muted); font-size: 12px; margin-bottom: 16px;">
+                    <i class="fas fa-grip-vertical"></i> Drag to reorder &bull; Toggle to show/hide
+                </p>
+
+                <div class="section-list" id="sectionList">
+                    <div class="section-item" draggable="true" data-section="hero">
+                        <i class="fas fa-grip-vertical section-drag-handle"></i>
+                        <div class="section-icon purple"><i class="fas fa-image"></i></div>
+                        <div class="section-info">
+                            <div class="section-name">Hero Banner</div>
+                            <div class="section-desc">Main showcase slider</div>
+                        </div>
+                        <div class="section-toggle active" onclick="toggleSection(this)"></div>
+                    </div>
+
+                    <div class="section-item" draggable="true" data-section="categories">
+                        <i class="fas fa-grip-vertical section-drag-handle"></i>
+                        <div class="section-icon blue"><i class="fas fa-th-large"></i></div>
+                        <div class="section-info">
+                            <div class="section-name">Categories</div>
+                            <div class="section-desc">Product categories grid</div>
+                        </div>
+                        <div class="section-toggle active" onclick="toggleSection(this)"></div>
+                    </div>
+
+                    <div class="section-item" draggable="true" data-section="featured">
+                        <i class="fas fa-grip-vertical section-drag-handle"></i>
+                        <div class="section-icon orange"><i class="fas fa-star"></i></div>
+                        <div class="section-info">
+                            <div class="section-name">Featured Products</div>
+                            <div class="section-desc">Highlighted products</div>
+                        </div>
+                        <div class="section-toggle active" onclick="toggleSection(this)"></div>
+                    </div>
+
+                    <div class="section-item" draggable="true" data-section="new-arrivals">
+                        <i class="fas fa-grip-vertical section-drag-handle"></i>
+                        <div class="section-icon green"><i class="fas fa-sparkles"></i></div>
+                        <div class="section-info">
+                            <div class="section-name">New Arrivals</div>
+                            <div class="section-desc">Latest products</div>
+                        </div>
+                        <div class="section-toggle active" onclick="toggleSection(this)"></div>
+                    </div>
+
+                    <div class="section-item" draggable="true" data-section="deals">
+                        <i class="fas fa-grip-vertical section-drag-handle"></i>
+                        <div class="section-icon pink"><i class="fas fa-tags"></i></div>
+                        <div class="section-info">
+                            <div class="section-name">Deals & Offers</div>
+                            <div class="section-desc">Discounted products</div>
+                        </div>
+                        <div class="section-toggle" onclick="toggleSection(this)"></div>
+                    </div>
+
+                    <div class="section-item" draggable="true" data-section="testimonials">
+                        <i class="fas fa-grip-vertical section-drag-handle"></i>
+                        <div class="section-icon yellow"><i class="fas fa-quote-left"></i></div>
+                        <div class="section-info">
+                            <div class="section-name">Testimonials</div>
+                            <div class="section-desc">Customer reviews</div>
+                        </div>
+                        <div class="section-toggle" onclick="toggleSection(this)"></div>
+                    </div>
+
+                    <div class="section-item" draggable="true" data-section="newsletter">
+                        <i class="fas fa-grip-vertical section-drag-handle"></i>
+                        <div class="section-icon blue"><i class="fas fa-envelope"></i></div>
+                        <div class="section-info">
+                            <div class="section-name">Newsletter</div>
+                            <div class="section-desc">Email subscription</div>
+                        </div>
+                        <div class="section-toggle active" onclick="toggleSection(this)"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Preview Panel -->
+    <div>
+        <div class="preview-container">
+            <div class="preview-header">
+                <span style="font-weight: 500; font-size: 13px;"><i class="fas fa-desktop"></i> Live Preview</span>
+                <div class="preview-device-btns">
+                    <button class="preview-device-btn active" onclick="setDevice('desktop')" title="Desktop">
+                        <i class="fas fa-desktop"></i>
+                    </button>
+                    <button class="preview-device-btn" onclick="setDevice('tablet')" title="Tablet">
+                        <i class="fas fa-tablet-alt"></i>
+                    </button>
+                    <button class="preview-device-btn" onclick="setDevice('mobile')" title="Mobile">
+                        <i class="fas fa-mobile-alt"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="preview-frame" id="previewFrame">
+                <div class="preview-section" data-section="hero">
+                    <i class="fas fa-image"></i>
+                    <span>Hero Banner</span>
+                </div>
+                <div class="preview-section" data-section="categories">
+                    <i class="fas fa-th-large"></i>
+                    <span>Categories</span>
+                </div>
+                <div class="preview-section" data-section="featured">
+                    <i class="fas fa-star"></i>
+                    <span>Featured Products</span>
+                </div>
+                <div class="preview-section" data-section="new-arrivals">
+                    <i class="fas fa-sparkles"></i>
+                    <span>New Arrivals</span>
+                </div>
+                <div class="preview-section disabled" data-section="deals">
+                    <i class="fas fa-tags"></i>
+                    <span>Deals & Offers (Hidden)</span>
+                </div>
+                <div class="preview-section disabled" data-section="testimonials">
+                    <i class="fas fa-quote-left"></i>
+                    <span>Testimonials (Hidden)</span>
+                </div>
+                <div class="preview-section" data-section="newsletter">
+                    <i class="fas fa-envelope"></i>
+                    <span>Newsletter</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Drag and Drop functionality
+const sectionList = document.getElementById('sectionList');
+let draggedItem = null;
+
+sectionList.addEventListener('dragstart', (e) => {
+    if (e.target.classList.contains('section-item')) {
+        draggedItem = e.target;
+        e.target.classList.add('dragging');
+    }
+});
+
+sectionList.addEventListener('dragend', (e) => {
+    if (e.target.classList.contains('section-item')) {
+        e.target.classList.remove('dragging');
+        draggedItem = null;
+        updatePreview();
+    }
+});
+
+sectionList.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const afterElement = getDragAfterElement(sectionList, e.clientY);
+    const dragging = document.querySelector('.dragging');
+    if (afterElement == null) {
+        sectionList.appendChild(dragging);
+    } else {
+        sectionList.insertBefore(dragging, afterElement);
+    }
+});
+
+function getDragAfterElement(container, y) {
+    const draggableElements = [...container.querySelectorAll('.section-item:not(.dragging)')];
+    return draggableElements.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            return { offset: offset, element: child };
+        } else {
+            return closest;
+        }
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
+// Toggle section visibility
+function toggleSection(toggle) {
+    toggle.classList.toggle('active');
+    const sectionItem = toggle.closest('.section-item');
+    const sectionName = sectionItem.dataset.section;
+    const previewSection = document.querySelector(`.preview-section[data-section="${sectionName}"]`);
+
+    if (toggle.classList.contains('active')) {
+        previewSection.classList.remove('disabled');
+        previewSection.querySelector('span').textContent = previewSection.querySelector('span').textContent.replace(' (Hidden)', '');
+    } else {
+        previewSection.classList.add('disabled');
+        previewSection.querySelector('span').textContent += ' (Hidden)';
+    }
+}
+
+// Update preview order
+function updatePreview() {
+    const previewFrame = document.getElementById('previewFrame');
+    const sections = document.querySelectorAll('#sectionList .section-item');
+
+    sections.forEach(section => {
+        const sectionName = section.dataset.section;
+        const previewSection = document.querySelector(`.preview-section[data-section="${sectionName}"]`);
+        previewFrame.appendChild(previewSection);
+    });
+}
+
+// Device preview
+function setDevice(device) {
+    const frame = document.getElementById('previewFrame');
+    const btns = document.querySelectorAll('.preview-device-btn');
+
+    btns.forEach(btn => btn.classList.remove('active'));
+    event.target.closest('.preview-device-btn').classList.add('active');
+
+    frame.classList.remove('mobile', 'tablet');
+    if (device !== 'desktop') {
+        frame.classList.add(device);
+    }
+}
+
+// Template selection
+function selectTemplate(card, template) {
+    document.querySelectorAll('.template-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+
+    // Show toast (demo only)
+    console.log('Template selected:', template);
+}
+</script>
+{% endblock %}

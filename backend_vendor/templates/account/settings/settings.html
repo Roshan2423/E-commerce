@@ -1,0 +1,419 @@
+{% extends 'account/base.html' %}
+
+{% block title %}Account Settings{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'customer_dashboard:overview' %}" class="cf-breadcrumb-item">
+    <i class="fas fa-home"></i>
+</a>
+<span class="cf-breadcrumb-separator">/</span>
+<span class="cf-breadcrumb-item active">Settings</span>
+{% endblock %}
+
+{% block content %}
+<div class="cf-page-header">
+    <div class="cf-page-header-content">
+        <h1 class="cf-page-title">Account Settings</h1>
+        <p class="cf-page-subtitle">Manage your account preferences and security</p>
+    </div>
+</div>
+
+<div class="cf-settings-layout">
+    <!-- Sidebar Navigation -->
+    <div class="cf-settings-nav">
+        <a href="{% url 'customer_dashboard:profile' %}" class="cf-settings-link">
+            <i class="fas fa-user"></i>
+            <span>Personal Info</span>
+        </a>
+        <a href="{% url 'customer_dashboard:settings' %}" class="cf-settings-link active">
+            <i class="fas fa-cog"></i>
+            <span>Account Settings</span>
+        </a>
+        <a href="{% url 'customer_dashboard:addresses' %}" class="cf-settings-link">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>Addresses</span>
+        </a>
+    </div>
+
+    <!-- Main Content -->
+    <div class="cf-settings-content">
+        <!-- Security Settings -->
+        <div class="cf-card">
+            <div class="cf-card-header">
+                <h3 class="cf-card-title">Security</h3>
+            </div>
+            <div class="cf-card-body">
+                <div class="cf-settings-item">
+                    <div class="cf-settings-item-info">
+                        <div class="cf-settings-item-icon">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <div>
+                            <h4>Password</h4>
+                            <p>Change your password to keep your account secure</p>
+                        </div>
+                    </div>
+                    <button class="cf-btn cf-btn-outline" onclick="showToast('Password change feature coming soon', 'info')">
+                        Change Password
+                    </button>
+                </div>
+
+                <div class="cf-settings-divider"></div>
+
+                <div class="cf-settings-item">
+                    <div class="cf-settings-item-info">
+                        <div class="cf-settings-item-icon">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div>
+                            <h4>Two-Factor Authentication</h4>
+                            <p>Add an extra layer of security to your account</p>
+                        </div>
+                    </div>
+                    <span class="cf-badge cf-badge-warning">Coming Soon</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notifications -->
+        <div class="cf-card cf-mt-4">
+            <div class="cf-card-header">
+                <h3 class="cf-card-title">Notifications</h3>
+            </div>
+            <div class="cf-card-body">
+                <div class="cf-settings-item">
+                    <div class="cf-settings-item-info">
+                        <div class="cf-settings-item-icon">
+                            <i class="fas fa-envelope"></i>
+                        </div>
+                        <div>
+                            <h4>Email Notifications</h4>
+                            <p>Receive order updates and promotions via email</p>
+                        </div>
+                    </div>
+                    <label class="cf-toggle">
+                        <input type="checkbox" checked>
+                        <span class="cf-toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="cf-settings-divider"></div>
+
+                <div class="cf-settings-item">
+                    <div class="cf-settings-item-info">
+                        <div class="cf-settings-item-icon">
+                            <i class="fas fa-tag"></i>
+                        </div>
+                        <div>
+                            <h4>Promotional Emails</h4>
+                            <p>Get notified about sales and special offers</p>
+                        </div>
+                    </div>
+                    <label class="cf-toggle">
+                        <input type="checkbox" checked>
+                        <span class="cf-toggle-slider"></span>
+                    </label>
+                </div>
+
+                <div class="cf-settings-divider"></div>
+
+                <div class="cf-settings-item">
+                    <div class="cf-settings-item-info">
+                        <div class="cf-settings-item-icon">
+                            <i class="fas fa-shipping-fast"></i>
+                        </div>
+                        <div>
+                            <h4>Order Updates</h4>
+                            <p>Get shipping and delivery notifications</p>
+                        </div>
+                    </div>
+                    <label class="cf-toggle">
+                        <input type="checkbox" checked>
+                        <span class="cf-toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Become a Vendor -->
+        {% if not user.vendor %}
+        <div class="cf-card cf-mt-4 cf-vendor-cta">
+            <div class="cf-card-body">
+                <div class="cf-vendor-cta-content">
+                    <div class="cf-vendor-cta-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <div class="cf-vendor-cta-text">
+                        <h3>Become a Vendor</h3>
+                        <p>Start selling your products on our platform. Apply now to become a vendor and reach thousands of customers.</p>
+                    </div>
+                    <a href="{% url 'vendor:apply' %}" class="cf-btn cf-btn-primary cf-btn-lg">
+                        Apply Now <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Danger Zone -->
+        <div class="cf-card cf-mt-4 cf-card-danger">
+            <div class="cf-card-header">
+                <h3 class="cf-card-title">Danger Zone</h3>
+            </div>
+            <div class="cf-card-body">
+                <div class="cf-settings-item">
+                    <div class="cf-settings-item-info">
+                        <div class="cf-settings-item-icon cf-icon-danger">
+                            <i class="fas fa-trash"></i>
+                        </div>
+                        <div>
+                            <h4>Delete Account</h4>
+                            <p>Permanently delete your account and all associated data</p>
+                        </div>
+                    </div>
+                    <button class="cf-btn cf-btn-danger" onclick="showToast('Account deletion is disabled', 'error')">
+                        Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.cf-settings-layout {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+    .cf-settings-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cf-settings-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+@media (max-width: 1024px) {
+    .cf-settings-nav {
+        flex-direction: row;
+        overflow-x: auto;
+        padding-bottom: 0.5rem;
+    }
+}
+
+.cf-settings-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: var(--cf-radius);
+    text-decoration: none;
+    color: var(--cf-text-secondary);
+    font-size: 0.875rem;
+    transition: all var(--cf-transition-fast);
+    white-space: nowrap;
+}
+
+.cf-settings-link:hover {
+    background: var(--cf-bg-secondary);
+    color: var(--cf-text);
+}
+
+.cf-settings-link.active {
+    background: var(--cf-blue-light);
+    color: var(--cf-blue);
+}
+
+.cf-settings-link i {
+    width: 18px;
+    text-align: center;
+}
+
+.cf-mt-4 {
+    margin-top: 1rem;
+}
+
+.cf-settings-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.cf-settings-item-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.cf-settings-item-icon {
+    width: 40px;
+    height: 40px;
+    background: var(--cf-blue-light);
+    color: var(--cf-blue);
+    border-radius: var(--cf-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.cf-icon-danger {
+    background: var(--cf-danger-light);
+    color: var(--cf-danger);
+}
+
+.cf-settings-item h4 {
+    font-size: 0.9375rem;
+    font-weight: 500;
+    margin: 0 0 0.25rem;
+}
+
+.cf-settings-item p {
+    font-size: 0.8125rem;
+    color: var(--cf-text-secondary);
+    margin: 0;
+}
+
+.cf-settings-divider {
+    height: 1px;
+    background: var(--cf-border);
+    margin: 1rem 0;
+}
+
+/* Toggle Switch */
+.cf-toggle {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.cf-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.cf-toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--cf-gray-300);
+    border-radius: 24px;
+    transition: var(--cf-transition);
+}
+
+.cf-toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: var(--cf-transition);
+}
+
+.cf-toggle input:checked + .cf-toggle-slider {
+    background: var(--cf-blue);
+}
+
+.cf-toggle input:checked + .cf-toggle-slider:before {
+    transform: translateX(20px);
+}
+
+/* Vendor CTA */
+.cf-vendor-cta {
+    background: linear-gradient(135deg, var(--cf-blue-light), #e0e7ff);
+    border: none;
+}
+
+.cf-vendor-cta-content {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .cf-vendor-cta-content {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+.cf-vendor-cta-icon {
+    width: 64px;
+    height: 64px;
+    background: var(--cf-blue);
+    color: white;
+    border-radius: var(--cf-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.cf-vendor-cta-text {
+    flex: 1;
+}
+
+.cf-vendor-cta-text h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 0.5rem;
+}
+
+.cf-vendor-cta-text p {
+    font-size: 0.875rem;
+    color: var(--cf-text-secondary);
+    margin: 0;
+}
+
+.cf-btn-lg {
+    padding: 0.75rem 1.5rem;
+}
+
+/* Danger Card */
+.cf-card-danger {
+    border-color: var(--cf-danger);
+}
+
+.cf-card-danger .cf-card-header {
+    background: var(--cf-danger-light);
+}
+
+.cf-card-danger .cf-card-title {
+    color: var(--cf-danger);
+}
+
+.cf-btn-danger {
+    background: var(--cf-danger);
+    color: white;
+    border: none;
+}
+
+.cf-btn-danger:hover {
+    background: #dc2626;
+}
+
+@media (max-width: 640px) {
+    .cf-settings-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+</style>
+{% endblock %}

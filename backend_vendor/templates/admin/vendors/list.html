@@ -1,0 +1,351 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Business E-commerce - OVN Store{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <h1 class="page-title">Business E-commerce</h1>
+        <p class="page-subtitle">Manage registered vendor businesses</p>
+    </div>
+    <div class="header-actions">
+        <a href="{% url 'vendor_admin:add' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i>
+            <span>Add Business</span>
+        </a>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #10b981, #34d399);">
+            <i class="fas fa-store"></i>
+        </div>
+        <div class="stat-content">
+            <h3 class="stat-value">{{ total_vendors }}</h3>
+            <p class="stat-label">Total Businesses</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-content">
+            <h3 class="stat-value">{{ approved_vendors }}</h3>
+            <p class="stat-label">Approved Vendors</p>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+            <i class="fas fa-clock"></i>
+        </div>
+        <div class="stat-content">
+            <h3 class="stat-value">{{ pending_vendors }}</h3>
+            <p class="stat-label">Pending Approval</p>
+        </div>
+    </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="filter-tabs">
+    <a href="?status=" class="tab {% if not request.GET.status %}active{% endif %}">All</a>
+    <a href="?status=approved" class="tab {% if request.GET.status == 'approved' %}active{% endif %}">Approved</a>
+    <a href="?status=pending" class="tab {% if request.GET.status == 'pending' %}active{% endif %}">Pending</a>
+    <a href="?status=suspended" class="tab {% if request.GET.status == 'suspended' %}active{% endif %}">Suspended</a>
+</div>
+
+<!-- Vendors Table -->
+<div class="vendors-table-container">
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Business</th>
+                <th>Owner</th>
+                <th>Products</th>
+                <th>Orders</th>
+                <th>Revenue</th>
+                <th>Commission</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in vendors_with_stats %}
+            <tr>
+                <td>
+                    <div class="vendor-cell">
+                        <div class="vendor-avatar" style="background: linear-gradient(135deg, #10b981, #34d399);">
+                            {{ item.vendor.business_name.0|upper }}
+                        </div>
+                        <div class="vendor-info">
+                            <span class="vendor-name">{{ item.vendor.business_name }}</span>
+                            <span class="vendor-slug">/v/{{ item.vendor.slug }}/</span>
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    {% if item.vendor.owner %}
+                    <span class="owner-linked">
+                        <i class="fas fa-check-circle"></i>
+                        {{ item.vendor.owner.get_full_name|default:item.vendor.owner.email }}
+                    </span>
+                    {% else %}
+                    <span class="owner-pending">
+                        <i class="fas fa-hourglass-half"></i>
+                        Not linked
+                    </span>
+                    {% endif %}
+                </td>
+                <td>
+                    <span class="stat-value-cell">{{ item.product_count }}</span>
+                </td>
+                <td>
+                    <span class="stat-value-cell">{{ item.order_count }}</span>
+                </td>
+                <td>
+                    <span class="stat-value-cell revenue">${{ item.revenue|floatformat:2 }}</span>
+                </td>
+                <td>{{ item.vendor.commission_rate }}%</td>
+                <td>
+                    <span class="status-badge status-{{ item.vendor.status }}">
+                        {{ item.vendor.get_status_display }}
+                    </span>
+                </td>
+                <td>
+                    <a href="{% url 'vendor_admin:detail' item.vendor.pk %}" class="btn btn-sm btn-primary" title="View Details">
+                        <i class="fas fa-eye"></i>
+                        <span>View</span>
+                    </a>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="8">
+                    <div class="empty-state">
+                        <i class="fas fa-store"></i>
+                        <p>No businesses registered yet</p>
+                        <a href="{% url 'vendor_admin:add' %}" class="btn btn-primary">Add First Business</a>
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<!-- Pagination -->
+{% if businesses.has_other_pages %}
+<div class="pagination">
+    {% if businesses.has_previous %}
+    <a href="?page={{ businesses.previous_page_number }}" class="page-btn">
+        <i class="fas fa-chevron-left"></i>
+    </a>
+    {% endif %}
+
+    {% for num in businesses.paginator.page_range %}
+        {% if businesses.number == num %}
+        <span class="page-btn active">{{ num }}</span>
+        {% elif num > businesses.number|add:'-3' and num < businesses.number|add:'3' %}
+        <a href="?page={{ num }}" class="page-btn">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if businesses.has_next %}
+    <a href="?page={{ businesses.next_page_number }}" class="page-btn">
+        <i class="fas fa-chevron-right"></i>
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+<style>
+    .filter-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .tab {
+        padding: 0.5rem 1rem;
+        border-radius: 9999px;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        color: var(--text);
+        text-decoration: none;
+        font-size: 0.875rem;
+        transition: all 0.2s;
+    }
+
+    .tab:hover,
+    .tab.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+
+    .vendors-table-container {
+        background: var(--card-bg);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th {
+        text-align: left;
+        padding: 1rem 1.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .data-table td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .data-table tbody tr:hover {
+        background: var(--bg);
+    }
+
+    .vendor-cell {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .vendor-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+    }
+
+    .vendor-name {
+        font-weight: 500;
+        color: var(--text);
+        display: block;
+    }
+
+    .vendor-slug {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .owner-linked {
+        color: #10b981;
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .owner-pending {
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 0.25rem;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-approved { background: #d1fae5; color: #065f46; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-suspended { background: #fee2e2; color: #991b1b; }
+    .status-rejected { background: #fce7f3; color: #9d174d; }
+
+    .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-sm {
+        padding: 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    .btn-success {
+        background: #10b981;
+        color: white;
+        border: none;
+    }
+
+    .btn-warning {
+        background: #f59e0b;
+        color: white;
+        border: none;
+    }
+
+    .btn-primary-outline {
+        background: transparent;
+        color: var(--primary);
+        border: 1px solid var(--primary);
+    }
+
+    .btn-primary-outline:hover {
+        background: var(--primary);
+        color: white;
+    }
+
+    .stat-value-cell {
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .stat-value-cell.revenue {
+        color: #10b981;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        color: var(--text-secondary);
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        opacity: 0.5;
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .page-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text);
+        text-decoration: none;
+    }
+
+    .page-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+</style>
+{% endblock %}

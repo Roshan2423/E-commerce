@@ -1,0 +1,626 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shopping Cart - ProStore Demo</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        /* Demo Banner */
+        .demo-banner {
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            color: white;
+            padding: 0.75rem;
+            text-align: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .demo-banner a {
+            color: white;
+            text-decoration: underline;
+            margin-left: 0.5rem;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0.75rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .back-link {
+            color: #7c3aed;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Cart Container */
+        .cart-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .cart-header {
+            margin-bottom: 1.5rem;
+        }
+
+        .cart-header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        .cart-header p {
+            color: #64748b;
+            font-size: 0.9375rem;
+        }
+
+        .cart-layout {
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 2rem;
+        }
+
+        /* Cart Items */
+        .cart-items {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .cart-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-image {
+            width: 120px;
+            height: 120px;
+            background: #f1f5f9;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+
+        .item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .item-image .no-image {
+            font-size: 2rem;
+            color: #cbd5e1;
+        }
+
+        .item-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .item-category {
+            font-size: 0.625rem;
+            color: #7c3aed;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.25rem;
+        }
+
+        .item-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-price {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: auto;
+        }
+
+        .item-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .quantity-selector {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .qty-btn {
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8fafc;
+            border: none;
+            color: #64748b;
+            cursor: not-allowed;
+            font-size: 0.875rem;
+        }
+
+        .qty-input {
+            width: 50px;
+            height: 36px;
+            border: none;
+            text-align: center;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .remove-btn {
+            color: #ef4444;
+            background: none;
+            border: none;
+            font-size: 0.875rem;
+            cursor: not-allowed;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+
+        .item-total {
+            text-align: right;
+            min-width: 100px;
+        }
+
+        .item-total-label {
+            font-size: 0.75rem;
+            color: #64748b;
+            margin-bottom: 0.25rem;
+        }
+
+        .item-total-price {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e293b;
+        }
+
+        /* Order Summary */
+        .order-summary {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            padding: 1.5rem;
+            height: fit-content;
+            position: sticky;
+            top: 100px;
+        }
+
+        .summary-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            font-size: 0.9375rem;
+        }
+
+        .summary-row span:first-child {
+            color: #64748b;
+        }
+
+        .summary-row span:last-child {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .summary-row.total {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+            font-size: 1.125rem;
+        }
+
+        .summary-row.total span:last-child {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #7c3aed;
+        }
+
+        .promo-code {
+            margin: 1.5rem 0;
+        }
+
+        .promo-input {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .promo-input input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.875rem;
+        }
+
+        .promo-input input::placeholder {
+            color: #94a3b8;
+        }
+
+        .promo-input button {
+            padding: 0.75rem 1rem;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #64748b;
+            cursor: not-allowed;
+        }
+
+        .checkout-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            text-decoration: none;
+        }
+
+        .checkout-btn:hover {
+            opacity: 0.95;
+        }
+
+        .continue-shopping {
+            display: block;
+            text-align: center;
+            color: #7c3aed;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .security-note {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .security-note i {
+            color: #10b981;
+        }
+
+        /* Empty Cart */
+        .empty-cart {
+            text-align: center;
+            padding: 4rem 2rem;
+        }
+
+        .empty-cart i {
+            font-size: 4rem;
+            color: #cbd5e1;
+            margin-bottom: 1rem;
+        }
+
+        .empty-cart h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-cart p {
+            color: #64748b;
+            margin-bottom: 1.5rem;
+        }
+
+        .empty-cart a {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1e293b;
+            color: #64748b;
+            padding: 2rem;
+            margin-top: 4rem;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .cart-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .order-summary {
+                position: static;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .cart-item {
+                flex-direction: column;
+            }
+
+            .item-image {
+                width: 100%;
+                height: 200px;
+            }
+
+            .item-total {
+                text-align: left;
+                margin-top: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Banner -->
+    <div class="demo-banner">
+        <i class="fas fa-star"></i> Professional Demo - Full cart experience
+        <a href="/">Start Free Trial</a>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="{% url 'demo:pro_user_home' %}" class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+                <span class="logo-text">ProStore</span>
+            </a>
+
+            <div class="nav-right">
+                <a href="{% url 'demo:pro_user_home' %}" class="back-link">
+                    <i class="fas fa-arrow-left"></i>
+                    Continue Shopping
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Cart Container -->
+    <div class="cart-container">
+        <div class="cart-header">
+            <h1>Shopping Cart</h1>
+            <p>{{ cart_items|length }} items in your cart</p>
+        </div>
+
+        {% if cart_items %}
+        <div class="cart-layout">
+            <!-- Cart Items -->
+            <div class="cart-items">
+                {% for item in cart_items %}
+                <div class="cart-item">
+                    <div class="item-image">
+                        {% if item.get_main_image %}
+                        <img src="{{ item.get_main_image }}" alt="{{ item.name }}">
+                        {% else %}
+                        <i class="fas fa-image no-image"></i>
+                        {% endif %}
+                    </div>
+                    <div class="item-details">
+                        {% if item.category %}
+                        <div class="item-category">{{ item.category.name }}</div>
+                        {% endif %}
+                        <div class="item-name">{{ item.name }}</div>
+                        <div class="item-price">Rs. {{ item.price|floatformat:0 }}</div>
+                        <div class="item-actions">
+                            <div class="quantity-selector">
+                                <button class="qty-btn" title="Demo only">-</button>
+                                <input type="text" class="qty-input" value="1" readonly>
+                                <button class="qty-btn" title="Demo only">+</button>
+                            </div>
+                            <button class="remove-btn" title="Demo only">
+                                <i class="fas fa-trash-alt"></i>
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                    <div class="item-total">
+                        <div class="item-total-label">Subtotal</div>
+                        <div class="item-total-price">Rs. {{ item.price|floatformat:0 }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <h2 class="summary-title">Order Summary</h2>
+
+                <div class="summary-row">
+                    <span>Subtotal ({{ cart_items|length }} items)</span>
+                    <span>Rs. {{ subtotal|floatformat:0 }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping</span>
+                    <span>Rs. {{ shipping|floatformat:0 }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax (13% VAT)</span>
+                    <span>Included</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <span>Rs. {{ total|floatformat:0 }}</span>
+                </div>
+
+                <div class="promo-code">
+                    <div class="promo-input">
+                        <input type="text" placeholder="Enter promo code" disabled>
+                        <button title="Demo only">Apply</button>
+                    </div>
+                </div>
+
+                <a href="{% url 'demo:pro_user_checkout' %}" class="checkout-btn">
+                    <i class="fas fa-lock"></i>
+                    Proceed to Checkout
+                </a>
+
+                <a href="{% url 'demo:pro_user_home' %}" class="continue-shopping">
+                    <i class="fas fa-arrow-left"></i> Continue Shopping
+                </a>
+
+                <div class="security-note">
+                    <i class="fas fa-shield-alt"></i>
+                    Secure checkout with SSL encryption
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="cart-items">
+            <div class="empty-cart">
+                <i class="fas fa-shopping-cart"></i>
+                <h2>Your cart is empty</h2>
+                <p>Looks like you haven't added any products to your cart yet.</p>
+                <a href="{% url 'demo:pro_user_home' %}">
+                    <i class="fas fa-arrow-left"></i>
+                    Start Shopping
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        &copy; 2024 ProStore. All rights reserved. | Professional Demo
+    </footer>
+
+    <!-- Demo mode - auth disabled -->
+    <script>
+        window.IS_DEMO_MODE = true;
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('a, button, span');
+            if (target) {
+                const text = target.textContent.toLowerCase();
+                const href = target.getAttribute('href') || '';
+                if (text.includes('login') || text.includes('sign in') || text.includes('register') || text.includes('sign up') ||
+                    href.includes('/login') || href.includes('/register') || href.includes('/accounts/google')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alert('Authentication is disabled in demo mode. This is just a preview!');
+                    return false;
+                }
+            }
+        }, true);
+    </script>
+</body>
+</html>

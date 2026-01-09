@@ -1,0 +1,318 @@
+{% extends 'vendor/base.html' %}
+{% load static %}
+
+{% block title %}Reviews - {{ vendor_business.business_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <h1 class="page-title">Customer Reviews</h1>
+        <p class="page-subtitle">See what customers are saying about your products</p>
+    </div>
+</div>
+
+<!-- Stats -->
+<div class="review-stats">
+    <div class="stat-card">
+        <span class="stat-value">{{ avg_rating|floatformat:1 }}</span>
+        <div class="star-rating">
+            {% for i in "12345" %}
+                {% if forloop.counter <= avg_rating %}
+                <i class="fas fa-star"></i>
+                {% else %}
+                <i class="far fa-star"></i>
+                {% endif %}
+            {% endfor %}
+        </div>
+        <span class="stat-label">Average Rating</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-value">{{ total_reviews }}</span>
+        <span class="stat-label">Total Reviews</span>
+    </div>
+</div>
+
+<!-- Reviews List -->
+<div class="reviews-container">
+    {% for review in reviews %}
+    <div class="review-card">
+        <div class="review-header">
+            <div class="reviewer-info">
+                <div class="reviewer-avatar">{{ review.user.first_name.0|default:"U" }}</div>
+                <div class="reviewer-details">
+                    <span class="reviewer-name">{{ review.user.get_full_name|default:review.user.username }}</span>
+                    <span class="review-date">{{ review.created_at|date:"M d, Y" }}</span>
+                </div>
+            </div>
+            <div class="review-rating">
+                {% for i in "12345" %}
+                    {% if forloop.counter <= review.rating %}
+                    <i class="fas fa-star"></i>
+                    {% else %}
+                    <i class="far fa-star"></i>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="review-product">
+            <a href="{% url 'vendor:product_detail' review.product.pk %}">{{ review.product.name }}</a>
+        </div>
+
+        {% if review.title %}
+        <h4 class="review-title">{{ review.title }}</h4>
+        {% endif %}
+
+        <p class="review-comment">{{ review.comment }}</p>
+
+        {% if review.is_verified_purchase %}
+        <span class="verified-badge">
+            <i class="fas fa-check-circle"></i> Verified Purchase
+        </span>
+        {% endif %}
+
+        <!-- Vendor Response -->
+        {% if review.admin_response %}
+        <div class="vendor-response">
+            <div class="response-header">
+                <i class="fas fa-reply"></i>
+                <span>Your Response</span>
+            </div>
+            <p>{{ review.admin_response }}</p>
+        </div>
+        {% else %}
+        <form method="post" action="{% url 'vendor:review_respond' review.pk %}" class="response-form">
+            {% csrf_token %}
+            <textarea name="response" placeholder="Write a response to this review..." rows="2"></textarea>
+            <button type="submit" class="btn btn-sm btn-primary">
+                <i class="fas fa-reply"></i> Respond
+            </button>
+        </form>
+        {% endif %}
+    </div>
+    {% empty %}
+    <div class="empty-state">
+        <i class="fas fa-star"></i>
+        <h3>No reviews yet</h3>
+        <p>When customers review your products, they'll appear here.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if reviews.has_other_pages %}
+<div class="pagination">
+    {% if reviews.has_previous %}
+    <a href="?page={{ reviews.previous_page_number }}" class="page-btn">
+        <i class="fas fa-chevron-left"></i>
+    </a>
+    {% endif %}
+
+    {% for num in reviews.paginator.page_range %}
+        {% if reviews.number == num %}
+        <span class="page-btn active">{{ num }}</span>
+        {% elif num > reviews.number|add:'-3' and num < reviews.number|add:'3' %}
+        <a href="?page={{ num }}" class="page-btn">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if reviews.has_next %}
+    <a href="?page={{ reviews.next_page_number }}" class="page-btn">
+        <i class="fas fa-chevron-right"></i>
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+<style>
+    .review-stats {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .review-stats .stat-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.5rem 2rem;
+        text-align: center;
+    }
+
+    .review-stats .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+
+    .star-rating {
+        color: #fbbf24;
+        margin: 0.5rem 0;
+    }
+
+    .reviews-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .review-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 1.5rem;
+    }
+
+    .review-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1rem;
+    }
+
+    .reviewer-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .reviewer-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #10b981, #34d399);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 600;
+    }
+
+    .reviewer-name {
+        font-weight: 500;
+        color: var(--text);
+        display: block;
+    }
+
+    .review-date {
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    .review-rating {
+        color: #fbbf24;
+    }
+
+    .review-rating .far {
+        color: var(--text-secondary);
+    }
+
+    .review-product {
+        margin-bottom: 0.5rem;
+    }
+
+    .review-product a {
+        color: var(--primary);
+        text-decoration: none;
+        font-size: 0.875rem;
+    }
+
+    .review-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+    }
+
+    .review-comment {
+        color: var(--text);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+
+    .verified-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+        font-size: 0.75rem;
+        color: #10b981;
+    }
+
+    .vendor-response {
+        background: var(--bg);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+
+    .response-header {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 500;
+        color: var(--text);
+        margin-bottom: 0.5rem;
+    }
+
+    .response-form {
+        margin-top: 1rem;
+    }
+
+    .response-form textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--bg);
+        color: var(--text);
+        margin-bottom: 0.5rem;
+        resize: vertical;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: var(--text-secondary);
+        opacity: 0.5;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state h3 {
+        color: var(--text);
+        margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+        color: var(--text-secondary);
+    }
+
+    .pagination {
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .page-btn {
+        padding: 0.5rem 1rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        background: var(--card-bg);
+        color: var(--text);
+        text-decoration: none;
+    }
+
+    .page-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+    }
+</style>
+{% endblock %}

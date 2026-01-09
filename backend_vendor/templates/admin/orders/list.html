@@ -1,0 +1,634 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Orders - E-Commerce Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Orders</h1>
+</div>
+
+<!-- Order Statistics -->
+<div style="display: flex; gap: 16px; margin-bottom: 24px; align-items: center;">
+    <div style="background: white; border-radius: 10px; padding: 16px 24px; display: flex; align-items: center; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #667eea, #764ba2); display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-shopping-bag" style="color: white; font-size: 16px;"></i>
+        </div>
+        <div>
+            <div style="font-size: 24px; font-weight: 700; color: #1f2937;">{{ total_orders }}</div>
+            <div style="font-size: 13px; color: #64748b;">Total Orders</div>
+        </div>
+    </div>
+
+    <div style="background: white; border-radius: 10px; padding: 16px 24px; display: flex; align-items: center; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #f59e0b, #d97706); display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-clock" style="color: white; font-size: 16px;"></i>
+        </div>
+        <div>
+            <div style="font-size: 24px; font-weight: 700; color: #1f2937;">{{ pending_orders }}</div>
+            <div style="font-size: 13px; color: #64748b;">Pending</div>
+        </div>
+    </div>
+
+    <div style="background: white; border-radius: 10px; padding: 16px 24px; display: flex; align-items: center; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #3b82f6, #2563eb); display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-cog" style="color: white; font-size: 16px;"></i>
+        </div>
+        <div>
+            <div style="font-size: 24px; font-weight: 700; color: #1f2937;">{{ processing_orders }}</div>
+            <div style="font-size: 13px; color: #64748b;">Processing</div>
+        </div>
+    </div>
+
+    <div style="background: white; border-radius: 10px; padding: 16px 24px; display: flex; align-items: center; gap: 14px; box-shadow: 0 1px 3px rgba(0,0,0,0.08); border: 1px solid #e2e8f0;">
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, #10b981, #059669); display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-check-circle" style="color: white; font-size: 16px;"></i>
+        </div>
+        <div>
+            <div style="font-size: 24px; font-weight: 700; color: #1f2937;">{{ completed_orders }}</div>
+            <div style="font-size: 13px; color: #64748b;">Completed</div>
+        </div>
+    </div>
+
+    <!-- Create Order Button -->
+    <a href="{% url 'orders:create' %}" class="btn btn-primary" style="margin-left: auto; padding: 14px 24px;">
+        <i class="fas fa-plus"></i> Create Order
+    </a>
+</div>
+
+<!-- Orders Table -->
+<div class="data-table">
+    <div class="table-header">
+        <h3 class="table-title">All Orders</h3>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div style="padding: 16px 20px; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+        <form method="GET" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+            <input type="text" name="search" placeholder="Search by order ID, customer name or email..." value="{{ search }}"
+                   style="padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; min-width: 300px; flex: 1;">
+
+            <select name="status" style="padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; min-width: 140px; background: white;">
+                <option value="">All Status</option>
+                {% for choice in status_choices %}
+                <option value="{{ choice.0 }}" {% if choice.0 == selected_status %}selected{% endif %}>{{ choice.1 }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="payment_status" style="padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; min-width: 140px; background: white;">
+                <option value="">All Payments</option>
+                {% for choice in payment_status_choices %}
+                <option value="{{ choice.0 }}" {% if choice.0 == selected_payment_status %}selected{% endif %}>{{ choice.1 }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i> Search
+            </button>
+
+            {% if search or selected_status or selected_payment_status %}
+            <a href="{% url 'orders:list' %}" class="btn btn-secondary">
+                <i class="fas fa-times"></i> Clear
+            </a>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Order ID</th>
+                    <th style="text-align: center;">Customer</th>
+                    <th style="text-align: center;">Date</th>
+                    <th style="text-align: center;">Items</th>
+                    <th>Total</th>
+                    <th style="text-align: center;">Payment</th>
+                    <th style="text-align: center;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr class="clickable-row" data-href="{% url 'orders:detail' order.order_id %}" style="cursor: pointer;">
+                    <td>
+                        <strong style="color: #4f46e5;">#{{ order.get_order_number }}</strong>
+                    </td>
+                    <td>
+                        <div class="customer-cell">
+                            <div class="customer-name">{% if order.user %}{{ order.user.get_full_name|default:order.user.username }}{% else %}Guest{% endif %}</div>
+                            <div class="created-by">{% if order.is_guest_order %}<span style="color: #f59e0b;">Guest Order</span>{% else %}Created by: {% if order.user %}{{ order.user.get_full_name|default:order.user.username }}{% else %}System{% endif %}{% endif %}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="text-align: center; color: #1f2937; font-size: 13px; font-weight: 500;">{{ order.created_at|date:"d M, Y" }} <span style="color: #64748b;">{{ order.created_at|time:"h:i A" }}</span></div>
+                    </td>
+                    <td>
+                        <div class="order-items-preview">
+                            {% for item in order.items.all|slice:":3" %}
+                            <div class="item-thumb" {% if forloop.counter > 1 %}style="margin-left: -8px;"{% endif %}>
+                                {% if item.product and item.product.get_main_image %}
+                                <img src="{{ item.product.get_main_image }}" alt="{{ item.product_name }}">
+                                {% else %}
+                                <i class="fas fa-image"></i>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                            {% if order.items.count > 3 %}
+                            <div class="item-count">+{{ order.items.count|add:"-3" }}</div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        <strong style="color: #1f2937;">Rs {{ order.total_amount|floatformat:0 }}</strong>
+                    </td>
+                    <td style="text-align: center;">
+                        <div class="payment-cell">
+                            <div class="payment-method">{{ order.payment_method|default:"COD"|upper }}</div>
+                            <span class="badge payment-badge {% if order.payment_status == 'paid' %}success{% else %}warning{% endif %}" data-order-id="{{ order.order_id }}" data-current="{{ order.payment_status }}">
+                                {% if order.payment_status == 'paid' %}Paid{% else %}Unpaid{% endif %} <i class="fas fa-chevron-down" style="font-size: 8px; margin-left: 4px;"></i>
+                            </span>
+                        </div>
+                    </td>
+                    <td style="text-align: center;">
+                        <span class="badge status-badge {% if order.status == 'delivered' %}success{% elif order.status == 'processing' or order.status == 'confirmed' %}warning{% elif order.status == 'cancelled' or order.status == 'returned' %}danger{% else %}primary{% endif %}" data-order-id="{{ order.order_id }}" data-current="{{ order.status }}">
+                            {{ order.get_status_display }} <i class="fas fa-chevron-down" style="font-size: 8px; margin-left: 4px;"></i>
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 60px; color: #64748b;">
+                        <i class="fas fa-shopping-bag fa-3x" style="margin-bottom: 16px; opacity: 0.3;"></i>
+                        <br>
+                        <strong>No orders found</strong>
+                        <br>
+                        <small>Try adjusting your search criteria or wait for new orders</small>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if is_paginated %}
+    <div style="padding: 16px; display: flex; justify-content: center;">
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1{% if search %}&search={{ search }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_payment_status %}&payment_status={{ selected_payment_status }}{% endif %}">&laquo; First</a>
+                <a href="?page={{ page_obj.previous_page_number }}{% if search %}&search={{ search }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_payment_status %}&payment_status={{ selected_payment_status }}{% endif %}">Previous</a>
+            {% endif %}
+
+            <span style="padding: 8px 16px;">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}{% if search %}&search={{ search }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_payment_status %}&payment_status={{ selected_payment_status }}{% endif %}">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}{% if search %}&search={{ search }}{% endif %}{% if selected_status %}&status={{ selected_status }}{% endif %}{% if selected_payment_status %}&payment_status={{ selected_payment_status }}{% endif %}">Last &raquo;</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Status Update Modal -->
+<div id="statusModal" class="update-modal">
+    <div class="update-modal-content">
+        <div class="update-modal-header">
+            <h3>Update Order Status</h3>
+            <button class="modal-close" onclick="$('#statusModal').removeClass('show');">&times;</button>
+        </div>
+        <div class="update-modal-body">
+            <div class="order-info">
+                Order <strong id="statusOrderNumber">#</strong>
+            </div>
+            <div class="current-status">
+                Current Status: <span id="currentStatusBadge" class="badge"></span>
+            </div>
+            <div class="form-group" style="margin-top: 16px;">
+                <label class="form-label">Update Status To:</label>
+                <select id="newStatusSelect" class="form-control">
+                    <option value="processing">Processing</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="packed">Packed</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="returned">Returned</option>
+                    <option value="cancelled">Cancelled</option>
+                </select>
+            </div>
+        </div>
+        <div class="update-modal-footer">
+            <button class="btn btn-secondary" onclick="$('#statusModal').removeClass('show');">Cancel</button>
+            <button class="btn btn-primary" id="confirmStatusUpdate">Update Status</button>
+        </div>
+    </div>
+</div>
+
+<!-- Payment Update Modal -->
+<div id="paymentModal" class="update-modal">
+    <div class="update-modal-content">
+        <div class="update-modal-header">
+            <h3>Update Payment Status</h3>
+            <button class="modal-close" onclick="$('#paymentModal').removeClass('show');">&times;</button>
+        </div>
+        <div class="update-modal-body">
+            <div class="order-info">
+                Order <strong id="paymentOrderNumber">#</strong>
+            </div>
+            <div class="current-status">
+                Current Status: <span id="currentPaymentBadge" class="badge"></span>
+            </div>
+            <div class="form-group" style="margin-top: 16px;">
+                <label class="form-label">Update Payment To:</label>
+                <select id="newPaymentSelect" class="form-control">
+                    <option value="paid">Paid</option>
+                    <option value="pending">Unpaid</option>
+                </select>
+            </div>
+        </div>
+        <div class="update-modal-footer">
+            <button class="btn btn-secondary" onclick="$('#paymentModal').removeClass('show');">Cancel</button>
+            <button class="btn btn-primary" id="confirmPaymentUpdate">Update Payment</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let currentOrderId = null;
+    let currentBadge = null;
+    let currentOrderNumber = null;
+
+    // Make rows clickable
+    $('.clickable-row').click(function() {
+        window.location = $(this).data('href');
+    });
+
+    // Open status modal
+    $('.status-badge').click(function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        currentOrderId = $(this).data('order-id');
+        currentBadge = $(this);
+        currentOrderNumber = $(this).closest('tr').find('td:first strong').text();
+        const currentStatus = $(this).data('current');
+        const currentText = $(this).text().trim().replace(/▼/g, '').trim();
+
+        $('#statusOrderNumber').text(currentOrderNumber);
+        $('#currentStatusBadge').text(currentText).removeClass('success warning danger primary')
+            .addClass($(this).hasClass('success') ? 'success' : $(this).hasClass('warning') ? 'warning' : $(this).hasClass('danger') ? 'danger' : 'primary');
+        $('#newStatusSelect').val(currentStatus);
+
+        $('#statusModal').addClass('show');
+    });
+
+    // Open payment modal
+    $('.payment-badge').click(function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        currentOrderId = $(this).data('order-id');
+        currentBadge = $(this);
+        currentOrderNumber = $(this).closest('tr').find('td:first strong').text();
+        const currentPayment = $(this).data('current');
+        const currentText = $(this).text().trim().replace(/▼/g, '').trim();
+
+        $('#paymentOrderNumber').text(currentOrderNumber);
+        $('#currentPaymentBadge').text(currentText).removeClass('success warning danger primary')
+            .addClass($(this).hasClass('success') ? 'success' : $(this).hasClass('warning') ? 'warning' : 'danger');
+        $('#newPaymentSelect').val(currentPayment);
+
+        $('#paymentModal').addClass('show');
+    });
+
+    // Confirm status update
+    $('#confirmStatusUpdate').click(function() {
+        const newStatus = $('#newStatusSelect').val();
+
+        $.post('/orders/quick-update/', {
+            csrfmiddlewaretoken: '{{ csrf_token }}',
+            order_id: currentOrderId,
+            field: 'status',
+            value: newStatus
+        })
+        .done(function(response) {
+            if (response.success) {
+                currentBadge.html(response.display + ' <i class="fas fa-chevron-down" style="font-size: 8px; margin-left: 4px;"></i>');
+                currentBadge.removeClass('success warning danger primary').addClass(response.badge_class);
+                currentBadge.data('current', newStatus);
+                showToast('Status updated successfully', 'success');
+                $('#statusModal').removeClass('show');
+            } else {
+                showToast(response.message || 'Failed to update', 'error');
+            }
+        })
+        .fail(function() {
+            showToast('Failed to update status', 'error');
+        });
+    });
+
+    // Confirm payment update
+    $('#confirmPaymentUpdate').click(function() {
+        const newPayment = $('#newPaymentSelect').val();
+
+        $.post('/orders/quick-update/', {
+            csrfmiddlewaretoken: '{{ csrf_token }}',
+            order_id: currentOrderId,
+            field: 'payment_status',
+            value: newPayment
+        })
+        .done(function(response) {
+            if (response.success) {
+                currentBadge.html(response.display + ' <i class="fas fa-chevron-down" style="font-size: 8px; margin-left: 4px;"></i>');
+                currentBadge.removeClass('success warning danger primary').addClass(response.badge_class);
+                currentBadge.data('current', newPayment);
+                showToast('Payment status updated successfully', 'success');
+                $('#paymentModal').removeClass('show');
+            } else {
+                showToast(response.message || 'Failed to update', 'error');
+            }
+        })
+        .fail(function() {
+            showToast('Failed to update payment status', 'error');
+        });
+    });
+
+    // Close modal on outside click
+    $('.update-modal').click(function(e) {
+        if (e.target === this) {
+            $(this).removeClass('show');
+        }
+    });
+
+    // Toast notification
+    function showToast(message, type) {
+        const toast = $('<div>')
+            .addClass('toast-notification')
+            .addClass('toast-' + type)
+            .html(`<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i> ${message}`)
+            .appendTo('body');
+
+        setTimeout(() => toast.addClass('show'), 100);
+        setTimeout(() => {
+            toast.removeClass('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 2000);
+    }
+});
+</script>
+
+<style>
+.clickable-row:hover {
+    background: #f8fafc;
+}
+.clickable-row:hover td {
+    background: #f8fafc;
+}
+
+/* Order items preview */
+.order-items-preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.item-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f1f5f9;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.item-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.item-thumb i {
+    font-size: 14px;
+    color: #94a3b8;
+}
+
+.item-count {
+    width: 44px;
+    height: 44px;
+    border-radius: 8px;
+    background: #e2e8f0;
+    border: 2px solid white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #64748b;
+    margin-left: -10px;
+}
+
+/* Customer cell */
+.customer-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.customer-name {
+    font-weight: 500;
+    color: #1f2937;
+    font-size: 14px;
+}
+
+.created-by {
+    font-size: 11px;
+    color: #9ca3af;
+}
+
+/* Payment cell */
+.payment-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.payment-method {
+    font-size: 10px;
+    font-weight: 700;
+    color: #6b7280;
+    letter-spacing: 0.5px;
+}
+
+/* Badge styles */
+.status-badge, .payment-badge {
+    cursor: pointer;
+    user-select: none;
+}
+
+.status-badge:hover, .payment-badge:hover {
+    opacity: 0.8;
+}
+
+/* Update Modal styles */
+.update-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.4);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+}
+
+.update-modal.show {
+    display: flex;
+}
+
+.update-modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 100%;
+    max-width: 400px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+}
+
+.update-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.update-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #9ca3af;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.modal-close:hover {
+    color: #6b7280;
+}
+
+.update-modal-body {
+    padding: 24px;
+}
+
+.order-info {
+    font-size: 14px;
+    color: #374151;
+    margin-bottom: 12px;
+}
+
+.order-info strong {
+    color: #1f2937;
+}
+
+.current-status {
+    font-size: 14px;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.current-status .badge {
+    font-size: 12px;
+    padding: 4px 10px;
+}
+
+.update-modal-body .form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.update-modal-body .form-control {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #1f2937;
+    background: white;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%236b7280'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
+    cursor: pointer;
+}
+
+.update-modal-body .form-control:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.update-modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid #e2e8f0;
+    background: #f9fafb;
+    border-radius: 0 0 12px 12px;
+}
+
+.update-modal-footer .btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Toast notification */
+.toast-notification {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    padding: 12px 18px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    font-size: 13px;
+    z-index: 10000;
+    transform: translateY(100px);
+    opacity: 0;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.toast-notification.show {
+    transform: translateY(0);
+    opacity: 1;
+}
+.toast-success { background: #10b981; }
+.toast-error { background: #ef4444; }
+</style>
+{% endblock %}

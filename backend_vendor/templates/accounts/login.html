@@ -1,0 +1,566 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - OVN Store</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%233b82f6;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%231d4ed8;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23grad)'/%3E%3Ctext x='50' y='72' font-family='Arial,sans-serif' font-size='65' font-weight='900' fill='white' text-anchor='middle'%3EO%3C/text%3E%3C/svg%3E">
+
+    <!-- Google Fonts - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Sign-In now uses server-side flow -->
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f4f4f5;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .login-header {
+            padding: 1.5rem 2rem;
+            background: white;
+            border-bottom: 1px solid #e4e4e7;
+        }
+
+        .login-header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #18181b;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .logo-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        .header-link {
+            color: #52525b;
+            text-decoration: none;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .header-link:hover {
+            color: #18181b;
+        }
+
+        /* Main Content */
+        .login-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .login-card {
+            width: 100%;
+            max-width: 400px;
+            background: white;
+            border-radius: 12px;
+            border: 1px solid #e4e4e7;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        .login-card-header {
+            padding: 2rem 2rem 0;
+            text-align: center;
+        }
+
+        .login-card-header h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #18181b;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-card-header p {
+            font-size: 0.9375rem;
+            color: #71717a;
+        }
+
+        .login-card-body {
+            padding: 2rem;
+        }
+
+        /* Portal Badge */
+        .portal-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 500;
+            border-radius: 9999px;
+            margin-top: 0.75rem;
+        }
+
+        .portal-badge.vendor {
+            background: #ecfdf5;
+            color: #059669;
+        }
+
+        .portal-badge.customer {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+
+        .portal-badge.admin {
+            background: #faf5ff;
+            color: #7c3aed;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #18181b;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            font-size: 0.9375rem;
+            border: 1px solid #d4d4d8;
+            border-radius: 8px;
+            background: white;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #a1a1aa;
+        }
+
+        /* Error */
+        .form-error {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .form-success {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: #16a34a;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            margin-bottom: 1.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        /* Submit Button */
+        .btn-submit {
+            width: 100%;
+            padding: 0.875rem 1.5rem;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            color: white;
+            background: #3b82f6;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .btn-submit:hover {
+            background: #2563eb;
+        }
+
+        .btn-submit:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        /* Divider */
+        .login-divider {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .login-divider::before,
+        .login-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e4e4e7;
+        }
+
+        .login-divider span {
+            font-size: 0.8125rem;
+            color: #71717a;
+        }
+
+        /* Google Button */
+        .btn-google {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.9375rem;
+            font-weight: 500;
+            color: #18181b;
+            background: white;
+            border: 1px solid #d4d4d8;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            font-family: inherit;
+        }
+
+        .btn-google:hover {
+            background: #f4f4f5;
+            border-color: #a1a1aa;
+        }
+
+        .btn-google svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Footer Links */
+        .login-card-footer {
+            padding: 0 2rem 2rem;
+            text-align: center;
+        }
+
+        .login-card-footer p {
+            font-size: 0.875rem;
+            color: #71717a;
+        }
+
+        .login-card-footer a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .login-card-footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Page Footer */
+        .login-page-footer {
+            padding: 1.5rem 2rem;
+            text-align: center;
+            color: #71717a;
+            font-size: 0.8125rem;
+        }
+
+        .login-page-footer a {
+            color: #71717a;
+            text-decoration: none;
+        }
+
+        .login-page-footer a:hover {
+            color: #18181b;
+        }
+
+        /* Forgot password link */
+        .forgot-password {
+            text-align: right;
+            margin-bottom: 1.25rem;
+        }
+
+        .forgot-password a {
+            font-size: 0.8125rem;
+            color: #3b82f6;
+            text-decoration: none;
+        }
+
+        .forgot-password a:hover {
+            text-decoration: underline;
+        }
+
+        /* Loading overlay */
+        #loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e4e4e7;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #52525b;
+            font-size: 0.9375rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <span class="loading-text">Signing in...</span>
+    </div>
+
+    <!-- Header -->
+    <header class="login-header">
+        <div class="login-header-content">
+            <a href="/" class="logo">
+                <div class="logo-icon">O</div>
+                OVN Store
+            </a>
+            <a href="/" class="header-link">
+                <i class="fas fa-arrow-left"></i> Back to Store
+            </a>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="login-container">
+        <div class="login-card">
+            <div class="login-card-header">
+                <h1>Welcome back</h1>
+                <p>Sign in to your account</p>
+                {% if next_url %}
+                    {% if 'vendor' in next_url %}
+                    <div class="portal-badge vendor">
+                        <i class="fas fa-store"></i> Vendor Portal
+                    </div>
+                    {% elif 'dashboard' in next_url %}
+                    <div class="portal-badge admin">
+                        <i class="fas fa-shield-alt"></i> Admin Portal
+                    </div>
+                    {% elif 'account' in next_url %}
+                    <div class="portal-badge customer">
+                        <i class="fas fa-user"></i> Customer Portal
+                    </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            <div class="login-card-body">
+                {% if is_authenticated %}
+                <!-- User is already logged in - show navigation options -->
+                <div class="form-success">
+                    <i class="fas fa-check-circle"></i>
+                    Welcome back, {{ user.username }}!
+                </div>
+
+                <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
+                    {% if is_superuser or is_staff %}
+                    <a href="/dashboard/" class="btn-submit" style="text-decoration: none; text-align: center; background: #7c3aed;">
+                        <i class="fas fa-shield-alt"></i> Admin Dashboard
+                    </a>
+                    {% endif %}
+
+                    {% if has_vendor %}
+                    <a href="/vendor/" class="btn-submit" style="text-decoration: none; text-align: center; background: #059669;">
+                        <i class="fas fa-store"></i> Vendor Dashboard
+                    </a>
+                    {% elif not is_superuser and not is_staff %}
+                    <a href="/vendor/become-vendor/" class="btn-submit" style="text-decoration: none; text-align: center; background: #059669;">
+                        <i class="fas fa-store"></i> Become a Vendor
+                    </a>
+                    {% endif %}
+
+                    <a href="/store/" class="btn-submit" style="text-decoration: none; text-align: center; background: #3b82f6;">
+                        <i class="fas fa-shopping-bag"></i> Go to Store
+                    </a>
+
+                    <a href="/logout/" class="btn-submit" style="text-decoration: none; text-align: center; background: #71717a;">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+                {% else %}
+                <!-- User is not logged in - show login form -->
+                {% if error %}
+                <div class="form-error">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {{ error }}
+                </div>
+                {% endif %}
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="{% if message.tags == 'error' %}form-error{% else %}form-success{% endif %}">
+                            <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% else %}fa-check-circle{% endif %}"></i>
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <div id="alert-container"></div>
+
+                <form method="POST" id="login-form">
+                    {% csrf_token %}
+                    {% if next_url %}
+                    <input type="hidden" name="next" value="{{ next_url }}">
+                    {% endif %}
+
+                    <div class="form-group">
+                        <label class="form-label" for="username">Username or Email</label>
+                        <input
+                            type="text"
+                            id="username"
+                            name="username"
+                            class="form-input"
+                            placeholder="Enter your username or email"
+                            value="{{ username|default:'' }}"
+                            required
+                            autofocus
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password</label>
+                        <input
+                            type="password"
+                            id="password"
+                            name="password"
+                            class="form-input"
+                            placeholder="Enter your password"
+                            required
+                        >
+                    </div>
+
+                    <div class="forgot-password">
+                        <a href="#">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="submit-btn">
+                        Sign In
+                    </button>
+                </form>
+
+                <div class="login-divider">
+                    <span>or continue with</span>
+                </div>
+
+                <a href="/accounts/google/{% if next_url %}?next={{ next_url }}{% endif %}" class="btn-google">
+                    <svg viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continue with Google
+                </a>
+                {% endif %}
+            </div>
+
+            <div class="login-card-footer">
+                {% if is_authenticated %}
+                <p>Logged in as <strong>{{ user.username }}</strong></p>
+                {% else %}
+                <p>Don't have an account? <a href="/register{% if next_url %}?next={{ next_url }}{% endif %}">Create one</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="login-page-footer">
+        <p>&copy; 2024 OVN Store. All rights reserved.</p>
+    </footer>
+
+    <script>
+        // Handle form submission
+        const loginForm = document.getElementById('login-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function(e) {
+                const btn = document.getElementById('submit-btn');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.textContent = 'Signing in...';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

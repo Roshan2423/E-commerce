@@ -1,0 +1,722 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - ProStore Demo</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+
+        /* Demo Banner */
+        .demo-banner {
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            color: white;
+            padding: 0.75rem;
+            text-align: center;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .demo-banner a {
+            color: white;
+            text-decoration: underline;
+            margin-left: 0.5rem;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0.75rem 2rem;
+        }
+
+        .navbar-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.25rem;
+        }
+
+        .logo-text {
+            font-size: 1.25rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .checkout-steps {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: #94a3b8;
+        }
+
+        .step.active {
+            color: #7c3aed;
+        }
+
+        .step.completed {
+            color: #10b981;
+        }
+
+        .step-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #f1f5f9;
+        }
+
+        .step.active .step-number {
+            background: #7c3aed;
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: #10b981;
+            color: white;
+        }
+
+        /* Checkout Container */
+        .checkout-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        .checkout-layout {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            gap: 2rem;
+        }
+
+        /* Form Section */
+        .checkout-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .form-section {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            padding: 1.5rem;
+        }
+
+        .section-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-title i {
+            color: #7c3aed;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 0.5rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9375rem;
+            color: #1e293b;
+            transition: all 0.2s;
+            background: #fafafa;
+            cursor: not-allowed;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #7c3aed;
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .form-control::placeholder {
+            color: #94a3b8;
+        }
+
+        /* Payment Methods */
+        .payment-methods {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .payment-method {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            cursor: not-allowed;
+            transition: all 0.2s;
+        }
+
+        .payment-method:hover {
+            border-color: #7c3aed;
+        }
+
+        .payment-method.selected {
+            border-color: #7c3aed;
+            background: #faf5ff;
+        }
+
+        .payment-radio {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .payment-method.selected .payment-radio {
+            border-color: #7c3aed;
+        }
+
+        .payment-method.selected .payment-radio::after {
+            content: '';
+            width: 10px;
+            height: 10px;
+            background: #7c3aed;
+            border-radius: 50%;
+        }
+
+        .payment-icon {
+            width: 40px;
+            height: 40px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            color: #64748b;
+        }
+
+        .payment-info {
+            flex: 1;
+        }
+
+        .payment-name {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .payment-desc {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        /* Order Summary */
+        .order-summary {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            padding: 1.5rem;
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .summary-title {
+            font-size: 1.125rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+        }
+
+        .order-items {
+            margin-bottom: 1.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .order-item {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .order-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .order-item-image {
+            width: 60px;
+            height: 60px;
+            background: #f1f5f9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .order-item-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .order-item-image .no-image {
+            font-size: 1.25rem;
+            color: #cbd5e1;
+        }
+
+        .order-item-info {
+            flex: 1;
+        }
+
+        .order-item-name {
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #1e293b;
+            margin-bottom: 0.25rem;
+        }
+
+        .order-item-qty {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        .order-item-price {
+            font-weight: 600;
+            color: #1e293b;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+            font-size: 0.9375rem;
+        }
+
+        .summary-row span:first-child {
+            color: #64748b;
+        }
+
+        .summary-row span:last-child {
+            font-weight: 500;
+            color: #1e293b;
+        }
+
+        .summary-row.total {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e2e8f0;
+            font-size: 1.125rem;
+        }
+
+        .summary-row.total span:last-child {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #7c3aed;
+        }
+
+        .place-order-btn {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: not-allowed;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+            opacity: 0.9;
+        }
+
+        .demo-notice {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-top: 1rem;
+            font-size: 0.75rem;
+            color: #92400e;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .back-to-cart {
+            display: block;
+            text-align: center;
+            color: #7c3aed;
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-top: 1rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: #1e293b;
+            color: #64748b;
+            padding: 2rem;
+            margin-top: 4rem;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .checkout-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .checkout-steps {
+                display: none;
+            }
+
+            .order-summary {
+                position: static;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Demo Banner -->
+    <div class="demo-banner">
+        <i class="fas fa-star"></i> Professional Demo - Checkout preview (forms disabled)
+        <a href="/">Start Free Trial</a>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <a href="{% url 'demo:pro_user_home' %}" class="logo">
+                <div class="logo-icon">
+                    <i class="fas fa-store"></i>
+                </div>
+                <span class="logo-text">ProStore</span>
+            </a>
+
+            <div class="checkout-steps">
+                <div class="step completed">
+                    <span class="step-number"><i class="fas fa-check"></i></span>
+                    Cart
+                </div>
+                <div class="step active">
+                    <span class="step-number">2</span>
+                    Checkout
+                </div>
+                <div class="step">
+                    <span class="step-number">3</span>
+                    Confirmation
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Checkout Container -->
+    <div class="checkout-container">
+        <div class="checkout-layout">
+            <!-- Checkout Form -->
+            <div class="checkout-form">
+                <!-- Contact Information -->
+                <div class="form-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-user"></i>
+                        Contact Information
+                    </h2>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">First Name *</label>
+                            <input type="text" class="form-control" placeholder="Rajesh" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Last Name *</label>
+                            <input type="text" class="form-control" placeholder="Shrestha" disabled>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Email Address *</label>
+                            <input type="email" class="form-control" placeholder="rajesh@example.com" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone Number *</label>
+                            <input type="tel" class="form-control" placeholder="+977-98XXXXXXXX" disabled>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Shipping Address -->
+                <div class="form-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-map-marker-alt"></i>
+                        Shipping Address
+                    </h2>
+                    <div class="form-group">
+                        <label class="form-label">Street Address *</label>
+                        <input type="text" class="form-control" placeholder="123 Main Street" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Apartment, suite, etc. (optional)</label>
+                        <input type="text" class="form-control" placeholder="Apt 4B" disabled>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">City *</label>
+                            <input type="text" class="form-control" placeholder="Kathmandu" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Province/State *</label>
+                            <select class="form-control" disabled>
+                                <option>Bagmati</option>
+                                <option>Gandaki</option>
+                                <option>Lumbini</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Postal Code</label>
+                            <input type="text" class="form-control" placeholder="44600" disabled>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Country *</label>
+                            <select class="form-control" disabled>
+                                <option>Nepal</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Method -->
+                <div class="form-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-credit-card"></i>
+                        Payment Method
+                    </h2>
+                    <div class="payment-methods">
+                        <div class="payment-method selected">
+                            <div class="payment-radio"></div>
+                            <div class="payment-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <div class="payment-info">
+                                <div class="payment-name">Cash on Delivery</div>
+                                <div class="payment-desc">Pay when you receive</div>
+                            </div>
+                        </div>
+                        <div class="payment-method">
+                            <div class="payment-radio"></div>
+                            <div class="payment-icon">
+                                <i class="fas fa-mobile-alt"></i>
+                            </div>
+                            <div class="payment-info">
+                                <div class="payment-name">eSewa</div>
+                                <div class="payment-desc">Pay with eSewa wallet</div>
+                            </div>
+                        </div>
+                        <div class="payment-method">
+                            <div class="payment-radio"></div>
+                            <div class="payment-icon">
+                                <i class="fas fa-university"></i>
+                            </div>
+                            <div class="payment-info">
+                                <div class="payment-name">Khalti</div>
+                                <div class="payment-desc">Pay with Khalti wallet</div>
+                            </div>
+                        </div>
+                        <div class="payment-method">
+                            <div class="payment-radio"></div>
+                            <div class="payment-icon">
+                                <i class="fab fa-cc-visa"></i>
+                            </div>
+                            <div class="payment-info">
+                                <div class="payment-name">Credit/Debit Card</div>
+                                <div class="payment-desc">Visa, Mastercard accepted</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="order-summary">
+                <h2 class="summary-title">Order Summary</h2>
+
+                <div class="order-items">
+                    {% for item in cart_items %}
+                    <div class="order-item">
+                        <div class="order-item-image">
+                            {% if item.get_main_image %}
+                            <img src="{{ item.get_main_image }}" alt="{{ item.name }}">
+                            {% else %}
+                            <i class="fas fa-image no-image"></i>
+                            {% endif %}
+                        </div>
+                        <div class="order-item-info">
+                            <div class="order-item-name">{{ item.name|truncatewords:5 }}</div>
+                            <div class="order-item-qty">Qty: 1</div>
+                        </div>
+                        <div class="order-item-price">Rs. {{ item.price|floatformat:0 }}</div>
+                    </div>
+                    {% empty %}
+                    <div class="order-item">
+                        <div class="order-item-image">
+                            <i class="fas fa-image no-image"></i>
+                        </div>
+                        <div class="order-item-info">
+                            <div class="order-item-name">Sample Product</div>
+                            <div class="order-item-qty">Qty: 1</div>
+                        </div>
+                        <div class="order-item-price">Rs. 2,500</div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span>Rs. {{ subtotal|floatformat:0|default:"2,500" }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Shipping</span>
+                    <span>Rs. {{ shipping|floatformat:0|default:"100" }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax (13% VAT)</span>
+                    <span>Included</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total</span>
+                    <span>Rs. {{ total|floatformat:0|default:"2,600" }}</span>
+                </div>
+
+                <button class="place-order-btn" title="Demo only - order placement disabled">
+                    <i class="fas fa-lock"></i>
+                    Place Order
+                </button>
+
+                <div class="demo-notice">
+                    <i class="fas fa-info-circle"></i>
+                    This is a demo checkout. Sign up for a free trial to enable real transactions.
+                </div>
+
+                <a href="{% url 'demo:pro_user_cart' %}" class="back-to-cart">
+                    <i class="fas fa-arrow-left"></i> Back to Cart
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        &copy; 2024 ProStore. All rights reserved. | Professional Demo
+    </footer>
+
+    <!-- Demo mode - auth disabled -->
+    <script>
+        window.IS_DEMO_MODE = true;
+        document.addEventListener('click', function(e) {
+            const target = e.target.closest('a, button, span');
+            if (target) {
+                const text = target.textContent.toLowerCase();
+                const href = target.getAttribute('href') || '';
+                if (text.includes('login') || text.includes('sign in') || text.includes('register') || text.includes('sign up') ||
+                    href.includes('/login') || href.includes('/register') || href.includes('/accounts/google')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alert('Authentication is disabled in demo mode. This is just a preview!');
+                    return false;
+                }
+            }
+        }, true);
+    </script>
+</body>
+</html>

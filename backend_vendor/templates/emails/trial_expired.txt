@@ -1,0 +1,30 @@
+YOUR TRIAL HAS EXPIRED
+======================
+
+But it's not too late to continue!
+
+Hi {{ business.business_name }}!
+
+Your {{ plan_name }} free trial has ended. Your dashboard access is now limited,
+but don't worry - all your data is safe and waiting for you!
+
+CURRENT STATUS: Trial Expired
+Upgrade now to restore full access to your vendor dashboard
+
+Subscribe today and pick up right where you left off.
+Your products, orders, and customer data are all preserved.
+
+Upgrade here: {{ upgrade_url }}
+
+CHOOSE YOUR PLAN
+----------------
+Starter Pack - Rs. 999/month
+  - Up to 50 products
+
+Professional Pack - Rs. 2,499/month
+  - Unlimited products + analytics
+
+---
+Need help? Contact us at support@ovnstore.com
+
+(c) 2024 OVN Store. All rights reserved.

@@ -1,0 +1,137 @@
+{% load static %}
+<!-- Categories Section -->
+<section class="section section-categories" id="categoriesSection">
+    <div class="container">
+        <div class="section-header">
+            <h2 class="section-title">Shop by Category</h2>
+            <p class="section-subtitle">Browse our wide selection of categories</p>
+        </div>
+
+        <div class="categories-grid">
+            {% for category in categories %}
+            <a href="/v/{{ vendor.slug }}/products/?category={{ category.slug }}" class="category-card">
+                <div class="category-image">
+                    {% if category.image %}
+                    <img src="{{ category.image.url }}" alt="{{ category.name }}">
+                    {% else %}
+                    <div class="category-placeholder">
+                        <i class="fas fa-tag"></i>
+                    </div>
+                    {% endif %}
+                    <div class="category-overlay"></div>
+                </div>
+                <div class="category-content">
+                    <h3 class="category-name">{{ category.name }}</h3>
+                    <span class="category-count">{{ category.product_count|default:0 }} Products</span>
+                </div>
+            </a>
+            {% empty %}
+            <div class="empty-message">
+                <p>No categories available yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<style>
+    .section-categories {
+        padding: 5rem 0;
+        background: #f8fafc;
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .section-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a202c;
+        margin-bottom: 0.5rem;
+    }
+
+    .section-subtitle {
+        color: #64748b;
+        font-size: 1rem;
+    }
+
+    .categories-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1.5rem;
+    }
+
+    .category-card {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        text-decoration: none;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .category-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+    .category-image {
+        position: relative;
+        aspect-ratio: 4/3;
+    }
+
+    .category-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .category-placeholder {
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, {{ storefront.primary_color|default:'#667eea' }} 0%, {{ storefront.secondary_color|default:'#764ba2' }} 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        color: rgba(255,255,255,0.3);
+    }
+
+    .category-overlay {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 60%);
+    }
+
+    .category-content {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 1.5rem;
+        color: #ffffff;
+    }
+
+    .category-name {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+
+    .category-count {
+        font-size: 0.875rem;
+        opacity: 0.8;
+    }
+
+    .category-card:hover .category-overlay {
+        background: linear-gradient(to top, {{ storefront.primary_color|default:'#667eea' }}cc 0%, transparent 80%);
+    }
+
+    @media (max-width: 768px) {
+        .categories-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+    }
+</style>

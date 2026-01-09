@@ -1,0 +1,212 @@
+{% extends 'account/base.html' %}
+
+{% block title %}{% if object %}Edit Address{% else %}Add Address{% endif %}{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'customer_dashboard:overview' %}" class="cf-breadcrumb-item">
+    <i class="fas fa-home"></i>
+</a>
+<span class="cf-breadcrumb-separator">/</span>
+<a href="{% url 'customer_dashboard:addresses' %}" class="cf-breadcrumb-item">Addresses</a>
+<span class="cf-breadcrumb-separator">/</span>
+<span class="cf-breadcrumb-item active">{% if object %}Edit{% else %}Add{% endif %}</span>
+{% endblock %}
+
+{% block content %}
+<div class="cf-page-header">
+    <div class="cf-page-header-content">
+        <h1 class="cf-page-title">{% if object %}Edit Address{% else %}Add New Address{% endif %}</h1>
+        <p class="cf-page-subtitle">{% if object %}Update your address details{% else %}Add a new shipping or billing address{% endif %}</p>
+    </div>
+    <div class="cf-page-actions">
+        <a href="{% url 'customer_dashboard:addresses' %}" class="cf-btn cf-btn-outline">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+</div>
+
+<div class="cf-card cf-form-card">
+    <form method="post" class="cf-form">
+        {% csrf_token %}
+
+        <div class="cf-card-body">
+            <div class="cf-form-grid">
+                <div class="cf-form-group">
+                    <label for="id_address_type" class="cf-label">Address Type *</label>
+                    <select name="address_type" id="id_address_type" class="cf-input" required>
+                        <option value="">Select type...</option>
+                        <option value="shipping" {% if form.address_type.value == 'shipping' %}selected{% endif %}>Shipping Address</option>
+                        <option value="billing" {% if form.address_type.value == 'billing' %}selected{% endif %}>Billing Address</option>
+                        <option value="both" {% if form.address_type.value == 'both' %}selected{% endif %}>Both Shipping and Billing</option>
+                    </select>
+                    {% if form.address_type.errors %}
+                    <span class="cf-error">{{ form.address_type.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="cf-form-group cf-col-span-2">
+                    <label for="id_street_address" class="cf-label">Street Address *</label>
+                    <input type="text" name="street_address" id="id_street_address" class="cf-input" value="{{ form.street_address.value|default:'' }}" placeholder="123 Main Street" required>
+                    {% if form.street_address.errors %}
+                    <span class="cf-error">{{ form.street_address.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="cf-form-group cf-col-span-2">
+                    <label for="id_apartment" class="cf-label">Apartment, Suite, etc. (optional)</label>
+                    <input type="text" name="apartment" id="id_apartment" class="cf-input" value="{{ form.apartment.value|default:'' }}" placeholder="Apt 4B">
+                </div>
+
+                <div class="cf-form-group">
+                    <label for="id_city" class="cf-label">City *</label>
+                    <input type="text" name="city" id="id_city" class="cf-input" value="{{ form.city.value|default:'' }}" placeholder="Kathmandu" required>
+                    {% if form.city.errors %}
+                    <span class="cf-error">{{ form.city.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="cf-form-group">
+                    <label for="id_state" class="cf-label">State/Province *</label>
+                    <input type="text" name="state" id="id_state" class="cf-input" value="{{ form.state.value|default:'' }}" placeholder="Bagmati" required>
+                    {% if form.state.errors %}
+                    <span class="cf-error">{{ form.state.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="cf-form-group">
+                    <label for="id_postal_code" class="cf-label">Postal Code *</label>
+                    <input type="text" name="postal_code" id="id_postal_code" class="cf-input" value="{{ form.postal_code.value|default:'' }}" placeholder="44600" required>
+                    {% if form.postal_code.errors %}
+                    <span class="cf-error">{{ form.postal_code.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="cf-form-group">
+                    <label for="id_country" class="cf-label">Country *</label>
+                    <input type="text" name="country" id="id_country" class="cf-input" value="{{ form.country.value|default:'Nepal' }}" placeholder="Nepal" required>
+                    {% if form.country.errors %}
+                    <span class="cf-error">{{ form.country.errors.0 }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="cf-form-group cf-col-span-2">
+                    <label class="cf-checkbox-label">
+                        <input type="checkbox" name="is_default" id="id_is_default" class="cf-checkbox" {% if form.is_default.value %}checked{% endif %}>
+                        <span class="cf-checkbox-text">Set as default address</span>
+                    </label>
+                    <span class="cf-hint">This will be pre-selected during checkout</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="cf-card-footer">
+            <a href="{% url 'customer_dashboard:addresses' %}" class="cf-btn cf-btn-outline">Cancel</a>
+            <button type="submit" class="cf-btn cf-btn-primary">
+                <i class="fas fa-save"></i> {% if object %}Update Address{% else %}Save Address{% endif %}
+            </button>
+        </div>
+    </form>
+</div>
+
+<style>
+.cf-form-card {
+    max-width: 720px;
+}
+
+.cf-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+}
+
+@media (max-width: 640px) {
+    .cf-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.cf-col-span-2 {
+    grid-column: span 2;
+}
+
+@media (max-width: 640px) {
+    .cf-col-span-2 {
+        grid-column: span 1;
+    }
+}
+
+.cf-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+}
+
+.cf-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--cf-text);
+}
+
+.cf-input {
+    padding: 0.625rem 0.875rem;
+    border: 1px solid var(--cf-border);
+    border-radius: var(--cf-radius);
+    font-size: 0.875rem;
+    background: var(--cf-bg);
+    color: var(--cf-text);
+    transition: border-color var(--cf-transition-fast), box-shadow var(--cf-transition-fast);
+}
+
+.cf-input:focus {
+    outline: none;
+    border-color: var(--cf-blue);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.cf-input::placeholder {
+    color: var(--cf-text-muted);
+}
+
+select.cf-input {
+    cursor: pointer;
+}
+
+.cf-error {
+    font-size: 0.75rem;
+    color: var(--cf-danger);
+}
+
+.cf-hint {
+    font-size: 0.75rem;
+    color: var(--cf-text-secondary);
+}
+
+.cf-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.cf-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: var(--cf-radius-sm);
+    cursor: pointer;
+}
+
+.cf-checkbox-text {
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.cf-card-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--cf-border);
+    background: var(--cf-bg-secondary);
+}
+</style>
+{% endblock %}

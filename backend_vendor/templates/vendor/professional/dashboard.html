@@ -1,0 +1,295 @@
+{% extends 'vendor/professional/base.html' %}
+{% load static %}
+<!-- TEMPLATE: PROFESSIONAL DASHBOARD -->
+
+{% block title %}Dashboard - {{ business.business_name }}{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Welcome Header with Logo and Business Name -->
+<div class="welcome-header" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); border-radius: 16px; padding: 24px 32px; margin-bottom: 32px; display: flex; align-items: center; gap: 24px;">
+    {% if business.logo %}
+    <div class="welcome-logo" style="flex-shrink: 0;">
+        <img src="{{ business.logo.url }}" alt="{{ business.business_name }}" style="width: 80px; height: 80px; border-radius: 16px; object-fit: cover; border: 3px solid rgba(255,255,255,0.3); box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+    </div>
+    {% endif %}
+    <div class="welcome-info" style="flex: 1;">
+        <h1 style="color: white; font-size: 24px; font-weight: 700; margin: 0 0 8px 0;">
+            Welcome back, {{ business.business_name }}!
+        </h1>
+        <p style="color: rgba(255,255,255,0.85); font-size: 14px; margin: 0;">
+            Here's what's happening with your store today.
+        </p>
+    </div>
+    <div class="welcome-badge" style="flex-shrink: 0;">
+        <span style="background: rgba(255,255,255,0.2); color: white; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+            <i class="fas fa-crown"></i>Professional Plan
+        </span>
+    </div>
+</div>
+
+<div class="page-header">
+    <h1 class="page-title">Dashboard Overview</h1>
+</div>
+
+<!-- Statistics Cards -->
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-icon primary">
+            <i class="fas fa-shopping-cart"></i>
+        </div>
+        <div class="stat-value">{{ total_orders|default:0 }}</div>
+        <div class="stat-label">Total Orders</div>
+        <div class="stat-change">
+            <i class="fas fa-info-circle"></i>
+            {% if total_orders > 0 %}{{ total_orders }} order{{ total_orders|pluralize }}{% else %}No orders yet{% endif %}
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon success">
+            <i class="fas fa-coins"></i>
+        </div>
+        <div class="stat-value">Rs {{ total_revenue|floatformat:0|default:0 }}</div>
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-change">
+            <i class="fas fa-info-circle"></i>
+            {% if total_revenue > 0 %}From completed orders{% else %}No revenue yet{% endif %}
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon warning">
+            <i class="fas fa-box"></i>
+        </div>
+        <div class="stat-value">{{ total_products|default:0 }}</div>
+        <div class="stat-label">Total Products</div>
+        <div class="stat-change">
+            <i class="fas fa-info-circle"></i>
+            {% if total_products > 0 %}{{ total_products }} product{{ total_products|pluralize }}{% else %}No products yet{% endif %}
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon danger">
+            <i class="fas fa-users"></i>
+        </div>
+        <div class="stat-value">{{ total_customers|default:0 }}</div>
+        <div class="stat-label">Total Customers</div>
+        <div class="stat-change">
+            <i class="fas fa-info-circle"></i>
+            {% if total_customers > 0 %}{{ total_customers }} customer{{ total_customers|pluralize }}{% else %}No customers yet{% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px; margin-bottom: 32px;">
+    <!-- Sales Chart -->
+    <div class="data-table">
+        <div class="table-header">
+            <h3 class="table-title">Sales Overview</h3>
+        </div>
+        <div style="padding: 32px; height: 400px;">
+            <canvas id="salesChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Order Status Chart -->
+    <div class="data-table">
+        <div class="table-header">
+            <h3 class="table-title">Order Status</h3>
+        </div>
+        <div style="padding: 32px; height: 400px; display: flex; align-items: center; justify-content: center;">
+            <canvas id="ordersChart" style="max-height: 300px;"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Recent Orders and Low Stock -->
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 32px;">
+    <!-- Recent Orders -->
+    <div class="data-table">
+        <div class="table-header">
+            <h3 class="table-title">Recent Orders</h3>
+            <a href="{% url 'vendor:orders' %}" class="btn btn-sm btn-secondary">View All</a>
+        </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Customer</th>
+                        <th>Status</th>
+                        <th>Total</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in recent_orders %}
+                    <tr>
+                        <td>
+                            <strong>#{{ item.order.id }}</strong>
+                        </td>
+                        <td>{{ item.order.user.get_full_name|default:item.order.user.email|default:"Guest" }}</td>
+                        <td>
+                            <span class="badge {% if item.order.status == 'delivered' %}success{% elif item.order.status == 'pending' %}warning{% elif item.order.status == 'cancelled' %}danger{% else %}primary{% endif %}">
+                                {{ item.order.status|title }}
+                            </span>
+                        </td>
+                        <td><strong>Rs {{ item.total_price|floatformat:0 }}</strong></td>
+                        <td>{{ item.order.created_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 40px; color: #64748b;">
+                            <i class="fas fa-shopping-cart fa-2x" style="margin-bottom: 16px; opacity: 0.5;"></i>
+                            <br>
+                            No orders found. Orders will appear here when customers place them.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Low Stock Alert -->
+    <div class="data-table">
+        <div class="table-header">
+            <h3 class="table-title">Inventory Alert</h3>
+        </div>
+        <div style="padding: 24px;">
+            {% for product in low_stock_products %}
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 0; border-bottom: 1px solid #f1f5f9;">
+                <div>
+                    <div style="font-weight: 600; color: #1e293b;">{{ product.name|truncatechars:25 }}</div>
+                    <div style="font-size: 12px; color: #64748b;">SKU: {{ product.sku|default:"-" }}</div>
+                </div>
+                <span class="badge danger">{{ product.stock_quantity }} left</span>
+            </div>
+            {% empty %}
+            <div style="text-align: center; padding: 40px;">
+                <i class="fas fa-check-circle fa-2x" style="color: #10b981; margin-bottom: 16px;"></i>
+                <p style="color: #64748b; margin: 0;">All products are well stocked!</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Sales Chart
+    const salesCtx = document.getElementById('salesChart');
+    if (salesCtx) {
+        new Chart(salesCtx.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                datasets: [{
+                    label: 'Revenue (Rs)',
+                    data: [
+                        {{ monthly_data.jan|default:0 }},
+                        {{ monthly_data.feb|default:0 }},
+                        {{ monthly_data.mar|default:0 }},
+                        {{ monthly_data.apr|default:0 }},
+                        {{ monthly_data.may|default:0 }},
+                        {{ monthly_data.jun|default:0 }},
+                        {{ monthly_data.jul|default:0 }},
+                        {{ monthly_data.aug|default:0 }},
+                        {{ monthly_data.sep|default:0 }},
+                        {{ monthly_data.oct|default:0 }},
+                        {{ monthly_data.nov|default:0 }},
+                        {{ monthly_data.dec|default:0 }}
+                    ],
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: '#6366f1',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return 'Rs ' + value.toLocaleString();
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Order Status Chart
+    const ordersCtx = document.getElementById('ordersChart');
+    if (ordersCtx) {
+        new Chart(ordersCtx.getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Delivered', 'Processing', 'Pending', 'Cancelled'],
+                datasets: [{
+                    data: [
+                        {{ order_stats.delivered|default:0 }},
+                        {{ order_stats.processing|default:0 }},
+                        {{ order_stats.pending|default:0 }},
+                        {{ order_stats.cancelled|default:0 }}
+                    ],
+                    backgroundColor: [
+                        '#10b981',
+                        '#6366f1',
+                        '#f59e0b',
+                        '#ef4444'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '60%',
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

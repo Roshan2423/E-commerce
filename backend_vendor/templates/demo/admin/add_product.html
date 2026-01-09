@@ -1,0 +1,246 @@
+{% extends 'demo/admin/base.html' %}
+
+{% block title %}Add Product{% endblock %}
+{% block breadcrumb %}Add Product{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .form-section {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .image-upload {
+        border: 2px dashed var(--border);
+        border-radius: 12px;
+        padding: 2rem;
+        text-align: center;
+        cursor: not-allowed;
+        transition: all 0.2s;
+        background: #fafafa;
+    }
+
+    .image-upload i {
+        font-size: 2.5rem;
+        color: var(--primary);
+        margin-bottom: 0.75rem;
+    }
+
+    .image-upload p {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .image-upload small {
+        color: #94a3b8;
+        font-size: 0.75rem;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 1rem;
+        margin-top: 1.5rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+    }
+
+    .btn-lg {
+        padding: 0.875rem 2rem;
+        font-size: 1rem;
+    }
+
+    .demo-notice {
+        background: #fef3c7;
+        border: 1px solid #fcd34d;
+        border-radius: 8px;
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: #92400e;
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 1024px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Add New Product</h1>
+    <p class="page-subtitle">Create a new product listing for your store</p>
+</div>
+
+<div class="demo-notice">
+    <i class="fas fa-info-circle"></i>
+    This is a demo form. Form submission is disabled in demo mode.
+</div>
+
+<form>
+    <div class="form-grid">
+        <!-- Main Form -->
+        <div class="form-main">
+            <!-- Basic Info -->
+            <div class="form-section">
+                <h3 class="form-section-title">Basic Information</h3>
+
+                <div class="form-group">
+                    <label class="form-label">Product Name *</label>
+                    <input type="text" class="form-control" placeholder="Enter product name" disabled>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Short Description</label>
+                    <textarea class="form-control" rows="2" placeholder="Brief description for product cards" disabled></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Full Description</label>
+                    <textarea class="form-control" rows="5" placeholder="Detailed product description" disabled></textarea>
+                </div>
+            </div>
+
+            <!-- Pricing -->
+            <div class="form-section">
+                <h3 class="form-section-title">Pricing</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Regular Price (Rs.) *</label>
+                        <input type="number" class="form-control" placeholder="0.00" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Compare at Price (Rs.)</label>
+                        <input type="number" class="form-control" placeholder="0.00" disabled>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Cost per Item (Rs.)</label>
+                    <input type="number" class="form-control" placeholder="0.00" disabled>
+                    <small style="color: var(--text-secondary); font-size: 0.75rem;">Customers won't see this</small>
+                </div>
+            </div>
+
+            <!-- Inventory -->
+            <div class="form-section">
+                <h3 class="form-section-title">Inventory</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">SKU (Stock Keeping Unit)</label>
+                        <input type="text" class="form-control" placeholder="Auto-generated if empty" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Stock Quantity *</label>
+                        <input type="number" class="form-control" placeholder="0" disabled>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Low Stock Threshold</label>
+                    <input type="number" class="form-control" placeholder="10" disabled>
+                    <small style="color: var(--text-secondary); font-size: 0.75rem;">Alert when stock falls below this</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="form-sidebar">
+            <!-- Status -->
+            <div class="form-section">
+                <h3 class="form-section-title">Status</h3>
+
+                <div class="form-group">
+                    <label class="form-label">Product Status</label>
+                    <select class="form-control" disabled>
+                        <option>Active</option>
+                        <option>Draft</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: not-allowed;">
+                        <input type="checkbox" disabled>
+                        <span class="form-label" style="margin: 0;">Featured Product</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Category -->
+            <div class="form-section">
+                <h3 class="form-section-title">Organization</h3>
+
+                <div class="form-group">
+                    <label class="form-label">Category *</label>
+                    <select class="form-control" disabled>
+                        <option value="">Select category</option>
+                        {% for category in categories %}
+                        <option value="{{ category.id }}">{{ category.name }}</option>
+                        {% empty %}
+                        <option>Electronics</option>
+                        <option>Clothing</option>
+                        <option>Home & Garden</option>
+                        <option>Sports</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            <!-- Images -->
+            <div class="form-section">
+                <h3 class="form-section-title">Product Images</h3>
+
+                <div class="image-upload">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Click to upload images</p>
+                    <small>PNG, JPG up to 5MB</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Actions -->
+    <div class="form-section">
+        <div class="form-actions">
+            <a href="{% url 'demo:admin_products' %}" class="btn btn-outline btn-lg">
+                Cancel
+            </a>
+            <button type="button" class="btn btn-primary btn-lg" title="Demo only - form submission disabled">
+                <i class="fas fa-save"></i>
+                Save Product
+            </button>
+        </div>
+    </div>
+</form>
+{% endblock %}

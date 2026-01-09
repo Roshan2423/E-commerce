@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Admin Panel - OVN Store{% endblock %}</title>
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236366f1;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%238b5cf6;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23grad)'/%3E%3Ctext x='50' y='72' font-family='Arial,sans-serif' font-size='65' font-weight='900' fill='white' text-anchor='middle'%3EO%3C/text%3E%3C/svg%3E">
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    {% load static %}
+    <link href="{% static 'css/clean_admin.css' %}?v=2.0" rel="stylesheet">
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Modern Sidebar -->
+        <nav id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand-container">
+                    <div class="brand-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <a href="/" style="text-decoration: none;">
+                        <h3 class="brand-text">OVN Store</h3>
+                    </a>
+                </div>
+            </div>
+
+            <div class="nav-menu">
+                <ul class="nav-list">
+                    <!-- Dashboard -->
+                    <li class="nav-item {% if request.resolver_match.app_name == 'dashboard' %}active{% endif %}">
+                        <a href="/dashboard/" class="nav-link">
+                            <div class="nav-icon">
+                                <i class="fas fa-home"></i>
+                            </div>
+                            <span class="nav-text">Dashboard</span>
+                        </a>
+                    </li>
+
+                    <!-- Products -->
+                    <li class="nav-item has-dropdown {% if request.resolver_match.app_name == 'products' %}active{% endif %}">
+                        <a href="#" class="nav-link dropdown-toggle" data-target="products-menu">
+                            <div class="nav-icon">
+                                <i class="fas fa-cube"></i>
+                            </div>
+                            <span class="nav-text">Products</span>
+                            <div class="dropdown-icon">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu" id="products-menu">
+                            <a href="/products/" class="dropdown-link">
+                                <i class="fas fa-boxes"></i>
+                                <span>All Products</span>
+                            </a>
+                            <a href="/products/add/" class="dropdown-link">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>Add Product</span>
+                            </a>
+                            <a href="/products/categories/" class="dropdown-link">
+                                <i class="fas fa-folder-tree"></i>
+                                <span>Categories</span>
+                            </a>
+                            <a href="/products/flash-sale/" class="dropdown-link">
+                                <i class="fas fa-bolt"></i>
+                                <span>Flash Sale</span>
+                            </a>
+                        </div>
+                    </li>
+
+                    <!-- Orders -->
+                    <li class="nav-item has-dropdown {% if request.resolver_match.app_name == 'orders' %}active{% endif %}">
+                        <a href="#" class="nav-link dropdown-toggle" data-target="orders-menu">
+                            <div class="nav-icon">
+                                <i class="fas fa-shopping-bag"></i>
+                            </div>
+                            <span class="nav-text">Orders</span>
+                            <div class="dropdown-icon">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu" id="orders-menu">
+                            <a href="/orders/" class="dropdown-link">
+                                <i class="fas fa-list-ul"></i>
+                                <span>All Orders</span>
+                            </a>
+                            <a href="/orders/deleted/" class="dropdown-link">
+                                <i class="fas fa-trash-alt"></i>
+                                <span>Deleted Orders</span>
+                            </a>
+                        </div>
+                    </li>
+
+                    <!-- Reviews -->
+                    <li class="nav-item {% if 'reviews' in request.path %}active{% endif %}">
+                        <a href="/products/reviews/" class="nav-link">
+                            <div class="nav-icon">
+                                <i class="fas fa-star"></i>
+                            </div>
+                            <span class="nav-text">Reviews</span>
+                            {% if pending_reviews_count > 0 %}
+                            <span class="nav-badge">{{ pending_reviews_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+
+                    <!-- Customers -->
+                    <li class="nav-item {% if 'users' in request.path %}active{% endif %}">
+                        <a href="/users/" class="nav-link">
+                            <div class="nav-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <span class="nav-text">Customers</span>
+                        </a>
+                    </li>
+
+                    <!-- Contact Messages -->
+                    <li class="nav-item {% if 'contacts' in request.path %}active{% endif %}">
+                        <a href="/admin/contacts/" class="nav-link">
+                            <div class="nav-icon">
+                                <i class="fas fa-envelope"></i>
+                            </div>
+                            <span class="nav-text">Messages</span>
+                            {% if unread_messages_count > 0 %}
+                            <span class="nav-badge">{{ unread_messages_count }}</span>
+                            {% endif %}
+                        </a>
+                    </li>
+
+                    <!-- Analytics -->
+                    <li class="nav-item has-dropdown {% if request.resolver_match.app_name == 'reports' %}active{% endif %}">
+                        <a href="#" class="nav-link dropdown-toggle" data-target="reports-menu">
+                            <div class="nav-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <span class="nav-text">Analytics</span>
+                            <div class="dropdown-icon">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu" id="reports-menu">
+                            <a href="{% url 'reports:sales' %}" class="dropdown-link">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Sales Report</span>
+                            </a>
+                            <a href="{% url 'reports:products' %}" class="dropdown-link">
+                                <i class="fas fa-chart-pie"></i>
+                                <span>Product Stats</span>
+                            </a>
+                            <a href="{% url 'reports:customers' %}" class="dropdown-link">
+                                <i class="fas fa-users"></i>
+                                <span>Customer Insights</span>
+                            </a>
+                        </div>
+                    </li>
+
+                    <!-- Chatbot Admin -->
+                    <li class="nav-item has-dropdown {% if request.resolver_match.app_name == 'chatbot' %}active{% endif %}">
+                        <a href="#" class="nav-link dropdown-toggle" data-target="chatbot-menu">
+                            <div class="nav-icon">
+                                <i class="fas fa-robot"></i>
+                            </div>
+                            <span class="nav-text">Chatbot</span>
+                            <div class="dropdown-icon">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu" id="chatbot-menu">
+                            <a href="{% url 'chatbot:sessions' %}" class="dropdown-link">
+                                <i class="fas fa-comments"></i>
+                                <span>Chat Logs</span>
+                            </a>
+                            <a href="{% url 'chatbot:analytics' %}" class="dropdown-link">
+                                <i class="fas fa-chart-area"></i>
+                                <span>Chat Analytics</span>
+                            </a>
+                        </div>
+                    </li>
+
+                    <!-- Business Vendors -->
+                    <li class="nav-item has-dropdown {% if 'vendors' in request.path %}active{% endif %}">
+                        <a href="#" class="nav-link dropdown-toggle" data-target="vendors-menu">
+                            <div class="nav-icon">
+                                <i class="fas fa-store-alt"></i>
+                            </div>
+                            <span class="nav-text">Business Vendors</span>
+                            <div class="dropdown-icon">
+                                <i class="fas fa-chevron-right"></i>
+                            </div>
+                        </a>
+                        <div class="dropdown-menu" id="vendors-menu">
+                            <a href="{% url 'vendor_admin:list' %}" class="dropdown-link">
+                                <i class="fas fa-store"></i>
+                                <span>All Vendors</span>
+                            </a>
+                            <a href="{% url 'vendor_admin:applications' %}" class="dropdown-link">
+                                <i class="fas fa-file-alt"></i>
+                                <span>Vendor Applications</span>
+                                {% if pending_applications_count > 0 %}
+                                <span class="badge" style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 10px; font-size: 11px; margin-left: auto;">{{ pending_applications_count }}</span>
+                                {% endif %}
+                            </a>
+                            <a href="{% url 'vendor_admin:add' %}" class="dropdown-link">
+                                <i class="fas fa-plus-circle"></i>
+                                <span>Add Vendor</span>
+                            </a>
+                        </div>
+                    </li>
+
+                    <!-- Demo Settings -->
+                    <li class="nav-item {% if 'demo/settings' in request.path %}active{% endif %}">
+                        <a href="{% url 'demo:demo_settings' %}" class="nav-link">
+                            <div class="nav-icon">
+                                <i class="fas fa-palette"></i>
+                            </div>
+                            <span class="nav-text">Demo Settings</span>
+                        </a>
+                    </li>
+
+                    <div class="nav-divider"></div>
+
+                    <!-- External Links -->
+                    <li class="nav-item">
+                        <a href="/" class="nav-link" target="_blank">
+                            <div class="nav-icon">
+                                <i class="fas fa-store"></i>
+                            </div>
+                            <span class="nav-text">Vendor Dashboard</span>
+                        </a>
+                    </li>
+
+                    <!-- Logout -->
+                    <li class="nav-item">
+                        <a href="/logout/" class="nav-link logout-link" id="logout-btn">
+                            <div class="nav-icon">
+                                <i class="fas fa-arrow-right-from-bracket"></i>
+                            </div>
+                            <span class="nav-text">Logout</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <div id="content">
+            <!-- Top Navigation Bar -->
+            <nav class="top-navbar">
+                <div class="topbar-left">
+                    <button class="menu-toggle" id="sidebarToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                </div>
+
+                <div class="user-menu">
+                    <!-- Groq AI Token Usage -->
+                    <div class="groq-usage-widget" id="groqUsageWidget" title="Groq AI Token Usage">
+                        <div class="groq-icon">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div class="groq-info">
+                            <span class="groq-label">AI Tokens</span>
+                            <span class="groq-value" id="groqTokens">--</span>
+                        </div>
+                        <div class="groq-bar">
+                            <div class="groq-bar-fill" id="groqBarFill" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <button class="notification-btn">
+                        <i class="fas fa-bell"></i>
+                        <span class="notification-badge"></span>
+                    </button>
+
+                    <div class="user-profile">
+                        <div class="user-info">
+                            <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+                            <span class="user-role">{% if user.is_superuser %}Administrator{% else %}Staff{% endif %}</span>
+                        </div>
+                        <div class="user-avatar">
+                            {{ user.first_name.0|default:"A" }}{{ user.last_name.0|default:"D" }}
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Main Content Area -->
+            <div class="main-content">
+                <!-- Alert Messages -->
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert {{ message.tags }}">
+                            {% if message.tags == 'success' %}
+                                <i class="fas fa-check-circle"></i>
+                            {% elif message.tags == 'error' %}
+                                <i class="fas fa-exclamation-circle"></i>
+                            {% elif message.tags == 'warning' %}
+                                <i class="fas fa-exclamation-triangle"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle"></i>
+                            {% endif %}
+                            <span>{{ message }}</span>
+                            <button class="alert-close" onclick="this.parentElement.remove()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                {% block content %}{% endblock %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'js/admin.js' %}?v=2.0"></script>
+
+    <script>
+        // Check authentication on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Mobile sidebar toggle
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            const sidebar = document.getElementById('sidebar');
+
+            if (sidebarToggle) {
+                sidebarToggle.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                });
+            }
+
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(e) {
+                if (window.innerWidth <= 768) {
+                    if (!sidebar.contains(e.target) && !sidebarToggle.contains(e.target)) {
+                        sidebar.classList.remove('active');
+                    }
+                }
+            });
+
+            // Logout handler - clear session and redirect
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                logoutBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    // Clear localStorage
+                    localStorage.removeItem('currentUser');
+                    localStorage.removeItem('authToken');
+
+                    // Redirect to logout URL (Django handles session clearing)
+                    window.location.href = '/logout/';
+                });
+            }
+
+            // Auto-dismiss alerts after 1 second
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-10px)';
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 300);
+                }, 1000);
+            });
+
+            // Groq Usage Widget - Fetch and update
+            function updateGroqUsage() {
+                fetch('/dashboard/api/groq-usage/')
+                    .then(response => response.json())
+                    .then(data => {
+                        const tokenEl = document.getElementById('groqTokens');
+                        const barEl = document.getElementById('groqBarFill');
+                        const widgetEl = document.getElementById('groqUsageWidget');
+
+                        if (data.success && data.available) {
+                            tokenEl.textContent = data.remaining_tokens_formatted + '/' + data.limit_tokens_formatted;
+                            barEl.style.width = data.tokens_percent + '%';
+
+                            // Color based on remaining percentage
+                            if (data.tokens_percent > 50) {
+                                barEl.style.background = 'linear-gradient(90deg, #10b981, #34d399)';
+                                widgetEl.classList.remove('warning', 'danger');
+                            } else if (data.tokens_percent > 20) {
+                                barEl.style.background = 'linear-gradient(90deg, #f59e0b, #fbbf24)';
+                                widgetEl.classList.add('warning');
+                                widgetEl.classList.remove('danger');
+                            } else {
+                                barEl.style.background = 'linear-gradient(90deg, #ef4444, #f87171)';
+                                widgetEl.classList.add('danger');
+                                widgetEl.classList.remove('warning');
+                            }
+
+                            widgetEl.title = 'Groq AI: ' + data.remaining_tokens + ' tokens remaining (' + data.tokens_percent + '%)' +
+                                            '\nRequests: ' + data.remaining_requests + '/' + data.limit_requests +
+                                            '\nLast checked: ' + data.last_checked;
+                        } else {
+                            tokenEl.textContent = 'N/A';
+                            barEl.style.width = '0%';
+                            widgetEl.title = data.error || 'Groq API not available';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Failed to fetch Groq usage:', error);
+                        document.getElementById('groqTokens').textContent = 'Error';
+                    });
+            }
+
+            // Initial fetch
+            updateGroqUsage();
+
+            // Refresh every 2 minutes
+            setInterval(updateGroqUsage, 120000);
+        });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

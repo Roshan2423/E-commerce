@@ -1,0 +1,442 @@
+{% extends 'vendor/professional/base.html' %}
+{% load static %}
+
+{% block title %}Flash Sale Management - {{ business.business_name }}{% endblock %}
+
+{% block breadcrumb %}
+<a href="{% url 'vendor:dashboard' %}">
+    <i class="fas fa-home"></i>
+</a>
+<span>/</span>
+<a href="{% url 'vendor:products' %}">Products</a>
+<span>/</span>
+<span class="breadcrumb-current">Flash Sale</span>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .flash-sale-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+    }
+
+    .flash-sale-header i {
+        font-size: 28px;
+        color: #f59e0b;
+        animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.7; transform: scale(1.1); }
+    }
+
+    .flash-sale-header h1 {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+    }
+
+    .section-card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        box-shadow: var(--shadow-sm);
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .section-title.flash {
+        color: #f59e0b;
+    }
+
+    .section-title.flash i {
+        animation: pulse 1.5s infinite;
+    }
+
+    .flash-count {
+        background: #f59e0b;
+        color: white;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .search-box {
+        margin-bottom: 16px;
+        position: relative;
+        max-width: 400px;
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 10px 45px 10px 16px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-size: 14px;
+        background: var(--bg-light);
+        transition: all 0.2s;
+    }
+
+    .search-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    .search-icon {
+        position: absolute;
+        right: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--text-muted);
+        pointer-events: none;
+    }
+
+    .products-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .product-card {
+        background: var(--bg-light);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px 18px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        transition: all 0.2s;
+        flex-wrap: wrap;
+    }
+
+    .product-card:hover {
+        border-color: var(--primary);
+        box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);
+    }
+
+    .product-card.flash-active {
+        background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+        border-color: #f59e0b;
+    }
+
+    .product-image {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        object-fit: cover;
+        background: white;
+        flex-shrink: 0;
+    }
+
+    .product-info {
+        flex: 1;
+        min-width: 200px;
+    }
+
+    .product-name {
+        font-weight: 600;
+        font-size: 14px;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+        display: -webkit-box;
+        -webkit-line-clamp: 1;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .product-price {
+        font-size: 13px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .product-price .current-price {
+        color: var(--success);
+        font-weight: 700;
+    }
+
+    .product-price .original-price {
+        color: var(--text-muted);
+        text-decoration: line-through;
+        font-size: 12px;
+    }
+
+    .product-price .flash-price {
+        color: #dc2626;
+        font-weight: 700;
+    }
+
+    .flash-price-form {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+    }
+
+    .flash-price-input {
+        width: 120px;
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        background: white;
+    }
+
+    .flash-price-input:focus {
+        outline: none;
+        border-color: #f59e0b;
+        box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+    }
+
+    .save-price-btn {
+        padding: 8px 14px;
+        background: #f59e0b;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .save-price-btn:hover {
+        background: #d97706;
+    }
+
+    .toggle-btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+        white-space: nowrap;
+    }
+
+    .toggle-btn.add {
+        background: var(--success);
+        color: white;
+    }
+
+    .toggle-btn.add:hover {
+        background: #059669;
+    }
+
+    .toggle-btn.remove {
+        background: var(--danger);
+        color: white;
+    }
+
+    .toggle-btn.remove:hover {
+        background: #dc2626;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 50px 20px;
+        color: var(--text-muted);
+    }
+
+    .empty-state i {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.4;
+        color: #f59e0b;
+    }
+
+    .empty-state h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+
+    .discount-badge {
+        background: #ef4444;
+        color: white;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        margin-left: 8px;
+    }
+
+    @media (max-width: 768px) {
+        .product-card {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .flash-price-form {
+            width: 100%;
+        }
+
+        .flash-price-input {
+            flex: 1;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <div class="flash-sale-header">
+            <i class="fas fa-bolt"></i>
+            <h1>Flash Sale Management</h1>
+        </div>
+        <p class="page-subtitle">Manage your flash sale products and prices to boost sales</p>
+    </div>
+</div>
+
+<!-- Current Flash Sale Products -->
+<div class="section-card">
+    <h2 class="section-title flash">
+        <i class="fas fa-fire"></i>
+        Flash Sale Products
+        <span class="flash-count">{{ flash_sale_products|length }}</span>
+    </h2>
+
+    {% if flash_sale_products %}
+    <div class="search-box">
+        <input type="text" class="search-input" id="flashSearchInput" placeholder="Search flash sale products..." oninput="filterProducts('flash')">
+        <i class="fas fa-search search-icon"></i>
+    </div>
+    <div class="products-list" id="flashProductsList">
+        {% for product in flash_sale_products %}
+        <div class="product-card flash-active" data-name="{{ product.name|lower }}">
+            <img src="{{ product.get_main_image|default:'/static/images/placeholder.jpg' }}"
+                 alt="{{ product.name }}" class="product-image">
+            <div class="product-info">
+                <div class="product-name">{{ product.name }}</div>
+                <div class="product-price">
+                    {% if product.flash_sale_price %}
+                    <span class="flash-price">Rs. {{ product.flash_sale_price|floatformat:0 }}</span>
+                    <span class="original-price">Rs. {{ product.price|floatformat:0 }}</span>
+                    {% widthratio product.flash_sale_price product.price 100 as sale_percent %}
+                    <span class="discount-badge">-{{ 100|add:"-"|add:sale_percent }}% OFF</span>
+                    {% else %}
+                    <span class="current-price">Rs. {{ product.price|floatformat:0 }}</span>
+                    {% if product.compare_price %}
+                    <span class="original-price">Rs. {{ product.compare_price|floatformat:0 }}</span>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            <form action="{% url 'vendor:update_flash_price' product.pk %}" method="POST" class="flash-price-form">
+                {% csrf_token %}
+                <input type="number" name="flash_sale_price" class="flash-price-input"
+                       placeholder="Flash price" value="{{ product.flash_sale_price|default:'' }}" step="0.01" min="0">
+                <button type="submit" class="save-price-btn">
+                    <i class="fas fa-save"></i> Save
+                </button>
+            </form>
+            <a href="{% url 'vendor:toggle_flash_sale' product.pk %}" class="toggle-btn remove">
+                <i class="fas fa-times"></i> Remove
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-bolt"></i>
+        <h3>No Flash Sale Products</h3>
+        <p>Add products from the list below to display them in your Flash Sale section.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Available Products -->
+<div class="section-card">
+    <h2 class="section-title">
+        <i class="fas fa-boxes"></i>
+        Available Products
+    </h2>
+
+    {% if products %}
+    <div class="search-box">
+        <input type="text" class="search-input" id="availableSearchInput" placeholder="Search available products..." oninput="filterProducts('available')">
+        <i class="fas fa-search search-icon"></i>
+    </div>
+    <div class="products-list" id="availableProductsList">
+        {% for product in products %}
+        <div class="product-card" data-name="{{ product.name|lower }}">
+            <img src="{{ product.get_main_image|default:'/static/images/placeholder.jpg' }}"
+                 alt="{{ product.name }}" class="product-image">
+            <div class="product-info">
+                <div class="product-name">{{ product.name }}</div>
+                <div class="product-price">
+                    <span class="current-price">Rs. {{ product.price|floatformat:0 }}</span>
+                    {% if product.compare_price %}
+                    <span class="original-price">Rs. {{ product.compare_price|floatformat:0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <a href="{% url 'vendor:toggle_flash_sale' product.pk %}" class="toggle-btn add">
+                <i class="fas fa-plus"></i> Add to Flash Sale
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <i class="fas fa-boxes"></i>
+        <h3>No Products Available</h3>
+        <p>All your products are already in Flash Sale, or you haven't added any products yet.</p>
+        <a href="{% url 'vendor:product_add' %}" class="btn btn-primary" style="margin-top: 16px;">
+            <i class="fas fa-plus"></i> Add Product
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterProducts(type) {
+    const inputId = type === 'flash' ? 'flashSearchInput' : 'availableSearchInput';
+    const listId = type === 'flash' ? 'flashProductsList' : 'availableProductsList';
+
+    const searchInput = document.getElementById(inputId);
+    const productsList = document.getElementById(listId);
+
+    if (!searchInput || !productsList) return;
+
+    const query = searchInput.value.toLowerCase().trim();
+    const products = productsList.querySelectorAll('.product-card');
+
+    products.forEach(product => {
+        const name = product.getAttribute('data-name') || '';
+        if (name.includes(query)) {
+            product.style.display = 'flex';
+        } else {
+            product.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

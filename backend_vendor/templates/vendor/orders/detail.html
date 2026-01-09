@@ -1,0 +1,320 @@
+{% extends 'vendor/base.html' %}
+{% load static %}
+
+{% block title %}Order #{{ order.get_order_number }} - {{ vendor_business.business_name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="header-content">
+        <h1 class="page-title">Order #{{ order.get_order_number }}</h1>
+        <p class="page-subtitle">Placed on {{ order.created_at|date:"F d, Y at H:i" }}</p>
+    </div>
+    <div class="header-actions">
+        <a href="{% url 'vendor:orders' %}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i>
+            <span>Back to Orders</span>
+        </a>
+    </div>
+</div>
+
+<div class="order-detail-grid">
+    <!-- Order Status -->
+    <div class="detail-card">
+        <div class="card-header">
+            <h3>Order Status</h3>
+            <span class="status-badge status-{{ order.status }}">{{ order.get_status_display }}</span>
+        </div>
+        <div class="card-body">
+            <div class="status-timeline">
+                <div class="timeline-item {% if order.status in 'processing,confirmed,packed,shipped,delivered' %}completed{% endif %}">
+                    <div class="timeline-dot"></div>
+                    <span>Processing</span>
+                </div>
+                <div class="timeline-item {% if order.status in 'confirmed,packed,shipped,delivered' %}completed{% endif %}">
+                    <div class="timeline-dot"></div>
+                    <span>Confirmed</span>
+                </div>
+                <div class="timeline-item {% if order.status in 'packed,shipped,delivered' %}completed{% endif %}">
+                    <div class="timeline-dot"></div>
+                    <span>Packed</span>
+                </div>
+                <div class="timeline-item {% if order.status in 'shipped,delivered' %}completed{% endif %}">
+                    <div class="timeline-dot"></div>
+                    <span>Shipped</span>
+                </div>
+                <div class="timeline-item {% if order.status == 'delivered' %}completed{% endif %}">
+                    <div class="timeline-dot"></div>
+                    <span>Delivered</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Customer Info -->
+    <div class="detail-card">
+        <div class="card-header">
+            <h3>Customer Information</h3>
+        </div>
+        <div class="card-body">
+            <div class="info-row">
+                <span class="info-label">Name</span>
+                <span class="info-value">{{ order.user.get_full_name|default:"Guest Customer" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Email</span>
+                <span class="info-value">{{ order.user.email|default:order.guest_email }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Shipping Address</span>
+                <span class="info-value">{{ order.shipping_address }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Your Products in This Order -->
+    <div class="detail-card full-width">
+        <div class="card-header">
+            <h3>Your Products in This Order</h3>
+        </div>
+        <div class="card-body">
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>SKU</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in vendor_items %}
+                    <tr>
+                        <td>
+                            <div class="product-cell">
+                                {% if item.product.get_main_image %}
+                                <img src="{{ item.product.get_main_image }}" alt="{{ item.product_name }}">
+                                {% endif %}
+                                <span>{{ item.product_name }}</span>
+                            </div>
+                        </td>
+                        <td>{{ item.product_sku }}</td>
+                        <td>Rs. {{ item.unit_price }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td><strong>Rs. {{ item.total_price }}</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="4" class="text-right"><strong>Your Total:</strong></td>
+                        <td><strong>Rs. {{ vendor_total }}</strong></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- Payment Info -->
+    <div class="detail-card">
+        <div class="card-header">
+            <h3>Payment Information</h3>
+        </div>
+        <div class="card-body">
+            <div class="info-row">
+                <span class="info-label">Payment Method</span>
+                <span class="info-value">{{ order.payment_method|default:"Not specified" }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Payment Status</span>
+                <span class="status-badge status-{{ order.payment_status }}">{{ order.get_payment_status_display }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Notes -->
+    {% if order.notes %}
+    <div class="detail-card">
+        <div class="card-header">
+            <h3>Order Notes</h3>
+        </div>
+        <div class="card-body">
+            <p class="notes-text">{{ order.notes }}</p>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .order-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+    }
+
+    @media (max-width: 1024px) {
+        .order-detail-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .detail-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+
+    .detail-card.full-width {
+        grid-column: 1 / -1;
+    }
+
+    .card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .card-header h3 {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .card-body {
+        padding: 1.5rem;
+    }
+
+    .status-timeline {
+        display: flex;
+        justify-content: space-between;
+        position: relative;
+    }
+
+    .status-timeline::before {
+        content: '';
+        position: absolute;
+        top: 10px;
+        left: 20px;
+        right: 20px;
+        height: 2px;
+        background: var(--border);
+        z-index: 0;
+    }
+
+    .timeline-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0.5rem;
+        z-index: 1;
+    }
+
+    .timeline-dot {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: var(--bg);
+        border: 2px solid var(--border);
+    }
+
+    .timeline-item.completed .timeline-dot {
+        background: #10b981;
+        border-color: #10b981;
+    }
+
+    .timeline-item span {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .timeline-item.completed span {
+        color: #10b981;
+        font-weight: 500;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        color: var(--text-secondary);
+        font-size: 0.875rem;
+    }
+
+    .info-value {
+        color: var(--text);
+        font-weight: 500;
+        text-align: right;
+        max-width: 60%;
+    }
+
+    .items-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .items-table th {
+        text-align: left;
+        padding: 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border);
+    }
+
+    .items-table td {
+        padding: 1rem 0.75rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    .items-table tfoot td {
+        border-bottom: none;
+        padding-top: 1rem;
+    }
+
+    .product-cell {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .product-cell img {
+        width: 50px;
+        height: 50px;
+        border-radius: 8px;
+        object-fit: cover;
+    }
+
+    .text-right {
+        text-align: right;
+    }
+
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 9999px;
+        font-size: 0.75rem;
+        font-weight: 500;
+    }
+
+    .status-processing { background: #fef3c7; color: #92400e; }
+    .status-confirmed { background: #dbeafe; color: #1e40af; }
+    .status-packed { background: #e0e7ff; color: #3730a3; }
+    .status-shipped { background: #e0e7ff; color: #3730a3; }
+    .status-delivered { background: #d1fae5; color: #065f46; }
+    .status-cancelled { background: #fee2e2; color: #991b1b; }
+    .status-pending { background: #fef3c7; color: #92400e; }
+    .status-paid { background: #d1fae5; color: #065f46; }
+    .status-failed { background: #fee2e2; color: #991b1b; }
+</style>
+{% endblock %}

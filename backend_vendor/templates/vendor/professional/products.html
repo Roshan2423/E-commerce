@@ -1,0 +1,226 @@
+{% extends 'vendor/professional/base.html' %}
+{% load static %}
+
+{% block title %}Products{% endblock %}
+
+{% block breadcrumb %}Products{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Products</h1>
+        <p class="page-subtitle">Manage your product inventory</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
+        <a href="{% url 'vendor:product_add' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Product
+        </a>
+    </div>
+</div>
+
+<!-- Stats Cards -->
+<div class="stats-grid" style="grid-template-columns: repeat(3, 1fr);">
+    <div class="stat-card">
+        <div class="stat-icon primary">
+            <i class="fas fa-box"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">{{ total_products|default:"0" }}</div>
+            <div class="stat-label">Total Products</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon success">
+            <i class="fas fa-check-circle"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">{{ active_products|default:"0" }}</div>
+            <div class="stat-label">Active Products</div>
+        </div>
+    </div>
+
+    <div class="stat-card">
+        <div class="stat-icon danger">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+        <div class="stat-content">
+            <div class="stat-value">{{ low_stock|default:"0" }}</div>
+            <div class="stat-label">Low Stock</div>
+        </div>
+    </div>
+</div>
+
+<!-- Products Table -->
+<div class="card">
+    <div class="card-header">
+        <h3 class="card-title"><i class="fas fa-box"></i> All Products</h3>
+        <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <form method="get" style="display: flex; gap: 0.75rem; align-items: center;">
+                <input type="text" name="q" class="form-control" placeholder="Search products..." style="width: 200px;" value="{{ request.GET.q }}">
+                <select name="category" class="form-control" style="width: 150px;" onchange="this.form.submit()">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                    <option value="{{ category.slug }}" {% if request.GET.category == category.slug %}selected{% endif %}>{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </form>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Category</th>
+                    <th>Price</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div style="width: 48px; height: 48px; border-radius: 8px; overflow: hidden; background: var(--bg-light);">
+                                {% if product.get_main_image %}
+                                <img src="{{ product.get_main_image }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                {% else %}
+                                <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-secondary);"><i class="fas fa-image"></i></div>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div style="font-weight: 500;">{{ product.name|truncatechars:30 }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">SKU: {{ product.sku|default:"N/A" }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ product.category.name|default:"General" }}</td>
+                    <td>
+                        {% if product.compare_price %}
+                        <span style="text-decoration: line-through; color: var(--text-secondary); font-size: 0.8125rem;">Rs. {{ product.price|floatformat:0 }}</span><br>
+                        <strong style="color: var(--success);">Rs. {{ product.compare_price|floatformat:0 }}</strong>
+                        {% else %}
+                        <strong>Rs. {{ product.price|floatformat:0 }}</strong>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="color: {% if product.stock_quantity < 10 %}var(--danger){% elif product.stock_quantity < 20 %}var(--warning){% else %}var(--success){% endif %};">
+                            {{ product.stock_quantity|default:0 }}
+                        </span>
+                    </td>
+                    <td>
+                        {% if product.is_active %}
+                        <span class="badge badge-success">Active</span>
+                        {% else %}
+                        <span class="badge badge-secondary">Inactive</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <a href="{% url 'vendor:product_detail' product.pk %}" class="btn btn-sm btn-outline" title="View">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'vendor:product_edit' product.pk %}" class="btn btn-sm btn-outline" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-outline delete-btn" data-product-id="{{ product.pk }}" data-product-name="{{ product.name }}" title="Delete">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 3rem;">
+                        <div style="color: var(--text-secondary);">
+                            <i class="fas fa-box" style="font-size: 3rem; opacity: 0.5; display: block; margin-bottom: 1rem;"></i>
+                            <p style="margin-bottom: 1rem;">No products found</p>
+                            <a href="{% url 'vendor:product_add' %}" class="btn btn-primary">Add Your First Product</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination -->
+{% if products.has_other_pages %}
+<div style="display: flex; justify-content: center; gap: 0.5rem; margin-top: 1.5rem;">
+    {% if products.has_previous %}
+    <a href="?page={{ products.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" class="btn btn-sm btn-outline">
+        <i class="fas fa-chevron-left"></i>
+    </a>
+    {% endif %}
+
+    {% for num in products.paginator.page_range %}
+        {% if products.number == num %}
+        <span class="btn btn-sm btn-primary">{{ num }}</span>
+        {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+        <a href="?page={{ num }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" class="btn btn-sm btn-outline">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if products.has_next %}
+    <a href="?page={{ products.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q }}{% endif %}{% if request.GET.category %}&category={{ request.GET.category }}{% endif %}" class="btn btn-sm btn-outline">
+        <i class="fas fa-chevron-right"></i>
+    </a>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: white; border-radius: 12px; padding: 2rem; max-width: 400px; width: 90%;">
+        <h3 style="margin-bottom: 1rem;">Delete Product</h3>
+        <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Are you sure you want to delete "<span id="productName"></span>"? This action cannot be undone.</p>
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+            <button type="button" class="btn btn-outline" onclick="closeDeleteModal()">Cancel</button>
+            <form id="deleteForm" method="post" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Delete modal functionality
+    const deleteModal = document.getElementById('deleteModal');
+    const deleteForm = document.getElementById('deleteForm');
+    const productNameSpan = document.getElementById('productName');
+
+    document.querySelectorAll('.delete-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const productId = this.dataset.productId;
+            const productName = this.dataset.productName;
+            productNameSpan.textContent = productName;
+            deleteForm.action = "{% url 'vendor:product_delete' 0 %}".replace('/0/', '/' + productId + '/');
+            deleteModal.style.display = 'flex';
+        });
+    });
+
+    function closeDeleteModal() {
+        deleteModal.style.display = 'none';
+    }
+
+    deleteModal.addEventListener('click', function(e) {
+        if (e.target === deleteModal) {
+            closeDeleteModal();
+        }
+    });
+
+    // Search on Enter key
+    document.querySelector('input[name="q"]').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            this.form.submit();
+        }
+    });
+</script>
+{% endblock %}

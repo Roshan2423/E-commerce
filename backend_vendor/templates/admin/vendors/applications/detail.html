@@ -1,0 +1,386 @@
+{% extends 'admin/base.html' %}
+{% load static %}
+
+{% block title %}Application: {{ application.business_name }}{% endblock %}
+
+{% block content %}
+<div class="cf-page-header">
+    <div class="cf-page-header-content">
+        <div class="cf-breadcrumb">
+            <a href="{% url 'vendor_admin:applications' %}">Applications</a>
+            <span>/</span>
+            <span>{{ application.business_name }}</span>
+        </div>
+        <h1 class="cf-page-title">{{ application.business_name }}</h1>
+        <p class="cf-page-subtitle">Application from {{ application.user.username }}</p>
+    </div>
+    <div class="cf-page-actions">
+        {% if application.status == 'pending' %}
+        <a href="{% url 'vendor_admin:application_approve' application.pk %}" class="cf-btn cf-btn-green" onclick="return confirm('Approve this application? A business will be created for this user.')">
+            <i class="fas fa-check"></i> Approve
+        </a>
+        <button type="button" class="cf-btn cf-btn-red" onclick="showRejectModal()">
+            <i class="fas fa-times"></i> Reject
+        </button>
+        {% endif %}
+        <a href="{% url 'vendor_admin:applications' %}" class="cf-btn cf-btn-outline">
+            <i class="fas fa-arrow-left"></i> Back to List
+        </a>
+    </div>
+</div>
+
+<div class="cf-grid cf-grid-2">
+    <!-- Application Details -->
+    <div class="cf-card">
+        <div class="cf-card-header">
+            <h3 class="cf-card-title">Business Information</h3>
+            <span class="cf-badge {% if application.status == 'pending' %}cf-badge-yellow{% elif application.status == 'approved' %}cf-badge-green{% else %}cf-badge-red{% endif %}">
+                {{ application.get_status_display }}
+            </span>
+        </div>
+        <div class="cf-card-body">
+            <div class="cf-detail-list">
+                <div class="cf-detail-item">
+                    <span class="cf-detail-label">Business Name</span>
+                    <span class="cf-detail-value">{{ application.business_name }}</span>
+                </div>
+                <div class="cf-detail-item">
+                    <span class="cf-detail-label">Business Email</span>
+                    <span class="cf-detail-value">{{ application.business_email }}</span>
+                </div>
+                <div class="cf-detail-item">
+                    <span class="cf-detail-label">Phone</span>
+                    <span class="cf-detail-value">{{ application.phone }}</span>
+                </div>
+                <div class="cf-detail-item">
+                    <span class="cf-detail-label">Category</span>
+                    <span class="cf-detail-value">{{ application.get_category_display }}</span>
+                </div>
+                <div class="cf-detail-item">
+                    <span class="cf-detail-label">Selected Plan</span>
+                    <span class="cf-detail-value">
+                        {% if application.selected_plan == 'professional' %}
+                        <span class="cf-badge cf-badge-purple">Professional Pack</span>
+                        {% else %}
+                        <span class="cf-badge cf-badge-blue">Starter Pack</span>
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="cf-detail-item">
+                    <span class="cf-detail-label">Address</span>
+                    <span class="cf-detail-value">{{ application.address }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Applicant Info -->
+    <div class="cf-card">
+        <div class="cf-card-header">
+            <h3 class="cf-card-title">Applicant Information</h3>
+        </div>
+        <div class="cf-card-body">
+            <div class="cf-detail-list">
+                <div class="cf-detail-item">
+                    <span class="cf-detail-label">Username</span>
+                    <span class="cf-detail-value">{{ application.user.username }}</span>
+                </div>
+                <div class="cf-detail-item">
+                    <span class="cf-detail-label">Email</span>
+                    <span class="cf-detail-value">{{ application.user.email }}</span>
+                </div>
+                <div class="cf-detail-item">
+                    <span class="cf-detail-label">Name</span>
+                    <span class="cf-detail-value">{{ application.user.get_full_name|default:'-' }}</span>
+                </div>
+                <div class="cf-detail-item">
+                    <span class="cf-detail-label">Joined</span>
+                    <span class="cf-detail-value">{{ application.user.date_joined|date:"M d, Y" }}</span>
+                </div>
+                <div class="cf-detail-item">
+                    <span class="cf-detail-label">Submitted At</span>
+                    <span class="cf-detail-value">{{ application.submitted_at|date:"M d, Y H:i" }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Description -->
+    <div class="cf-card cf-col-span-2">
+        <div class="cf-card-header">
+            <h3 class="cf-card-title">Business Description</h3>
+        </div>
+        <div class="cf-card-body">
+            <p>{{ application.description|linebreaks }}</p>
+        </div>
+    </div>
+
+    <!-- Document -->
+    {% if application.business_document %}
+    <div class="cf-card">
+        <div class="cf-card-header">
+            <h3 class="cf-card-title">Business Document</h3>
+        </div>
+        <div class="cf-card-body">
+            <a href="{{ application.business_document.url }}" target="_blank" class="cf-btn cf-btn-primary">
+                <i class="fas fa-download"></i> Download Document
+            </a>
+            <p class="cf-text-muted cf-mt-2">{{ application.business_document.name }}</p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Review Info -->
+    {% if application.reviewed_by %}
+    <div class="cf-card">
+        <div class="cf-card-header">
+            <h3 class="cf-card-title">Review Information</h3>
+        </div>
+        <div class="cf-card-body">
+            <div class="cf-detail-list">
+                <div class="cf-detail-item">
+                    <span class="cf-detail-label">Reviewed By</span>
+                    <span class="cf-detail-value">{{ application.reviewed_by.username }}</span>
+                </div>
+                <div class="cf-detail-item">
+                    <span class="cf-detail-label">Reviewed At</span>
+                    <span class="cf-detail-value">{{ application.reviewed_at|date:"M d, Y H:i" }}</span>
+                </div>
+                {% if application.rejection_reason %}
+                <div class="cf-detail-item">
+                    <span class="cf-detail-label">Rejection Reason</span>
+                    <span class="cf-detail-value">{{ application.rejection_reason }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Created Business -->
+    {% if application.created_business %}
+    <div class="cf-card">
+        <div class="cf-card-header">
+            <h3 class="cf-card-title">Created Business</h3>
+        </div>
+        <div class="cf-card-body">
+            <a href="{% url 'vendor_admin:detail' application.created_business.pk %}" class="cf-btn cf-btn-primary">
+                <i class="fas fa-store"></i> View Business
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Reject Modal -->
+<div class="cf-modal" id="rejectModal" style="display: none;">
+    <div class="cf-modal-overlay" onclick="hideRejectModal()"></div>
+    <div class="cf-modal-content">
+        <div class="cf-modal-header">
+            <h3>Reject Application</h3>
+            <button type="button" class="cf-modal-close" onclick="hideRejectModal()">&times;</button>
+        </div>
+        <form method="post" action="{% url 'vendor_admin:application_reject' application.pk %}">
+            {% csrf_token %}
+            <div class="cf-modal-body">
+                <div class="cf-form-group">
+                    <label class="cf-form-label">Rejection Reason</label>
+                    <textarea name="reason" class="cf-input" rows="4" placeholder="Enter the reason for rejection...">Your application did not meet our requirements.</textarea>
+                </div>
+            </div>
+            <div class="cf-modal-footer">
+                <button type="button" class="cf-btn cf-btn-outline" onclick="hideRejectModal()">Cancel</button>
+                <button type="submit" class="cf-btn cf-btn-red">Reject Application</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    /* Page Header */
+    .cf-page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .cf-page-header-content { flex: 1; }
+    .cf-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-bottom: 0.5rem;
+    }
+    .cf-breadcrumb a {
+        color: #6366f1;
+        text-decoration: none;
+    }
+    .cf-breadcrumb a:hover { text-decoration: underline; }
+    .cf-page-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #1f2937;
+        margin: 0;
+    }
+    .cf-page-subtitle {
+        color: #6b7280;
+        margin-top: 0.25rem;
+        margin-bottom: 0;
+    }
+    .cf-page-actions {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    /* Buttons */
+    .cf-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.5rem 1rem;
+        font-size: 0.875rem;
+        font-weight: 500;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.15s;
+        gap: 0.5rem;
+    }
+    .cf-btn-primary {
+        background: #6366f1;
+        color: white;
+    }
+    .cf-btn-primary:hover { background: #4f46e5; }
+    .cf-btn-green {
+        background: #059669;
+        color: white;
+    }
+    .cf-btn-green:hover { background: #047857; }
+    .cf-btn-red {
+        background: #dc2626;
+        color: white;
+    }
+    .cf-btn-red:hover { background: #b91c1c; }
+    .cf-btn-outline {
+        background: white;
+        border: 1px solid #d1d5db;
+        color: #374151;
+    }
+    .cf-btn-outline:hover {
+        background: #f9fafb;
+        border-color: #9ca3af;
+    }
+
+    /* Cards */
+    .cf-card {
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        border: 1px solid #e5e7eb;
+        overflow: hidden;
+    }
+    .cf-card-header {
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .cf-card-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: #1f2937;
+        margin: 0;
+    }
+    .cf-card-body {
+        padding: 1.25rem;
+    }
+
+    /* Badges */
+    .cf-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border-radius: 9999px;
+    }
+    .cf-badge-yellow { background: #fef3c7; color: #92400e; }
+    .cf-badge-green { background: #d1fae5; color: #065f46; }
+    .cf-badge-red { background: #fee2e2; color: #991b1b; }
+    .cf-badge-blue { background: #dbeafe; color: #1e40af; }
+    .cf-badge-purple { background: #ede9fe; color: #5b21b6; }
+
+    /* Grid */
+    .cf-grid { display: grid; gap: 1.5rem; }
+    .cf-grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .cf-col-span-2 { grid-column: span 2; }
+    @media (max-width: 768px) {
+        .cf-grid-2 { grid-template-columns: 1fr; }
+        .cf-col-span-2 { grid-column: span 1; }
+        .cf-page-header { flex-direction: column; }
+    }
+
+    /* Detail List */
+    .cf-detail-list { display: flex; flex-direction: column; gap: 1rem; }
+    .cf-detail-item { display: flex; justify-content: space-between; padding-bottom: 0.75rem; border-bottom: 1px solid #e5e7eb; }
+    .cf-detail-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .cf-detail-label { color: #6b7280; font-size: 0.875rem; }
+    .cf-detail-value { font-weight: 500; color: #1f2937; }
+
+    /* Form Elements */
+    .cf-form-group { margin-bottom: 1rem; }
+    .cf-form-group:last-child { margin-bottom: 0; }
+    .cf-form-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: #374151;
+        margin-bottom: 0.5rem;
+    }
+    .cf-input {
+        width: 100%;
+        padding: 0.625rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        font-size: 0.875rem;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .cf-input:focus {
+        outline: none;
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    }
+
+    /* Utilities */
+    .cf-text-muted { color: #6b7280; font-size: 0.875rem; }
+    .cf-mt-2 { margin-top: 0.5rem; }
+
+    /* Modal */
+    .cf-modal { position: fixed; inset: 0; z-index: 1000; display: flex; align-items: center; justify-content: center; }
+    .cf-modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
+    .cf-modal-content { position: relative; background: white; border-radius: 12px; width: 100%; max-width: 500px; margin: 1rem; }
+    .cf-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.5rem; border-bottom: 1px solid #e5e7eb; }
+    .cf-modal-header h3 { margin: 0; font-size: 1.125rem; font-weight: 600; }
+    .cf-modal-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #6b7280; }
+    .cf-modal-close:hover { color: #374151; }
+    .cf-modal-body { padding: 1.5rem; }
+    .cf-modal-footer { display: flex; justify-content: flex-end; gap: 0.75rem; padding: 1rem 1.5rem; border-top: 1px solid #e5e7eb; }
+</style>
+
+<script>
+function showRejectModal() {
+    document.getElementById('rejectModal').style.display = 'flex';
+}
+
+function hideRejectModal() {
+    document.getElementById('rejectModal').style.display = 'none';
+}
+</script>
+{% endblock %}
